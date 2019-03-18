@@ -1,0 +1,900 @@
+****ENTERING AGMG ************************************************************* 
+
+****        Number of unknowns:       79316                                     
+****                 Nonzeros :     3417034 (per row:  43.08)                   
+
+****SETUP: Coarsening by multiple pairwise aggregation                          
+****  Rmk: Setup performed assuming the matrix symmetric                        
+****       Quality threshold (BlockD):  8.00 ;  Strong diag. dom. trs: 1.29     
+****         Maximal number of passes:  2  ; Target coarsening factor: 4.00     
+****                      Threshold for rows with large pos. offdiag.: 0.45     
+****   Coarsening too slow: quality threshold increased to 1.60E+01             
+                                                                                
+****                      Level:           2                                    
+****        Number of variables:       79195          (reduction ratio: 1.00)   
+****                   Nonzeros:     3132909 (per row:39.6; red. ratio: 1.09)   
+****   Coarsening too slow: quality threshold increased to 3.20E+01             
+                                                                                
+****                      Level:           3                                    
+****        Number of variables:       79073          (reduction ratio: 1.00)   
+****                   Nonzeros:     2981755 (per row:37.7; red. ratio: 1.05)   
+
+****                  Grid complexity:     3.00                                 
+****              Operator complexity:     2.79                                 
+****  Theoretical Weighted complexity:     6.32 (K-cycle at each level)         
+****    Effective Weighted complexity:     4.49 (V-cycle enforced where needed) 
+
+****       Setup time (Elapsed):     6.90E-01 seconds                           
+
+****SOLUTION: flexible conjugate gradient iterations (FCG(1))                   
+****     AMG preconditioner with 1 Gauss-Seidel pre- and post-smoothing sweeps  
+****         at each level                                                      
+****  Iter=    0        Resid= 0.28E+03        Relat. res.= 0.10E+01            
+****  Iter=    1        Resid= 0.11E+06        Relat. res.= 0.39E+03            
+****  Iter=    2        Resid= 0.13E+06        Relat. res.= 0.45E+03            
+****  Iter=    3        Resid= 0.12E+06        Relat. res.= 0.43E+03            
+****  Iter=    4        Resid= 0.12E+06        Relat. res.= 0.42E+03            
+****  Iter=    5        Resid= 0.11E+06        Relat. res.= 0.40E+03            
+****  Iter=    6        Resid= 0.12E+06        Relat. res.= 0.43E+03            
+****  Iter=    7        Resid= 0.12E+06        Relat. res.= 0.42E+03            
+****  Iter=    8        Resid= 0.12E+06        Relat. res.= 0.42E+03            
+****  Iter=    9        Resid= 0.11E+06        Relat. res.= 0.38E+03            
+****  Iter=   10        Resid= 0.10E+06        Relat. res.= 0.36E+03            
+****  Iter=   11        Resid= 0.87E+05        Relat. res.= 0.31E+03            
+****  Iter=   12        Resid= 0.81E+05        Relat. res.= 0.29E+03            
+****  Iter=   13        Resid= 0.83E+05        Relat. res.= 0.29E+03            
+****  Iter=   14        Resid= 0.76E+05        Relat. res.= 0.27E+03            
+****  Iter=   15        Resid= 0.71E+05        Relat. res.= 0.25E+03            
+****  Iter=   16        Resid= 0.72E+05        Relat. res.= 0.25E+03            
+****  Iter=   17        Resid= 0.75E+05        Relat. res.= 0.27E+03            
+****  Iter=   18        Resid= 0.75E+05        Relat. res.= 0.27E+03            
+****  Iter=   19        Resid= 0.65E+05        Relat. res.= 0.23E+03            
+****  Iter=   20        Resid= 0.64E+05        Relat. res.= 0.23E+03            
+****  Iter=   21        Resid= 0.60E+05        Relat. res.= 0.21E+03            
+****  Iter=   22        Resid= 0.54E+05        Relat. res.= 0.19E+03            
+****  Iter=   23        Resid= 0.51E+05        Relat. res.= 0.18E+03            
+****  Iter=   24        Resid= 0.51E+05        Relat. res.= 0.18E+03            
+****  Iter=   25        Resid= 0.45E+05        Relat. res.= 0.16E+03            
+****  Iter=   26        Resid= 0.42E+05        Relat. res.= 0.15E+03            
+****  Iter=   27        Resid= 0.38E+05        Relat. res.= 0.14E+03            
+****  Iter=   28        Resid= 0.38E+05        Relat. res.= 0.13E+03            
+****  Iter=   29        Resid= 0.36E+05        Relat. res.= 0.13E+03            
+****  Iter=   30        Resid= 0.39E+05        Relat. res.= 0.14E+03            
+****  Iter=   31        Resid= 0.36E+05        Relat. res.= 0.13E+03            
+****  Iter=   32        Resid= 0.33E+05        Relat. res.= 0.12E+03            
+****  Iter=   33        Resid= 0.32E+05        Relat. res.= 0.11E+03            
+****  Iter=   34        Resid= 0.33E+05        Relat. res.= 0.12E+03            
+****  Iter=   35        Resid= 0.33E+05        Relat. res.= 0.12E+03            
+****  Iter=   36        Resid= 0.34E+05        Relat. res.= 0.12E+03            
+****  Iter=   37        Resid= 0.36E+05        Relat. res.= 0.13E+03            
+****  Iter=   38        Resid= 0.37E+05        Relat. res.= 0.13E+03            
+****  Iter=   39        Resid= 0.38E+05        Relat. res.= 0.13E+03            
+****  Iter=   40        Resid= 0.36E+05        Relat. res.= 0.13E+03            
+****  Iter=   41        Resid= 0.36E+05        Relat. res.= 0.13E+03            
+****  Iter=   42        Resid= 0.41E+05        Relat. res.= 0.14E+03            
+****  Iter=   43        Resid= 0.45E+05        Relat. res.= 0.16E+03            
+****  Iter=   44        Resid= 0.48E+05        Relat. res.= 0.17E+03            
+****  Iter=   45        Resid= 0.48E+05        Relat. res.= 0.17E+03            
+****  Iter=   46        Resid= 0.47E+05        Relat. res.= 0.17E+03            
+****  Iter=   47        Resid= 0.49E+05        Relat. res.= 0.17E+03            
+****  Iter=   48        Resid= 0.53E+05        Relat. res.= 0.19E+03            
+****  Iter=   49        Resid= 0.56E+05        Relat. res.= 0.20E+03            
+****  Iter=   50        Resid= 0.58E+05        Relat. res.= 0.21E+03            
+****  Iter=   51        Resid= 0.61E+05        Relat. res.= 0.21E+03            
+****  Iter=   52        Resid= 0.62E+05        Relat. res.= 0.22E+03            
+****  Iter=   53        Resid= 0.65E+05        Relat. res.= 0.23E+03            
+****  Iter=   54        Resid= 0.63E+05        Relat. res.= 0.22E+03            
+****  Iter=   55        Resid= 0.61E+05        Relat. res.= 0.21E+03            
+****  Iter=   56        Resid= 0.59E+05        Relat. res.= 0.21E+03            
+****  Iter=   57        Resid= 0.50E+05        Relat. res.= 0.18E+03            
+****  Iter=   58        Resid= 0.47E+05        Relat. res.= 0.17E+03            
+****  Iter=   59        Resid= 0.44E+05        Relat. res.= 0.16E+03            
+****  Iter=   60        Resid= 0.39E+05        Relat. res.= 0.14E+03            
+****  Iter=   61        Resid= 0.35E+05        Relat. res.= 0.12E+03            
+****  Iter=   62        Resid= 0.32E+05        Relat. res.= 0.11E+03            
+****  Iter=   63        Resid= 0.29E+05        Relat. res.= 0.10E+03            
+****  Iter=   64        Resid= 0.26E+05        Relat. res.= 0.94E+02            
+****  Iter=   65        Resid= 0.24E+05        Relat. res.= 0.87E+02            
+****  Iter=   66        Resid= 0.23E+05        Relat. res.= 0.82E+02            
+****  Iter=   67        Resid= 0.23E+05        Relat. res.= 0.83E+02            
+****  Iter=   68        Resid= 0.23E+05        Relat. res.= 0.83E+02            
+****  Iter=   69        Resid= 0.23E+05        Relat. res.= 0.81E+02            
+****  Iter=   70        Resid= 0.24E+05        Relat. res.= 0.84E+02            
+****  Iter=   71        Resid= 0.24E+05        Relat. res.= 0.84E+02            
+****  Iter=   72        Resid= 0.25E+05        Relat. res.= 0.89E+02            
+****  Iter=   73        Resid= 0.25E+05        Relat. res.= 0.88E+02            
+****  Iter=   74        Resid= 0.26E+05        Relat. res.= 0.91E+02            
+****  Iter=   75        Resid= 0.26E+05        Relat. res.= 0.93E+02            
+****  Iter=   76        Resid= 0.26E+05        Relat. res.= 0.93E+02            
+****  Iter=   77        Resid= 0.25E+05        Relat. res.= 0.89E+02            
+****  Iter=   78        Resid= 0.24E+05        Relat. res.= 0.86E+02            
+****  Iter=   79        Resid= 0.23E+05        Relat. res.= 0.83E+02            
+****  Iter=   80        Resid= 0.23E+05        Relat. res.= 0.82E+02            
+****  Iter=   81        Resid= 0.20E+05        Relat. res.= 0.72E+02            
+****  Iter=   82        Resid= 0.21E+05        Relat. res.= 0.76E+02            
+****  Iter=   83        Resid= 0.20E+05        Relat. res.= 0.69E+02            
+****  Iter=   84        Resid= 0.18E+05        Relat. res.= 0.65E+02            
+****  Iter=   85        Resid= 0.16E+05        Relat. res.= 0.58E+02            
+****  Iter=   86        Resid= 0.18E+05        Relat. res.= 0.63E+02            
+****  Iter=   87        Resid= 0.17E+05        Relat. res.= 0.62E+02            
+****  Iter=   88        Resid= 0.17E+05        Relat. res.= 0.62E+02            
+****  Iter=   89        Resid= 0.15E+05        Relat. res.= 0.54E+02            
+****  Iter=   90        Resid= 0.15E+05        Relat. res.= 0.53E+02            
+****  Iter=   91        Resid= 0.13E+05        Relat. res.= 0.48E+02            
+****  Iter=   92        Resid= 0.12E+05        Relat. res.= 0.43E+02            
+****  Iter=   93        Resid= 0.12E+05        Relat. res.= 0.41E+02            
+****  Iter=   94        Resid= 0.11E+05        Relat. res.= 0.40E+02            
+****  Iter=   95        Resid= 0.11E+05        Relat. res.= 0.39E+02            
+****  Iter=   96        Resid= 0.11E+05        Relat. res.= 0.40E+02            
+****  Iter=   97        Resid= 0.12E+05        Relat. res.= 0.41E+02            
+****  Iter=   98        Resid= 0.12E+05        Relat. res.= 0.41E+02            
+****  Iter=   99        Resid= 0.12E+05        Relat. res.= 0.41E+02            
+****  Iter=  100        Resid= 0.11E+05        Relat. res.= 0.41E+02            
+
+**** !!!   WARNING:  100 ITERATIONS WERE                                        
+**** INSUFFICIENT TO ACHIEVE THE DESIRED ACCURACY                               
+
+****     level 2   #call=   100   #cycle=   100   mean=   1.00    max=  1       
+
+****       Number of work units:  -345.93 per digit of accuracy (*)             
+****    Solution time (Elapsed):     3.60E+00 seconds                           
+
+*** (*) 1 work unit represents the cost of 1 (fine grid) residual evaluation    
+****LEAVING AGMG * (MEMORY RELEASED) ****************************************** 
+
+**** !!!   WARNING:  100 ITERATIONS WERE                                        
+**** INSUFFICIENT TO ACHIEVE THE DESIRED ACCURACY                               
+
+Convergence flag = 
+     1
+
+Relative residual = 
+   40.5917
+
+Relative residual with "\" = 
+   1.6760e-08
+
+
+---------------------------------------------------------------------------------------------
+
+2nd Run of 600 iterations: Maximum iterations set to 1000
+
+****ENTERING AGMG ************************************************************* 
+
+****        Number of unknowns:       79316                                     
+****                 Nonzeros :     3417034 (per row:  43.08)                   
+
+****SETUP: Coarsening by multiple pairwise aggregation                          
+****  Rmk: Setup performed assuming the matrix symmetric                        
+****       Quality threshold (BlockD):  8.00 ;  Strong diag. dom. trs: 1.29     
+****         Maximal number of passes:  2  ; Target coarsening factor: 4.00     
+****                      Threshold for rows with large pos. offdiag.: 0.45     
+****   Coarsening too slow: quality threshold increased to 1.60E+01             
+                                                                                
+****                      Level:           2                                    
+****        Number of variables:       79195          (reduction ratio: 1.00)   
+****                   Nonzeros:     3132909 (per row:39.6; red. ratio: 1.09)   
+****   Coarsening too slow: quality threshold increased to 3.20E+01             
+                                                                                
+****                      Level:           3                                    
+****        Number of variables:       79073          (reduction ratio: 1.00)   
+****                   Nonzeros:     2981755 (per row:37.7; red. ratio: 1.05)   
+
+****                  Grid complexity:     3.00                                 
+****              Operator complexity:     2.79                                 
+****  Theoretical Weighted complexity:     6.32 (K-cycle at each level)         
+****    Effective Weighted complexity:     4.49 (V-cycle enforced where needed) 
+
+****       Setup time (Elapsed):     6.79E-01 seconds                           
+
+****SOLUTION: flexible conjugate gradient iterations (FCG(1))                   
+****     AMG preconditioner with 1 Gauss-Seidel pre- and post-smoothing sweeps  
+****         at each level                                                      
+****  Iter=    0        Resid= 0.28E+03        Relat. res.= 0.10E+01            
+****  Iter=    1        Resid= 0.11E+06        Relat. res.= 0.39E+03            
+****  Iter=    2        Resid= 0.13E+06        Relat. res.= 0.45E+03            
+****  Iter=    3        Resid= 0.12E+06        Relat. res.= 0.43E+03            
+****  Iter=    4        Resid= 0.12E+06        Relat. res.= 0.42E+03            
+****  Iter=    5        Resid= 0.11E+06        Relat. res.= 0.40E+03            
+****  Iter=    6        Resid= 0.12E+06        Relat. res.= 0.43E+03            
+****  Iter=    7        Resid= 0.12E+06        Relat. res.= 0.42E+03            
+****  Iter=    8        Resid= 0.12E+06        Relat. res.= 0.42E+03            
+****  Iter=    9        Resid= 0.11E+06        Relat. res.= 0.38E+03            
+****  Iter=   10        Resid= 0.10E+06        Relat. res.= 0.36E+03            
+****  Iter=   11        Resid= 0.87E+05        Relat. res.= 0.31E+03            
+****  Iter=   12        Resid= 0.81E+05        Relat. res.= 0.29E+03            
+****  Iter=   13        Resid= 0.83E+05        Relat. res.= 0.29E+03            
+****  Iter=   14        Resid= 0.76E+05        Relat. res.= 0.27E+03            
+****  Iter=   15        Resid= 0.71E+05        Relat. res.= 0.25E+03            
+****  Iter=   16        Resid= 0.72E+05        Relat. res.= 0.25E+03            
+****  Iter=   17        Resid= 0.75E+05        Relat. res.= 0.27E+03            
+****  Iter=   18        Resid= 0.75E+05        Relat. res.= 0.27E+03            
+****  Iter=   19        Resid= 0.65E+05        Relat. res.= 0.23E+03            
+****  Iter=   20        Resid= 0.64E+05        Relat. res.= 0.23E+03            
+****  Iter=   21        Resid= 0.60E+05        Relat. res.= 0.21E+03            
+****  Iter=   22        Resid= 0.54E+05        Relat. res.= 0.19E+03            
+****  Iter=   23        Resid= 0.51E+05        Relat. res.= 0.18E+03            
+****  Iter=   24        Resid= 0.51E+05        Relat. res.= 0.18E+03            
+****  Iter=   25        Resid= 0.45E+05        Relat. res.= 0.16E+03            
+****  Iter=   26        Resid= 0.42E+05        Relat. res.= 0.15E+03            
+****  Iter=   27        Resid= 0.38E+05        Relat. res.= 0.14E+03            
+****  Iter=   28        Resid= 0.38E+05        Relat. res.= 0.13E+03            
+****  Iter=   29        Resid= 0.36E+05        Relat. res.= 0.13E+03            
+****  Iter=   30        Resid= 0.39E+05        Relat. res.= 0.14E+03            
+****  Iter=   31        Resid= 0.36E+05        Relat. res.= 0.13E+03            
+****  Iter=   32        Resid= 0.33E+05        Relat. res.= 0.12E+03            
+****  Iter=   33        Resid= 0.32E+05        Relat. res.= 0.11E+03            
+****  Iter=   34        Resid= 0.33E+05        Relat. res.= 0.12E+03            
+****  Iter=   35        Resid= 0.33E+05        Relat. res.= 0.12E+03            
+****  Iter=   36        Resid= 0.34E+05        Relat. res.= 0.12E+03            
+****  Iter=   37        Resid= 0.36E+05        Relat. res.= 0.13E+03            
+****  Iter=   38        Resid= 0.37E+05        Relat. res.= 0.13E+03            
+****  Iter=   39        Resid= 0.38E+05        Relat. res.= 0.13E+03            
+****  Iter=   40        Resid= 0.36E+05        Relat. res.= 0.13E+03            
+****  Iter=   41        Resid= 0.36E+05        Relat. res.= 0.13E+03            
+****  Iter=   42        Resid= 0.41E+05        Relat. res.= 0.14E+03            
+****  Iter=   43        Resid= 0.45E+05        Relat. res.= 0.16E+03            
+****  Iter=   44        Resid= 0.48E+05        Relat. res.= 0.17E+03            
+****  Iter=   45        Resid= 0.48E+05        Relat. res.= 0.17E+03            
+****  Iter=   46        Resid= 0.47E+05        Relat. res.= 0.17E+03            
+****  Iter=   47        Resid= 0.49E+05        Relat. res.= 0.17E+03            
+****  Iter=   48        Resid= 0.53E+05        Relat. res.= 0.19E+03            
+****  Iter=   49        Resid= 0.56E+05        Relat. res.= 0.20E+03            
+****  Iter=   50        Resid= 0.58E+05        Relat. res.= 0.21E+03            
+****  Iter=   51        Resid= 0.61E+05        Relat. res.= 0.21E+03            
+****  Iter=   52        Resid= 0.62E+05        Relat. res.= 0.22E+03            
+****  Iter=   53        Resid= 0.65E+05        Relat. res.= 0.23E+03            
+****  Iter=   54        Resid= 0.63E+05        Relat. res.= 0.22E+03            
+****  Iter=   55        Resid= 0.61E+05        Relat. res.= 0.21E+03            
+****  Iter=   56        Resid= 0.59E+05        Relat. res.= 0.21E+03            
+****  Iter=   57        Resid= 0.50E+05        Relat. res.= 0.18E+03            
+****  Iter=   58        Resid= 0.47E+05        Relat. res.= 0.17E+03            
+****  Iter=   59        Resid= 0.44E+05        Relat. res.= 0.16E+03            
+****  Iter=   60        Resid= 0.39E+05        Relat. res.= 0.14E+03            
+****  Iter=   61        Resid= 0.35E+05        Relat. res.= 0.12E+03            
+****  Iter=   62        Resid= 0.32E+05        Relat. res.= 0.11E+03            
+****  Iter=   63        Resid= 0.29E+05        Relat. res.= 0.10E+03            
+****  Iter=   64        Resid= 0.26E+05        Relat. res.= 0.94E+02            
+****  Iter=   65        Resid= 0.24E+05        Relat. res.= 0.87E+02            
+****  Iter=   66        Resid= 0.23E+05        Relat. res.= 0.82E+02            
+****  Iter=   67        Resid= 0.23E+05        Relat. res.= 0.83E+02            
+****  Iter=   68        Resid= 0.23E+05        Relat. res.= 0.83E+02            
+****  Iter=   69        Resid= 0.23E+05        Relat. res.= 0.81E+02            
+****  Iter=   70        Resid= 0.24E+05        Relat. res.= 0.84E+02            
+****  Iter=   71        Resid= 0.24E+05        Relat. res.= 0.84E+02            
+****  Iter=   72        Resid= 0.25E+05        Relat. res.= 0.89E+02            
+****  Iter=   73        Resid= 0.25E+05        Relat. res.= 0.88E+02            
+****  Iter=   74        Resid= 0.26E+05        Relat. res.= 0.91E+02            
+****  Iter=   75        Resid= 0.26E+05        Relat. res.= 0.93E+02            
+****  Iter=   76        Resid= 0.26E+05        Relat. res.= 0.93E+02            
+****  Iter=   77        Resid= 0.25E+05        Relat. res.= 0.89E+02            
+****  Iter=   78        Resid= 0.24E+05        Relat. res.= 0.86E+02            
+****  Iter=   79        Resid= 0.23E+05        Relat. res.= 0.83E+02            
+****  Iter=   80        Resid= 0.23E+05        Relat. res.= 0.82E+02            
+****  Iter=   81        Resid= 0.20E+05        Relat. res.= 0.72E+02            
+****  Iter=   82        Resid= 0.21E+05        Relat. res.= 0.76E+02            
+****  Iter=   83        Resid= 0.20E+05        Relat. res.= 0.69E+02            
+****  Iter=   84        Resid= 0.18E+05        Relat. res.= 0.65E+02            
+****  Iter=   85        Resid= 0.16E+05        Relat. res.= 0.58E+02            
+****  Iter=   86        Resid= 0.18E+05        Relat. res.= 0.63E+02            
+****  Iter=   87        Resid= 0.17E+05        Relat. res.= 0.62E+02            
+****  Iter=   88        Resid= 0.17E+05        Relat. res.= 0.62E+02            
+****  Iter=   89        Resid= 0.15E+05        Relat. res.= 0.54E+02            
+****  Iter=   90        Resid= 0.15E+05        Relat. res.= 0.53E+02            
+****  Iter=   91        Resid= 0.13E+05        Relat. res.= 0.48E+02            
+****  Iter=   92        Resid= 0.12E+05        Relat. res.= 0.43E+02            
+****  Iter=   93        Resid= 0.12E+05        Relat. res.= 0.41E+02            
+****  Iter=   94        Resid= 0.11E+05        Relat. res.= 0.40E+02            
+****  Iter=   95        Resid= 0.11E+05        Relat. res.= 0.39E+02            
+****  Iter=   96        Resid= 0.11E+05        Relat. res.= 0.40E+02            
+****  Iter=   97        Resid= 0.12E+05        Relat. res.= 0.41E+02            
+****  Iter=   98        Resid= 0.12E+05        Relat. res.= 0.41E+02            
+****  Iter=   99        Resid= 0.12E+05        Relat. res.= 0.41E+02            
+****  Iter=  100        Resid= 0.11E+05        Relat. res.= 0.41E+02            
+****  Iter=  101        Resid= 0.11E+05        Relat. res.= 0.41E+02            
+****  Iter=  102        Resid= 0.11E+05        Relat. res.= 0.39E+02            
+****  Iter=  103        Resid= 0.10E+05        Relat. res.= 0.37E+02            
+****  Iter=  104        Resid= 0.11E+05        Relat. res.= 0.38E+02            
+****  Iter=  105        Resid= 0.11E+05        Relat. res.= 0.39E+02            
+****  Iter=  106        Resid= 0.11E+05        Relat. res.= 0.39E+02            
+****  Iter=  107        Resid= 0.11E+05        Relat. res.= 0.38E+02            
+****  Iter=  108        Resid= 0.11E+05        Relat. res.= 0.38E+02            
+****  Iter=  109        Resid= 0.11E+05        Relat. res.= 0.38E+02            
+****  Iter=  110        Resid= 0.10E+05        Relat. res.= 0.37E+02            
+****  Iter=  111        Resid= 0.10E+05        Relat. res.= 0.36E+02            
+****  Iter=  112        Resid= 0.92E+04        Relat. res.= 0.33E+02            
+****  Iter=  113        Resid= 0.89E+04        Relat. res.= 0.32E+02            
+****  Iter=  114        Resid= 0.82E+04        Relat. res.= 0.29E+02            
+****  Iter=  115        Resid= 0.75E+04        Relat. res.= 0.27E+02            
+****  Iter=  116        Resid= 0.67E+04        Relat. res.= 0.24E+02            
+****  Iter=  117        Resid= 0.58E+04        Relat. res.= 0.21E+02            
+****  Iter=  118        Resid= 0.50E+04        Relat. res.= 0.18E+02            
+****  Iter=  119        Resid= 0.42E+04        Relat. res.= 0.15E+02            
+****  Iter=  120        Resid= 0.39E+04        Relat. res.= 0.14E+02            
+****  Iter=  121        Resid= 0.39E+04        Relat. res.= 0.14E+02            
+****  Iter=  122        Resid= 0.36E+04        Relat. res.= 0.13E+02            
+****  Iter=  123        Resid= 0.35E+04        Relat. res.= 0.12E+02            
+****  Iter=  124        Resid= 0.31E+04        Relat. res.= 0.11E+02            
+****  Iter=  125        Resid= 0.26E+04        Relat. res.= 0.92E+01            
+****  Iter=  126        Resid= 0.27E+04        Relat. res.= 0.97E+01            
+****  Iter=  127        Resid= 0.25E+04        Relat. res.= 0.88E+01            
+****  Iter=  128        Resid= 0.28E+04        Relat. res.= 0.98E+01            
+****  Iter=  129        Resid= 0.26E+04        Relat. res.= 0.92E+01            
+****  Iter=  130        Resid= 0.24E+04        Relat. res.= 0.84E+01            
+****  Iter=  131        Resid= 0.25E+04        Relat. res.= 0.88E+01            
+****  Iter=  132        Resid= 0.25E+04        Relat. res.= 0.90E+01            
+****  Iter=  133        Resid= 0.24E+04        Relat. res.= 0.86E+01            
+****  Iter=  134        Resid= 0.23E+04        Relat. res.= 0.83E+01            
+****  Iter=  135        Resid= 0.22E+04        Relat. res.= 0.76E+01            
+****  Iter=  136        Resid= 0.19E+04        Relat. res.= 0.68E+01            
+****  Iter=  137        Resid= 0.20E+04        Relat. res.= 0.71E+01            
+****  Iter=  138        Resid= 0.19E+04        Relat. res.= 0.68E+01            
+****  Iter=  139        Resid= 0.20E+04        Relat. res.= 0.71E+01            
+****  Iter=  140        Resid= 0.20E+04        Relat. res.= 0.72E+01            
+****  Iter=  141        Resid= 0.19E+04        Relat. res.= 0.69E+01            
+****  Iter=  142        Resid= 0.19E+04        Relat. res.= 0.66E+01            
+****  Iter=  143        Resid= 0.18E+04        Relat. res.= 0.65E+01            
+****  Iter=  144        Resid= 0.18E+04        Relat. res.= 0.65E+01            
+****  Iter=  145        Resid= 0.18E+04        Relat. res.= 0.64E+01            
+****  Iter=  146        Resid= 0.17E+04        Relat. res.= 0.61E+01            
+****  Iter=  147        Resid= 0.16E+04        Relat. res.= 0.56E+01            
+****  Iter=  148        Resid= 0.15E+04        Relat. res.= 0.54E+01            
+****  Iter=  149        Resid= 0.15E+04        Relat. res.= 0.52E+01            
+****  Iter=  150        Resid= 0.15E+04        Relat. res.= 0.53E+01            
+****  Iter=  151        Resid= 0.14E+04        Relat. res.= 0.50E+01            
+****  Iter=  152        Resid= 0.11E+04        Relat. res.= 0.40E+01            
+****  Iter=  153        Resid= 0.10E+04        Relat. res.= 0.36E+01            
+****  Iter=  154        Resid= 0.91E+03        Relat. res.= 0.32E+01            
+****  Iter=  155        Resid= 0.91E+03        Relat. res.= 0.32E+01            
+****  Iter=  156        Resid= 0.84E+03        Relat. res.= 0.30E+01            
+****  Iter=  157        Resid= 0.72E+03        Relat. res.= 0.26E+01            
+****  Iter=  158        Resid= 0.61E+03        Relat. res.= 0.22E+01            
+****  Iter=  159        Resid= 0.57E+03        Relat. res.= 0.20E+01            
+****  Iter=  160        Resid= 0.47E+03        Relat. res.= 0.17E+01            
+****  Iter=  161        Resid= 0.42E+03        Relat. res.= 0.15E+01            
+****  Iter=  162        Resid= 0.37E+03        Relat. res.= 0.13E+01            
+****  Iter=  163        Resid= 0.30E+03        Relat. res.= 0.11E+01            
+****  Iter=  164        Resid= 0.27E+03        Relat. res.= 0.98E+00            
+****  Iter=  165        Resid= 0.24E+03        Relat. res.= 0.84E+00            
+****  Iter=  166        Resid= 0.23E+03        Relat. res.= 0.83E+00            
+****  Iter=  167        Resid= 0.21E+03        Relat. res.= 0.73E+00            
+****  Iter=  168        Resid= 0.19E+03        Relat. res.= 0.68E+00            
+****  Iter=  169        Resid= 0.18E+03        Relat. res.= 0.63E+00            
+****  Iter=  170        Resid= 0.16E+03        Relat. res.= 0.57E+00            
+****  Iter=  171        Resid= 0.14E+03        Relat. res.= 0.50E+00            
+****  Iter=  172        Resid= 0.12E+03        Relat. res.= 0.44E+00            
+****  Iter=  173        Resid= 0.11E+03        Relat. res.= 0.39E+00            
+****  Iter=  174        Resid= 0.80E+02        Relat. res.= 0.28E+00            
+****  Iter=  175        Resid= 0.67E+02        Relat. res.= 0.24E+00            
+****  Iter=  176        Resid= 0.36E+02        Relat. res.= 0.13E+00            
+****  Iter=  177        Resid= 0.34E+02        Relat. res.= 0.12E+00            
+****  Iter=  178        Resid= 0.32E+02        Relat. res.= 0.11E+00            
+****  Iter=  179        Resid= 0.33E+02        Relat. res.= 0.12E+00            
+****  Iter=  180        Resid= 0.35E+02        Relat. res.= 0.13E+00            
+****  Iter=  181        Resid= 0.32E+02        Relat. res.= 0.11E+00            
+****  Iter=  182        Resid= 0.39E+02        Relat. res.= 0.14E+00            
+****  Iter=  183        Resid= 0.39E+02        Relat. res.= 0.14E+00            
+****  Iter=  184        Resid= 0.38E+02        Relat. res.= 0.14E+00            
+****  Iter=  185        Resid= 0.35E+02        Relat. res.= 0.13E+00            
+****  Iter=  186        Resid= 0.31E+02        Relat. res.= 0.11E+00            
+****  Iter=  187        Resid= 0.30E+02        Relat. res.= 0.11E+00            
+****  Iter=  188        Resid= 0.22E+02        Relat. res.= 0.76E-01            
+****  Iter=  189        Resid= 0.16E+02        Relat. res.= 0.57E-01            
+****  Iter=  190        Resid= 0.16E+02        Relat. res.= 0.55E-01            
+****  Iter=  191        Resid= 0.14E+02        Relat. res.= 0.51E-01            
+****  Iter=  192        Resid= 0.13E+02        Relat. res.= 0.48E-01            
+****  Iter=  193        Resid= 0.11E+02        Relat. res.= 0.39E-01            
+****  Iter=  194        Resid= 0.12E+02        Relat. res.= 0.44E-01            
+****  Iter=  195        Resid= 0.89E+01        Relat. res.= 0.32E-01            
+****  Iter=  196        Resid= 0.82E+01        Relat. res.= 0.29E-01            
+****  Iter=  197        Resid= 0.66E+01        Relat. res.= 0.23E-01            
+****  Iter=  198        Resid= 0.62E+01        Relat. res.= 0.22E-01            
+****  Iter=  199        Resid= 0.58E+01        Relat. res.= 0.21E-01            
+****  Iter=  200        Resid= 0.58E+01        Relat. res.= 0.20E-01            
+****  Iter=  201        Resid= 0.55E+01        Relat. res.= 0.20E-01            
+****  Iter=  202        Resid= 0.46E+01        Relat. res.= 0.16E-01            
+****  Iter=  203        Resid= 0.37E+01        Relat. res.= 0.13E-01            
+****  Iter=  204        Resid= 0.33E+01        Relat. res.= 0.12E-01            
+****  Iter=  205        Resid= 0.31E+01        Relat. res.= 0.11E-01            
+****  Iter=  206        Resid= 0.25E+01        Relat. res.= 0.90E-02            
+****  Iter=  207        Resid= 0.25E+01        Relat. res.= 0.88E-02            
+****  Iter=  208        Resid= 0.23E+01        Relat. res.= 0.83E-02            
+****  Iter=  209        Resid= 0.19E+01        Relat. res.= 0.67E-02            
+****  Iter=  210        Resid= 0.17E+01        Relat. res.= 0.59E-02            
+****  Iter=  211        Resid= 0.15E+01        Relat. res.= 0.54E-02            
+****  Iter=  212        Resid= 0.12E+01        Relat. res.= 0.42E-02            
+****  Iter=  213        Resid= 0.11E+01        Relat. res.= 0.38E-02            
+****  Iter=  214        Resid= 0.99E+00        Relat. res.= 0.35E-02            
+****  Iter=  215        Resid= 0.87E+00        Relat. res.= 0.31E-02            
+****  Iter=  216        Resid= 0.85E+00        Relat. res.= 0.30E-02            
+****  Iter=  217        Resid= 0.72E+00        Relat. res.= 0.26E-02            
+****  Iter=  218        Resid= 0.56E+00        Relat. res.= 0.20E-02            
+****  Iter=  219        Resid= 0.47E+00        Relat. res.= 0.17E-02            
+****  Iter=  220        Resid= 0.43E+00        Relat. res.= 0.15E-02            
+****  Iter=  221        Resid= 0.38E+00        Relat. res.= 0.14E-02            
+****  Iter=  222        Resid= 0.31E+00        Relat. res.= 0.11E-02            
+****  Iter=  223        Resid= 0.24E+00        Relat. res.= 0.84E-03            
+****  Iter=  224        Resid= 0.20E+00        Relat. res.= 0.71E-03            
+****  Iter=  225        Resid= 0.14E+00        Relat. res.= 0.48E-03            
+****  Iter=  226        Resid= 0.10E+00        Relat. res.= 0.35E-03            
+****  Iter=  227        Resid= 0.92E-01        Relat. res.= 0.33E-03            
+****  Iter=  228        Resid= 0.90E-01        Relat. res.= 0.32E-03            
+****  Iter=  229        Resid= 0.82E-01        Relat. res.= 0.29E-03            
+****  Iter=  230        Resid= 0.82E-01        Relat. res.= 0.29E-03            
+****  Iter=  231        Resid= 0.83E-01        Relat. res.= 0.30E-03            
+****  Iter=  232        Resid= 0.87E-01        Relat. res.= 0.31E-03            
+****  Iter=  233        Resid= 0.84E-01        Relat. res.= 0.30E-03            
+****  Iter=  234        Resid= 0.98E-01        Relat. res.= 0.35E-03            
+****  Iter=  235        Resid= 0.86E-01        Relat. res.= 0.30E-03            
+****  Iter=  236        Resid= 0.86E-01        Relat. res.= 0.31E-03            
+****  Iter=  237        Resid= 0.77E-01        Relat. res.= 0.27E-03            
+****  Iter=  238        Resid= 0.79E-01        Relat. res.= 0.28E-03            
+****  Iter=  239        Resid= 0.67E-01        Relat. res.= 0.24E-03            
+****  Iter=  240        Resid= 0.59E-01        Relat. res.= 0.21E-03            
+****  Iter=  241        Resid= 0.46E-01        Relat. res.= 0.16E-03            
+****  Iter=  242        Resid= 0.45E-01        Relat. res.= 0.16E-03            
+****  Iter=  243        Resid= 0.39E-01        Relat. res.= 0.14E-03            
+****  Iter=  244        Resid= 0.36E-01        Relat. res.= 0.13E-03            
+****  Iter=  245        Resid= 0.32E-01        Relat. res.= 0.11E-03            
+****  Iter=  246        Resid= 0.28E-01        Relat. res.= 0.98E-04            
+****  Iter=  247        Resid= 0.25E-01        Relat. res.= 0.90E-04            
+****  Iter=  248        Resid= 0.26E-01        Relat. res.= 0.92E-04            
+****  Iter=  249        Resid= 0.24E-01        Relat. res.= 0.83E-04            
+****  Iter=  250        Resid= 0.24E-01        Relat. res.= 0.84E-04            
+****  Iter=  251        Resid= 0.24E-01        Relat. res.= 0.87E-04            
+****  Iter=  252        Resid= 0.24E-01        Relat. res.= 0.84E-04            
+****  Iter=  253        Resid= 0.20E-01        Relat. res.= 0.71E-04            
+****  Iter=  254        Resid= 0.19E-01        Relat. res.= 0.67E-04            
+****  Iter=  255        Resid= 0.19E-01        Relat. res.= 0.67E-04            
+****  Iter=  256        Resid= 0.16E-01        Relat. res.= 0.55E-04            
+****  Iter=  257        Resid= 0.15E-01        Relat. res.= 0.53E-04            
+****  Iter=  258        Resid= 0.14E-01        Relat. res.= 0.51E-04            
+****  Iter=  259        Resid= 0.13E-01        Relat. res.= 0.46E-04            
+****  Iter=  260        Resid= 0.85E-02        Relat. res.= 0.30E-04            
+****  Iter=  261        Resid= 0.65E-02        Relat. res.= 0.23E-04            
+****  Iter=  262        Resid= 0.59E-02        Relat. res.= 0.21E-04            
+****  Iter=  263        Resid= 0.50E-02        Relat. res.= 0.18E-04            
+****  Iter=  264        Resid= 0.34E-02        Relat. res.= 0.12E-04            
+****  Iter=  265        Resid= 0.31E-02        Relat. res.= 0.11E-04            
+****  Iter=  266        Resid= 0.28E-02        Relat. res.= 0.99E-05            
+****  Iter=  267        Resid= 0.23E-02        Relat. res.= 0.82E-05            
+****  Iter=  268        Resid= 0.14E-02        Relat. res.= 0.51E-05            
+****  Iter=  269        Resid= 0.12E-02        Relat. res.= 0.42E-05            
+****  Iter=  270        Resid= 0.81E-03        Relat. res.= 0.29E-05            
+****  Iter=  271        Resid= 0.74E-03        Relat. res.= 0.26E-05            
+****  Iter=  272        Resid= 0.77E-03        Relat. res.= 0.27E-05            
+****  Iter=  273        Resid= 0.65E-03        Relat. res.= 0.23E-05            
+****  Iter=  274        Resid= 0.42E-03        Relat. res.= 0.15E-05            
+****  Iter=  275        Resid= 0.33E-03        Relat. res.= 0.12E-05            
+****  Iter=  276        Resid= 0.33E-03        Relat. res.= 0.12E-05            
+****  Iter=  277        Resid= 0.28E-03        Relat. res.= 0.99E-06            
+****  - Convergence reached in  277 iterations -                                
+
+****     level 2   #call=   277   #cycle=   277   mean=   1.00    max=  1       
+
+****       Number of work units:   256.72 per digit of accuracy (*)             
+****    Solution time (Elapsed):     1.00E+01 seconds                           
+
+*** (*) 1 work unit represents the cost of 1 (fine grid) residual evaluation    
+****LEAVING AGMG * (MEMORY RELEASED) ****************************************** 
+Convergence flag = 
+     0
+
+Relative residual = 
+   2.9435e-08
+
+Relative residual with "\" = 
+   1.6760e-08
+
+---------------------------------------------------------------------------
+
+3rd Run of 5000 iterations, maximum iterations set to 5000. tolerance set to 1e-10
+
+
+
+
+
+5000 ITERATIONS WERE                                        
+**** INSUFFICIENT TO ACHIEVE THE DESIRED ACCURACY                               
+
+****ENTERING AGMG ************************************************************* 
+
+****        Number of unknowns:       79316                                     
+****                 Nonzeros :     3417034 (per row:  43.08)                   
+
+****SETUP: Coarsening by multiple pairwise aggregation                          
+****  Rmk: Setup performed assuming the matrix symmetric                        
+****       Quality threshold (BlockD):  8.00 ;  Strong diag. dom. trs: 1.29     
+****         Maximal number of passes:  2  ; Target coarsening factor: 4.00     
+****                      Threshold for rows with large pos. offdiag.: 0.45     
+****   Coarsening too slow: quality threshold increased to 1.60E+01             
+                                                                                
+****                      Level:           2                                    
+****        Number of variables:       79195          (reduction ratio: 1.00)   
+****                   Nonzeros:     3132909 (per row:39.6; red. ratio: 1.09)   
+****   Coarsening too slow: quality threshold increased to 3.20E+01             
+                                                                                
+****                      Level:           3                                    
+****        Number of variables:       79073          (reduction ratio: 1.00)   
+****                   Nonzeros:     2981755 (per row:37.7; red. ratio: 1.05)   
+
+****                  Grid complexity:     3.00                                 
+****              Operator complexity:     2.79                                 
+****  Theoretical Weighted complexity:     6.32 (K-cycle at each level)         
+****    Effective Weighted complexity:     4.49 (V-cycle enforced where needed) 
+
+****       Setup time (Elapsed):     6.83E-01 seconds                           
+
+****SOLUTION: flexible conjugate gradient iterations (FCG(1))                   
+****     AMG preconditioner with 1 Gauss-Seidel pre- and post-smoothing sweeps  
+****         at each level                                                      
+****  Iter=    0        Resid= 0.28E+03        Relat. res.= 0.10E+01            
+****  Iter=    1        Resid= 0.11E+06        Relat. res.= 0.39E+03            
+****  Iter=    2        Resid= 0.13E+06        Relat. res.= 0.45E+03            
+****  Iter=    3        Resid= 0.12E+06        Relat. res.= 0.43E+03            
+****  Iter=    4        Resid= 0.12E+06        Relat. res.= 0.42E+03            
+****  Iter=    5        Resid= 0.11E+06        Relat. res.= 0.40E+03            
+****  Iter=    6        Resid= 0.12E+06        Relat. res.= 0.43E+03            
+****  Iter=    7        Resid= 0.12E+06        Relat. res.= 0.42E+03            
+****  Iter=    8        Resid= 0.12E+06        Relat. res.= 0.42E+03            
+****  Iter=    9        Resid= 0.11E+06        Relat. res.= 0.38E+03            
+****  Iter=   10        Resid= 0.10E+06        Relat. res.= 0.36E+03            
+****  Iter=   11        Resid= 0.87E+05        Relat. res.= 0.31E+03            
+****  Iter=   12        Resid= 0.81E+05        Relat. res.= 0.29E+03            
+****  Iter=   13        Resid= 0.83E+05        Relat. res.= 0.29E+03            
+****  Iter=   14        Resid= 0.76E+05        Relat. res.= 0.27E+03            
+****  Iter=   15        Resid= 0.71E+05        Relat. res.= 0.25E+03            
+****  Iter=   16        Resid= 0.72E+05        Relat. res.= 0.25E+03            
+****  Iter=   17        Resid= 0.75E+05        Relat. res.= 0.27E+03            
+****  Iter=   18        Resid= 0.75E+05        Relat. res.= 0.27E+03            
+****  Iter=   19        Resid= 0.65E+05        Relat. res.= 0.23E+03            
+****  Iter=   20        Resid= 0.64E+05        Relat. res.= 0.23E+03            
+****  Iter=   21        Resid= 0.60E+05        Relat. res.= 0.21E+03            
+****  Iter=   22        Resid= 0.54E+05        Relat. res.= 0.19E+03            
+****  Iter=   23        Resid= 0.51E+05        Relat. res.= 0.18E+03            
+****  Iter=   24        Resid= 0.51E+05        Relat. res.= 0.18E+03            
+****  Iter=   25        Resid= 0.45E+05        Relat. res.= 0.16E+03            
+****  Iter=   26        Resid= 0.42E+05        Relat. res.= 0.15E+03            
+****  Iter=   27        Resid= 0.38E+05        Relat. res.= 0.14E+03            
+****  Iter=   28        Resid= 0.38E+05        Relat. res.= 0.13E+03            
+****  Iter=   29        Resid= 0.36E+05        Relat. res.= 0.13E+03            
+****  Iter=   30        Resid= 0.39E+05        Relat. res.= 0.14E+03            
+****  Iter=   31        Resid= 0.36E+05        Relat. res.= 0.13E+03            
+****  Iter=   32        Resid= 0.33E+05        Relat. res.= 0.12E+03            
+****  Iter=   33        Resid= 0.32E+05        Relat. res.= 0.11E+03            
+****  Iter=   34        Resid= 0.33E+05        Relat. res.= 0.12E+03            
+****  Iter=   35        Resid= 0.33E+05        Relat. res.= 0.12E+03            
+****  Iter=   36        Resid= 0.34E+05        Relat. res.= 0.12E+03            
+****  Iter=   37        Resid= 0.36E+05        Relat. res.= 0.13E+03            
+****  Iter=   38        Resid= 0.37E+05        Relat. res.= 0.13E+03            
+****  Iter=   39        Resid= 0.38E+05        Relat. res.= 0.13E+03            
+****  Iter=   40        Resid= 0.36E+05        Relat. res.= 0.13E+03            
+****  Iter=   41        Resid= 0.36E+05        Relat. res.= 0.13E+03            
+****  Iter=   42        Resid= 0.41E+05        Relat. res.= 0.14E+03            
+****  Iter=   43        Resid= 0.45E+05        Relat. res.= 0.16E+03            
+****  Iter=   44        Resid= 0.48E+05        Relat. res.= 0.17E+03            
+****  Iter=   45        Resid= 0.48E+05        Relat. res.= 0.17E+03            
+****  Iter=   46        Resid= 0.47E+05        Relat. res.= 0.17E+03            
+****  Iter=   47        Resid= 0.49E+05        Relat. res.= 0.17E+03            
+****  Iter=   48        Resid= 0.53E+05        Relat. res.= 0.19E+03            
+****  Iter=   49        Resid= 0.56E+05        Relat. res.= 0.20E+03            
+****  Iter=   50        Resid= 0.58E+05        Relat. res.= 0.21E+03            
+****  Iter=   51        Resid= 0.61E+05        Relat. res.= 0.21E+03            
+****  Iter=   52        Resid= 0.62E+05        Relat. res.= 0.22E+03            
+****  Iter=   53        Resid= 0.65E+05        Relat. res.= 0.23E+03            
+****  Iter=   54        Resid= 0.63E+05        Relat. res.= 0.22E+03            
+****  Iter=   55        Resid= 0.61E+05        Relat. res.= 0.21E+03            
+****  Iter=   56        Resid= 0.59E+05        Relat. res.= 0.21E+03            
+****  Iter=   57        Resid= 0.50E+05        Relat. res.= 0.18E+03            
+****  Iter=   58        Resid= 0.47E+05        Relat. res.= 0.17E+03            
+****  Iter=   59        Resid= 0.44E+05        Relat. res.= 0.16E+03            
+****  Iter=   60        Resid= 0.39E+05        Relat. res.= 0.14E+03            
+****  Iter=   61        Resid= 0.35E+05        Relat. res.= 0.12E+03            
+****  Iter=   62        Resid= 0.32E+05        Relat. res.= 0.11E+03            
+****  Iter=   63        Resid= 0.29E+05        Relat. res.= 0.10E+03            
+****  Iter=   64        Resid= 0.26E+05        Relat. res.= 0.94E+02            
+****  Iter=   65        Resid= 0.24E+05        Relat. res.= 0.87E+02            
+****  Iter=   66        Resid= 0.23E+05        Relat. res.= 0.82E+02            
+****  Iter=   67        Resid= 0.23E+05        Relat. res.= 0.83E+02            
+****  Iter=   68        Resid= 0.23E+05        Relat. res.= 0.83E+02            
+****  Iter=   69        Resid= 0.23E+05        Relat. res.= 0.81E+02            
+****  Iter=   70        Resid= 0.24E+05        Relat. res.= 0.84E+02            
+****  Iter=   71        Resid= 0.24E+05        Relat. res.= 0.84E+02            
+****  Iter=   72        Resid= 0.25E+05        Relat. res.= 0.89E+02            
+****  Iter=   73        Resid= 0.25E+05        Relat. res.= 0.88E+02            
+****  Iter=   74        Resid= 0.26E+05        Relat. res.= 0.91E+02            
+****  Iter=   75        Resid= 0.26E+05        Relat. res.= 0.93E+02            
+****  Iter=   76        Resid= 0.26E+05        Relat. res.= 0.93E+02            
+****  Iter=   77        Resid= 0.25E+05        Relat. res.= 0.89E+02            
+****  Iter=   78        Resid= 0.24E+05        Relat. res.= 0.86E+02            
+****  Iter=   79        Resid= 0.23E+05        Relat. res.= 0.83E+02            
+****  Iter=   80        Resid= 0.23E+05        Relat. res.= 0.82E+02            
+****  Iter=   81        Resid= 0.20E+05        Relat. res.= 0.72E+02            
+****  Iter=   82        Resid= 0.21E+05        Relat. res.= 0.76E+02            
+****  Iter=   83        Resid= 0.20E+05        Relat. res.= 0.69E+02            
+****  Iter=   84        Resid= 0.18E+05        Relat. res.= 0.65E+02            
+****  Iter=   85        Resid= 0.16E+05        Relat. res.= 0.58E+02            
+****  Iter=   86        Resid= 0.18E+05        Relat. res.= 0.63E+02            
+****  Iter=   87        Resid= 0.17E+05        Relat. res.= 0.62E+02            
+****  Iter=   88        Resid= 0.17E+05        Relat. res.= 0.62E+02            
+****  Iter=   89        Resid= 0.15E+05        Relat. res.= 0.54E+02            
+****  Iter=   90        Resid= 0.15E+05        Relat. res.= 0.53E+02            
+****  Iter=   91        Resid= 0.13E+05        Relat. res.= 0.48E+02            
+****  Iter=   92        Resid= 0.12E+05        Relat. res.= 0.43E+02            
+****  Iter=   93        Resid= 0.12E+05        Relat. res.= 0.41E+02            
+****  Iter=   94        Resid= 0.11E+05        Relat. res.= 0.40E+02            
+****  Iter=   95        Resid= 0.11E+05        Relat. res.= 0.39E+02            
+****  Iter=   96        Resid= 0.11E+05        Relat. res.= 0.40E+02            
+****  Iter=   97        Resid= 0.12E+05        Relat. res.= 0.41E+02            
+****  Iter=   98        Resid= 0.12E+05        Relat. res.= 0.41E+02            
+****  Iter=   99        Resid= 0.12E+05        Relat. res.= 0.41E+02            
+****  Iter=  100        Resid= 0.11E+05        Relat. res.= 0.41E+02            
+****  Iter=  101        Resid= 0.11E+05        Relat. res.= 0.41E+02            
+****  Iter=  102        Resid= 0.11E+05        Relat. res.= 0.39E+02            
+****  Iter=  103        Resid= 0.10E+05        Relat. res.= 0.37E+02            
+****  Iter=  104        Resid= 0.11E+05        Relat. res.= 0.38E+02            
+****  Iter=  105        Resid= 0.11E+05        Relat. res.= 0.39E+02            
+****  Iter=  106        Resid= 0.11E+05        Relat. res.= 0.39E+02            
+****  Iter=  107        Resid= 0.11E+05        Relat. res.= 0.38E+02            
+****  Iter=  108        Resid= 0.11E+05        Relat. res.= 0.38E+02            
+****  Iter=  109        Resid= 0.11E+05        Relat. res.= 0.38E+02            
+****  Iter=  110        Resid= 0.10E+05        Relat. res.= 0.37E+02            
+****  Iter=  111        Resid= 0.10E+05        Relat. res.= 0.36E+02            
+****  Iter=  112        Resid= 0.92E+04        Relat. res.= 0.33E+02            
+****  Iter=  113        Resid= 0.89E+04        Relat. res.= 0.32E+02            
+****  Iter=  114        Resid= 0.82E+04        Relat. res.= 0.29E+02            
+****  Iter=  115        Resid= 0.75E+04        Relat. res.= 0.27E+02            
+****  Iter=  116        Resid= 0.67E+04        Relat. res.= 0.24E+02            
+****  Iter=  117        Resid= 0.58E+04        Relat. res.= 0.21E+02            
+****  Iter=  118        Resid= 0.50E+04        Relat. res.= 0.18E+02            
+****  Iter=  119        Resid= 0.42E+04        Relat. res.= 0.15E+02            
+****  Iter=  120        Resid= 0.39E+04        Relat. res.= 0.14E+02            
+****  Iter=  121        Resid= 0.39E+04        Relat. res.= 0.14E+02            
+****  Iter=  122        Resid= 0.36E+04        Relat. res.= 0.13E+02            
+****  Iter=  123        Resid= 0.35E+04        Relat. res.= 0.12E+02            
+****  Iter=  124        Resid= 0.31E+04        Relat. res.= 0.11E+02            
+****  Iter=  125        Resid= 0.26E+04        Relat. res.= 0.92E+01            
+****  Iter=  126        Resid= 0.27E+04        Relat. res.= 0.97E+01            
+****  Iter=  127        Resid= 0.25E+04        Relat. res.= 0.88E+01            
+****  Iter=  128        Resid= 0.28E+04        Relat. res.= 0.98E+01            
+****  Iter=  129        Resid= 0.26E+04        Relat. res.= 0.92E+01            
+****  Iter=  130        Resid= 0.24E+04        Relat. res.= 0.84E+01            
+****  Iter=  131        Resid= 0.25E+04        Relat. res.= 0.88E+01            
+****  Iter=  132        Resid= 0.25E+04        Relat. res.= 0.90E+01            
+****  Iter=  133        Resid= 0.24E+04        Relat. res.= 0.86E+01            
+****  Iter=  134        Resid= 0.23E+04        Relat. res.= 0.83E+01            
+****  Iter=  135        Resid= 0.22E+04        Relat. res.= 0.76E+01            
+****  Iter=  136        Resid= 0.19E+04        Relat. res.= 0.68E+01            
+****  Iter=  137        Resid= 0.20E+04        Relat. res.= 0.71E+01            
+****  Iter=  138        Resid= 0.19E+04        Relat. res.= 0.68E+01            
+****  Iter=  139        Resid= 0.20E+04        Relat. res.= 0.71E+01            
+****  Iter=  140        Resid= 0.20E+04        Relat. res.= 0.72E+01            
+****  Iter=  141        Resid= 0.19E+04        Relat. res.= 0.69E+01            
+****  Iter=  142        Resid= 0.19E+04        Relat. res.= 0.66E+01            
+****  Iter=  143        Resid= 0.18E+04        Relat. res.= 0.65E+01            
+****  Iter=  144        Resid= 0.18E+04        Relat. res.= 0.65E+01            
+****  Iter=  145        Resid= 0.18E+04        Relat. res.= 0.64E+01            
+****  Iter=  146        Resid= 0.17E+04        Relat. res.= 0.61E+01            
+****  Iter=  147        Resid= 0.16E+04        Relat. res.= 0.56E+01            
+****  Iter=  148        Resid= 0.15E+04        Relat. res.= 0.54E+01            
+****  Iter=  149        Resid= 0.15E+04        Relat. res.= 0.52E+01            
+****  Iter=  150        Resid= 0.15E+04        Relat. res.= 0.53E+01            
+****  Iter=  151        Resid= 0.14E+04        Relat. res.= 0.50E+01            
+****  Iter=  152        Resid= 0.11E+04        Relat. res.= 0.40E+01            
+****  Iter=  153        Resid= 0.10E+04        Relat. res.= 0.36E+01            
+****  Iter=  154        Resid= 0.91E+03        Relat. res.= 0.32E+01            
+****  Iter=  155        Resid= 0.91E+03        Relat. res.= 0.32E+01            
+****  Iter=  156        Resid= 0.84E+03        Relat. res.= 0.30E+01            
+****  Iter=  157        Resid= 0.72E+03        Relat. res.= 0.26E+01            
+****  Iter=  158        Resid= 0.61E+03        Relat. res.= 0.22E+01            
+****  Iter=  159        Resid= 0.57E+03        Relat. res.= 0.20E+01            
+****  Iter=  160        Resid= 0.47E+03        Relat. res.= 0.17E+01            
+****  Iter=  161        Resid= 0.42E+03        Relat. res.= 0.15E+01            
+****  Iter=  162        Resid= 0.37E+03        Relat. res.= 0.13E+01            
+****  Iter=  163        Resid= 0.30E+03        Relat. res.= 0.11E+01            
+****  Iter=  164        Resid= 0.27E+03        Relat. res.= 0.98E+00            
+****  Iter=  165        Resid= 0.24E+03        Relat. res.= 0.84E+00            
+****  Iter=  166        Resid= 0.23E+03        Relat. res.= 0.83E+00            
+****  Iter=  167        Resid= 0.21E+03        Relat. res.= 0.73E+00            
+****  Iter=  168        Resid= 0.19E+03        Relat. res.= 0.68E+00            
+****  Iter=  169        Resid= 0.18E+03        Relat. res.= 0.63E+00            
+****  Iter=  170        Resid= 0.16E+03        Relat. res.= 0.57E+00            
+****  Iter=  171        Resid= 0.14E+03        Relat. res.= 0.50E+00            
+****  Iter=  172        Resid= 0.12E+03        Relat. res.= 0.44E+00            
+****  Iter=  173        Resid= 0.11E+03        Relat. res.= 0.39E+00            
+****  Iter=  174        Resid= 0.80E+02        Relat. res.= 0.28E+00            
+****  Iter=  175        Resid= 0.67E+02        Relat. res.= 0.24E+00            
+****  Iter=  176        Resid= 0.36E+02        Relat. res.= 0.13E+00            
+****  Iter=  177        Resid= 0.34E+02        Relat. res.= 0.12E+00            
+****  Iter=  178        Resid= 0.32E+02        Relat. res.= 0.11E+00            
+****  Iter=  179        Resid= 0.33E+02        Relat. res.= 0.12E+00            
+****  Iter=  180        Resid= 0.35E+02        Relat. res.= 0.13E+00            
+****  Iter=  181        Resid= 0.32E+02        Relat. res.= 0.11E+00            
+****  Iter=  182        Resid= 0.39E+02        Relat. res.= 0.14E+00            
+****  Iter=  183        Resid= 0.39E+02        Relat. res.= 0.14E+00            
+****  Iter=  184        Resid= 0.38E+02        Relat. res.= 0.14E+00            
+****  Iter=  185        Resid= 0.35E+02        Relat. res.= 0.13E+00            
+****  Iter=  186        Resid= 0.31E+02        Relat. res.= 0.11E+00            
+****  Iter=  187        Resid= 0.30E+02        Relat. res.= 0.11E+00            
+****  Iter=  188        Resid= 0.22E+02        Relat. res.= 0.76E-01            
+****  Iter=  189        Resid= 0.16E+02        Relat. res.= 0.57E-01            
+****  Iter=  190        Resid= 0.16E+02        Relat. res.= 0.55E-01            
+****  Iter=  191        Resid= 0.14E+02        Relat. res.= 0.51E-01            
+****  Iter=  192        Resid= 0.13E+02        Relat. res.= 0.48E-01            
+****  Iter=  193        Resid= 0.11E+02        Relat. res.= 0.39E-01            
+****  Iter=  194        Resid= 0.12E+02        Relat. res.= 0.44E-01            
+****  Iter=  195        Resid= 0.89E+01        Relat. res.= 0.32E-01            
+****  Iter=  196        Resid= 0.82E+01        Relat. res.= 0.29E-01            
+****  Iter=  197        Resid= 0.66E+01        Relat. res.= 0.23E-01            
+****  Iter=  198        Resid= 0.62E+01        Relat. res.= 0.22E-01            
+****  Iter=  199        Resid= 0.58E+01        Relat. res.= 0.21E-01            
+****  Iter=  200        Resid= 0.58E+01        Relat. res.= 0.20E-01            
+****  Iter=  201        Resid= 0.55E+01        Relat. res.= 0.20E-01            
+****  Iter=  202        Resid= 0.46E+01        Relat. res.= 0.16E-01            
+****  Iter=  203        Resid= 0.37E+01        Relat. res.= 0.13E-01            
+****  Iter=  204        Resid= 0.33E+01        Relat. res.= 0.12E-01            
+****  Iter=  205        Resid= 0.31E+01        Relat. res.= 0.11E-01            
+****  Iter=  206        Resid= 0.25E+01        Relat. res.= 0.90E-02            
+****  Iter=  207        Resid= 0.25E+01        Relat. res.= 0.88E-02            
+****  Iter=  208        Resid= 0.23E+01        Relat. res.= 0.83E-02            
+****  Iter=  209        Resid= 0.19E+01        Relat. res.= 0.67E-02            
+****  Iter=  210        Resid= 0.17E+01        Relat. res.= 0.59E-02            
+****  Iter=  211        Resid= 0.15E+01        Relat. res.= 0.54E-02            
+****  Iter=  212        Resid= 0.12E+01        Relat. res.= 0.42E-02            
+****  Iter=  213        Resid= 0.11E+01        Relat. res.= 0.38E-02            
+****  Iter=  214        Resid= 0.99E+00        Relat. res.= 0.35E-02            
+****  Iter=  215        Resid= 0.87E+00        Relat. res.= 0.31E-02            
+****  Iter=  216        Resid= 0.85E+00        Relat. res.= 0.30E-02            
+****  Iter=  217        Resid= 0.72E+00        Relat. res.= 0.26E-02            
+****  Iter=  218        Resid= 0.56E+00        Relat. res.= 0.20E-02            
+****  Iter=  219        Resid= 0.47E+00        Relat. res.= 0.17E-02            
+****  Iter=  220        Resid= 0.43E+00        Relat. res.= 0.15E-02            
+****  Iter=  221        Resid= 0.38E+00        Relat. res.= 0.14E-02            
+****  Iter=  222        Resid= 0.31E+00        Relat. res.= 0.11E-02            
+****  Iter=  223        Resid= 0.24E+00        Relat. res.= 0.84E-03            
+****  Iter=  224        Resid= 0.20E+00        Relat. res.= 0.71E-03            
+****  Iter=  225        Resid= 0.14E+00        Relat. res.= 0.48E-03            
+****  Iter=  226        Resid= 0.10E+00        Relat. res.= 0.35E-03            
+****  Iter=  227        Resid= 0.92E-01        Relat. res.= 0.33E-03            
+****  Iter=  228        Resid= 0.90E-01        Relat. res.= 0.32E-03            
+****  Iter=  229        Resid= 0.82E-01        Relat. res.= 0.29E-03            
+****  Iter=  230        Resid= 0.82E-01        Relat. res.= 0.29E-03            
+****  Iter=  231        Resid= 0.83E-01        Relat. res.= 0.30E-03            
+****  Iter=  232        Resid= 0.87E-01        Relat. res.= 0.31E-03            
+****  Iter=  233        Resid= 0.84E-01        Relat. res.= 0.30E-03            
+****  Iter=  234        Resid= 0.98E-01        Relat. res.= 0.35E-03            
+****  Iter=  235        Resid= 0.86E-01        Relat. res.= 0.30E-03            
+****  Iter=  236        Resid= 0.86E-01        Relat. res.= 0.31E-03            
+****  Iter=  237        Resid= 0.77E-01        Relat. res.= 0.27E-03            
+****  Iter=  238        Resid= 0.79E-01        Relat. res.= 0.28E-03            
+****  Iter=  239        Resid= 0.67E-01        Relat. res.= 0.24E-03            
+****  Iter=  240        Resid= 0.59E-01        Relat. res.= 0.21E-03            
+****  Iter=  241        Resid= 0.46E-01        Relat. res.= 0.16E-03            
+****  Iter=  242        Resid= 0.45E-01        Relat. res.= 0.16E-03            
+****  Iter=  243        Resid= 0.39E-01        Relat. res.= 0.14E-03            
+****  Iter=  244        Resid= 0.36E-01        Relat. res.= 0.13E-03            
+****  Iter=  245        Resid= 0.32E-01        Relat. res.= 0.11E-03            
+****  Iter=  246        Resid= 0.28E-01        Relat. res.= 0.98E-04            
+****  Iter=  247        Resid= 0.25E-01        Relat. res.= 0.90E-04            
+****  Iter=  248        Resid= 0.26E-01        Relat. res.= 0.92E-04            
+****  Iter=  249        Resid= 0.24E-01        Relat. res.= 0.83E-04            
+****  Iter=  250        Resid= 0.24E-01        Relat. res.= 0.84E-04            
+****  Iter=  251        Resid= 0.24E-01        Relat. res.= 0.87E-04            
+****  Iter=  252        Resid= 0.24E-01        Relat. res.= 0.84E-04            
+****  Iter=  253        Resid= 0.20E-01        Relat. res.= 0.71E-04            
+****  Iter=  254        Resid= 0.19E-01        Relat. res.= 0.67E-04            
+****  Iter=  255        Resid= 0.19E-01        Relat. res.= 0.67E-04            
+****  Iter=  256        Resid= 0.16E-01        Relat. res.= 0.55E-04            
+****  Iter=  257        Resid= 0.15E-01        Relat. res.= 0.53E-04            
+****  Iter=  258        Resid= 0.14E-01        Relat. res.= 0.51E-04            
+****  Iter=  259        Resid= 0.13E-01        Relat. res.= 0.46E-04            
+****  Iter=  260        Resid= 0.85E-02        Relat. res.= 0.30E-04            
+****  Iter=  261        Resid= 0.65E-02        Relat. res.= 0.23E-04            
+****  Iter=  262        Resid= 0.59E-02        Relat. res.= 0.21E-04            
+****  Iter=  263        Resid= 0.50E-02        Relat. res.= 0.18E-04            
+****  Iter=  264        Resid= 0.34E-02        Relat. res.= 0.12E-04            
+****  Iter=  265        Resid= 0.31E-02        Relat. res.= 0.11E-04            
+****  Iter=  266        Resid= 0.28E-02        Relat. res.= 0.99E-05            
+****  Iter=  267        Resid= 0.23E-02        Relat. res.= 0.82E-05            
+****  Iter=  268        Resid= 0.14E-02        Relat. res.= 0.51E-05            
+****  Iter=  269        Resid= 0.12E-02        Relat. res.= 0.42E-05            
+****  Iter=  270        Resid= 0.81E-03        Relat. res.= 0.29E-05            
+****  Iter=  271        Resid= 0.74E-03        Relat. res.= 0.26E-05            
+****  Iter=  272        Resid= 0.77E-03        Relat. res.= 0.27E-05            
+****  Iter=  273        Resid= 0.65E-03        Relat. res.= 0.23E-05            
+****  Iter=  274        Resid= 0.42E-03        Relat. res.= 0.15E-05            
+****  Iter=  275        Resid= 0.33E-03        Relat. res.= 0.12E-05            
+****  Iter=  276        Resid= 0.33E-03        Relat. res.= 0.12E-05            
+****  Iter=  277        Resid= 0.28E-03        Relat. res.= 0.99E-06            
+****  Iter=  278        Resid= 0.20E-03        Relat. res.= 0.70E-06            
+****  Iter=  279        Resid= 0.13E-03        Relat. res.= 0.47E-06            
+****  Iter=  280        Resid= 0.13E-03        Relat. res.= 0.46E-06            
+****  Iter=  281        Resid= 0.11E-03        Relat. res.= 0.39E-06            
+****  Iter=  282        Resid= 0.76E-04        Relat. res.= 0.27E-06            
+****  Iter=  283        Resid= 0.59E-04        Relat. res.= 0.21E-06            
+****  Iter=  284        Resid= 0.52E-04        Relat. res.= 0.19E-06            
+****  Iter=  285        Resid= 0.54E-04        Relat. res.= 0.19E-06            
+****  Iter=  286        Resid= 0.46E-04        Relat. res.= 0.16E-06            
+****  Iter=  287        Resid= 0.51E-04        Relat. res.= 0.18E-06            
+****  Iter=  288        Resid= 0.51E-04        Relat. res.= 0.18E-06            
+****  Iter=  289        Resid= 0.50E-04        Relat. res.= 0.18E-06            
+****  Iter=  290        Resid= 0.35E-04        Relat. res.= 0.12E-06            
+****  Iter=  291        Resid= 0.28E-04        Relat. res.= 0.10E-06            
+****  Iter=  292        Resid= 0.26E-04        Relat. res.= 0.93E-07            
+****  Iter=  293        Resid= 0.26E-04        Relat. res.= 0.93E-07            
+****  Iter=  294        Resid= 0.23E-04        Relat. res.= 0.82E-07            
+****  Iter=  295        Resid= 0.18E-04        Relat. res.= 0.64E-07            
+****  Iter=  296        Resid= 0.13E-04        Relat. res.= 0.47E-07            
+****  Iter=  297        Resid= 0.12E-04        Relat. res.= 0.43E-07            
+****  Iter=  298        Resid= 0.91E-05        Relat. res.= 0.32E-07            
+****  Iter=  299        Resid= 0.56E-05        Relat. res.= 0.20E-07            
+****  Iter=  300        Resid= 0.44E-05        Relat. res.= 0.15E-07            
+****  Iter=  301        Resid= 0.38E-05        Relat. res.= 0.14E-07            
+****  Iter=  302        Resid= 0.36E-05        Relat. res.= 0.13E-07            
+****  Iter=  303        Resid= 0.28E-05        Relat. res.= 0.98E-08            
+****  Iter=  304        Resid= 0.23E-05        Relat. res.= 0.82E-08            
+****  Iter=  305        Resid= 0.18E-05        Relat. res.= 0.65E-08            
+****  Iter=  306        Resid= 0.16E-05        Relat. res.= 0.58E-08            
+****  Iter=  307        Resid= 0.14E-05        Relat. res.= 0.49E-08            
+****  Iter=  308        Resid= 0.11E-05        Relat. res.= 0.39E-08            
+****  Iter=  309        Resid= 0.76E-06        Relat. res.= 0.27E-08            
+****  Iter=  310        Resid= 0.68E-06        Relat. res.= 0.24E-08            
+****  Iter=  311        Resid= 0.61E-06        Relat. res.= 0.22E-08            
+****  Iter=  312        Resid= 0.43E-06        Relat. res.= 0.15E-08            
+****  Iter=  313        Resid= 0.26E-06        Relat. res.= 0.94E-09            
+****  Iter=  314        Resid= 0.17E-06        Relat. res.= 0.60E-09            
+****  Iter=  315        Resid= 0.15E-06        Relat. res.= 0.55E-09            
+****  Iter=  316        Resid= 0.14E-06        Relat. res.= 0.48E-09            
+****  Iter=  317        Resid= 0.12E-06        Relat. res.= 0.42E-09            
+****  Iter=  318        Resid= 0.94E-07        Relat. res.= 0.33E-09            
+****  Iter=  319        Resid= 0.85E-07        Relat. res.= 0.30E-09            
+****  Iter=  320        Resid= 0.82E-07        Relat. res.= 0.29E-09            
+****  Iter=  321        Resid= 0.86E-07        Relat. res.= 0.30E-09            
+****  Iter=  322        Resid= 0.86E-07        Relat. res.= 0.30E-09            
+****  Iter=  323        Resid= 0.91E-07        Relat. res.= 0.32E-09            
+****  Iter=  324        Resid= 0.11E-06        Relat. res.= 0.40E-09            
+****  Iter=  325        Resid= 0.11E-06        Relat. res.= 0.37E-09            
+****  Iter=  326        Resid= 0.13E-06        Relat. res.= 0.46E-09            
+****  Iter=  327        Resid= 0.14E-06        Relat. res.= 0.50E-09            
+****  Iter=  328        Resid= 0.16E-06        Relat. res.= 0.58E-09            
+****  Iter=  329        Resid= 0.18E-06        Relat. res.= 0.65E-09            
+****  Iter=  330        Resid= 0.20E-06        Relat. res.= 0.71E-09            
+****  Iter=  331        Resid= 0.23E-06        Relat. res.= 0.82E-09            
+****  Iter=  332        Resid= 0.29E-06        Relat. res.= 0.10E-08            
+****  Iter=  333        Resid= 0.31E-06        Relat. res.= 0.11E-08            
+****  Iter=  334        Resid= 0.31E-06        Relat. res.= 0.11E-08            
+****  Iter=  335        Resid= 0.31E-06        Relat. res.= 0.11E-08            
+****  Iter=  336        Resid= 0.27E-06        Relat. res.= 0.96E-09            
+****  Iter=  337        Resid= 0.24E-06        Relat. res.= 0.83E-09            
+****  Iter=  338        Resid= 0.18E-06        Relat. res.= 0.64E-09            
+****  Iter=  339        Resid= 0.15E-06        Relat. res.= 0.55E-09            
+****  Iter=  340        Resid= 0.13E-06        Relat. res.= 0.46E-09            
+****  Iter=  341        Resid= 0.11E-06        Relat. res.= 0.38E-09            
+****  Iter=  342        Resid= 0.88E-07        Relat. res.= 0.31E-09            
+****  Iter=  343        Resid= 0.53E-07        Relat. res.= 0.19E-09            
+****  Iter=  344        Resid= 0.31E-07        Relat. res.= 0.11E-09            
+****  Iter=  345        Resid= 0.28E-07        Relat. res.= 0.99E-10            
+****  - Convergence reached in  345 iterations -                                
+
+****     level 2   #call=   345   #cycle=   345   mean=   1.00    max=  1       
+
+****       Number of work units:   191.88 per digit of accuracy (*)             
+****    Solution time (Elapsed):     1.25E+01 seconds                           
+
+*** (*) 1 work unit represents the cost of 1 (fine grid) residual evaluation    
+****LEAVING AGMG * (MEMORY RELEASED) ****************************************** 
+Convergence flag = 
+     0
+
+Relative residual = 
+   2.9435e-08
+
+Relative residual with "\" = 
+   1.6760e-08
+
+
+Question: Why is the Relative Residual not changing even after changing the maxiterations and tolerance??
+
+
+
+
