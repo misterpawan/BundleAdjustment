@@ -103,6 +103,8 @@ alphas=[];
 % Compute Cholesky factor of weight matrix.
 R=chol(W);
 
+addpath('../cameramodel');
+cd '../cameramodel';
 % Handle to weighted residual function. Works for single-return
 % call only. Used by linesearch.
 wResFun=@(x)R*feval(resFun,x);
@@ -168,6 +170,29 @@ while true
     D=sparse(1:length(Jn),1:length(Jn),1./Jn,length(Jn),length(Jn));
     % Scale.
     Js=J*D;
+
+    
+    %fprintf("\nThe size of Js is : %d %d\n",size(Js,1),size(Js,2)); //
+    %181122 x 79316 - roma
+    %fprintf("\nThe size of Js is : %d %d\n",size(Js,1),size(Js,2));
+    %//394165 x 55421 - st pierre
+    %break;
+    
+    %obtain the hessian matrix here
+    %{
+    Hs = Js'*Js;
+    %fprintf("\nThe size of Js is : %d %d\n",size(Hs,1),size(Hs,2)); //
+    %79316 x 79316 - roma
+    fprintf("\nThe size of Hs is : %d %d\n",size(Hs,1),size(Hs,2)); //55421
+    x 55421 - stpierre
+    mat_dump_coo(Hs); %dumping the matrix in a file
+    spy(Hs);
+    saveas(gcf,'\home\iiit\shrutimoy.das\BundleAdjustment\Hessian_stp.png');
+    break; % this is to come out of the program once the Hessian structure is achieved.
+    %}
+
+    % #### Apply PCG and preconditioners here.
+
     % Solve scaled normal equations.
     q=(Js'*Js)\-(Js'*r);
     % Unscale solution.
@@ -239,6 +264,7 @@ if nargout>3
                  'scaled',struct('D',D,'J',Js),...
                  'p',p);
 end
+cd '../lsa';
 
 % Trim unused trace columns.
 if nargout>4
