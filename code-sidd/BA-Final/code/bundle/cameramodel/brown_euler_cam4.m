@@ -18,6 +18,8 @@ function [f,J,JJ]=brown_euler_cam4(x,s)
 %   See also PROB2DBATSTRUCT, BUNDLE, GAUSS_NEWTON_ARMIJO,
 %       LEVENBERG_MARQUARDT, LEVENBERG_MARQUARDT_POWELL.
 
+addpath('../cammodel');
+
 % Update DBAT structure with current estimates in x.
 s=deserialize(s,x);
 
@@ -107,6 +109,8 @@ switch distModel
         % ...OP residuals...
         f(s.post.res.ix.OP)=fPre.OP;
 
+        %fprintf("\nCASE 1:The size of J is : %d x %d\n", length(f),length(x));
+
         J=sparse(length(f),length(x));
         % Insert image point jacobians...
         J(s.post.res.ix.IP,s.bundle.serial.IO.dest)=dIO1+dIO2;
@@ -169,6 +173,8 @@ switch distModel
         f(s.post.res.ix.EO)=fPre.EO;
         % ...OP residuals...
         f(s.post.res.ix.OP)=fPre.OP;
+
+        %fprintf("\nCASE 2:The size of J is : %d x %d\n", length(f),s.bundle.serial.n);//181122x79316
 
         J=spalloc(length(f),s.bundle.serial.n,nnz(JObs)+nnz(Jpre.IO)+...
                   nnz(Jpre.EO)+nnz(Jpre.OP));
@@ -274,6 +280,8 @@ switch distModel
         dEO2=dEO+dxy*dEO;
         dOP2=dOP+dxy*dOP;
         
+        %fprintf("\nCASE 3:The size of J is : %d x %d\n", length(f),length(x));
+
         J=sparse(length(f),length(x));
         % Insert image point jacobians...
         J(s.post.res.ix.IP,s.bundle.serial.IO.dest)=dIO1;
