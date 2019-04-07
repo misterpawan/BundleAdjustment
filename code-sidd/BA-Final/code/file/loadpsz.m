@@ -159,6 +159,7 @@ end
 DelayedWaitBar(0.25);
 
 % Load project data from the main xml file.
+addpath('../xchg/xml2struct');
 fName=fullfile(unpackDir,'doc.xml');
 s=dbatxml2struct(fName);
 DelayedWaitBar(0.3);
@@ -270,6 +271,7 @@ P=nan(3,4,length(cameraIds));
 CC=nan(3,length(cameraIds));
 
 % Prior observations of camera centers
+addpath('../photogrammetry');
 priorCamPos=struct('pos',nan(3,length(cameraIds)),...
                    'std',nan(3,length(cameraIds)),...
                    'cov',nan(3,3,length(cameraIds)),...
@@ -382,6 +384,7 @@ else
 end
 
 % Object points are in local coordinates.
+addpath('../xchg/ply');
 if ~isempty(ptCloud) && ~isempty(ptCloud.points.Attributes.path)
     [~,~,points,~]=ply_read(fullfile(unpackDir,ptCloud.points.Attributes.path),'tri');
 else
