@@ -36,10 +36,12 @@ inputFile=fullfile(inputDir,'psprojects','C5.psz');
 % Report file name.
 reportFile=fullfile(inputDir,'dbatexports','stpierrePS_C5-dbatreport.txt');
 
+addpath('../file');
 fprintf('Loading PhotoScan project file %s...',inputFile);
 psz=loadpsz(inputFile);
 fprintf('done.\n');
 
+addpath('../misc');
 [prob,pmReport,pts3d,pts2d]=ps2pmstruct(psz);
 
 probRaw=prob; %#ok<NASGU>
@@ -116,6 +118,7 @@ s0=setcamest(s0,'all','not','sk','as');
 fprintf('\nRunning the bundle with damping %s...\n',damping);
 
 % Run the bundle.
+addpath('../bundle');
 [result,ok,iters,sigma0,E]=bundle(s0,damping,'trace');
     
 if ok
@@ -133,6 +136,7 @@ E=bundle_cov(result,E,'prepare');
 
 fprintf('\nBundle result file %s generated.\n',reportFile);
 
+addpath('../plotting');
 % Don't plot iteration history for the 26000+ object points.
 h=plotparams(result,E,'noop');
 

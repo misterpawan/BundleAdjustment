@@ -257,9 +257,12 @@ if any(s.bundle.est.IO(4:5,modelsWithoutB))
              'supported by lens distortion model %d! Results will ' ...
              'be inaccurate.'],usedBadModels);
 end
-    
+
+addpath('../');
+cd ..;
 % Version string.
 [v,d]=dbatversion;
+cd bundle;
 E=struct('maxIter',maxIter,'convTol',convTol,'absTerm',absTerm, ...
          'singularTest',singularTest, 'chirality',veto,'dateStamp', ...
          datestr(now), 'version',sprintf('%s (%s)',v,d));
@@ -284,6 +287,9 @@ switch lower(damping)
     
     % Call Gauss-Newton-Armijo optimization routine. The vector alpha is
     % returned with the step lengths used at each iteration.
+
+    addpath('lsa');
+    cd 'lsa';
     stopWatch=cputime;
     [x,code,iters,final,X,res,alpha]=gauss_newton_armijo(resFun, ...
                                                       vetoFun,x0,W, ...
@@ -292,6 +298,7 @@ switch lower(damping)
                                                       singularTest, ...
                                                       mu,alphaMin);  
     time=cputime-stopWatch;
+    cd '..';
     E.damping=struct('name','gna','alpha',alpha,'mu',mu,'alphaMin',alphaMin);
   case 'lm'
     % Original Levenberg-Marquardt "lambda"-version.

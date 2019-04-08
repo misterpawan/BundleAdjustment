@@ -47,8 +47,12 @@ inputFile=fullfile(inputDir,'pmexports','roma-pmexport.txt');
 % Report file name.
 reportFile=fullfile(inputDir,'dbatexports','roma-dbatreport.txt');;
 
+addpath('../file');
+
+cd '../file';
 fprintf('Loading data file %s...',inputFile);
 prob=loadpm(inputFile);
+cd '../demo';
 probRaw=prob;
 if any(isnan(cat(2,prob.images.imSz)))
     error('Image sizes unknown!');
@@ -56,7 +60,10 @@ end
 disp('done.')
 
 % Convert loaded PhotoModeler data to DBAT struct.
+addpath('../misc');
+cd '../misc';
 s0=prob2dbatstruct(prob);
+cd '../demo';
 ss0=s0;
 
 % Default distortion model is now 3: With aspect/skew.
@@ -80,16 +87,22 @@ s0.EO.val(1:3,:)=s0.EO.val(1:3,:)+randn(3,size(s0.EO.val,2))*noiseLevel;
 s0=clearop(s0);
 
 % Compute initial OP values by forward intersection.
+addpath('../photogrammetry');
+cd('../photogrammetry');
 s1=forwintersect(s0,'all',true);
+cd '../demo';
 
 % Set up for dependent relative orientation with base camera 1.
 s1=seteoest(s1,'depend',1);
-
+%fprintf("\nThe length of s1 is:%d x %d\n",size(s1,1),size(s1,2));
 fprintf('Running the bundle with damping %s...\n',damping);
 
+addpath('../bundle');
+cd '../bundle';
 % Run the bundle.
 [result,ok,iters,sigma0,E]=bundle(s1,damping,'trace');
-    
+cd '../demo';
+
 if ok
     fprintf('Bundle ok after %d iterations with sigma0=%.2f (%.2f pixels)\n',...
             iters,sigma0,sigma0*s1.IP.sigmas(1));
@@ -105,6 +118,8 @@ E=bundle_cov(result,E,'prepare');
 
 fprintf('\nBundle result file %s generated.\n',reportFile);
 
+addpath('../plotting');
+cd '../plotting';
 % Don't plot iteration history for the 26000+ object points.
 h=plotparams(result,E,'noop');
 
@@ -124,6 +139,8 @@ plotnetwork(result,E,'trans','up','align',1,'title',...
 if nargout>0
     rr=result;
 end
+
+cd '../demo';
 
 imName='';
 imNo=1;
