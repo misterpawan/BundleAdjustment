@@ -5,7 +5,9 @@
 
 #include "Math/v3d_linearbase.h"
 
+#include <stdio.h>
 #include <iostream>
+
 
 namespace V3D
 {
@@ -710,22 +712,63 @@ namespace V3D
       int const * rowIdxs   = A.getRowIndices();
       int const * destIdxs  = A.getDestIndices();
       Elem const * values = A.getValues();
+      
+      // Dump Matrix in Matlab Matrix Format - indexing with 1
 
-      cout << "colStarts = ";
-      for (int k = 0; k <= nCols; ++k) cout << colStarts[k] << " ";
-      cout << endl;
+      //int count = 0;
+      int j, k;
+      freopen("test9.txt","w",stdout);
 
-      cout << "rowIdxs = ";
-      for (int k = 0; k < nnz; ++k) cout << rowIdxs[k] << " ";
-      cout << endl;
+      for (j = 0; j < nCols; j++)
+      {
+         const int start = colStarts[j];
+         const int end   = colStarts[j+1];
 
-      cout << "destIdxs = ";
-      for (int k = 0; k < nnz; ++k) cout << destIdxs[k] << " ";
-      cout << endl;
+         for (k = start; k < end; k++)
+            cout << rowIdxs[k] + 1 << " " << j+1 << " " << values[k] << "\n";
+      }
 
-      cout << "values = ";
+      fclose(stdout);
+
+
+
+
+      // COO Format 
+      /*int diff = 0;
+      freopen("test6.txt","w",stdout);
+
+      for(int i = 0; i<nCols; i++)
+      {
+         diff = colStarts[i+1] - colStarts[i];
+
+         for(int count =0 ; count < diff; count++){
+            cout << i+1 << " " << rowIdxs[i+count] + 1 << " " << values[i+count] << "\n";
+         }
+      
+      }
+      fclose(stdout);
+      */
+
+      //cout << "colStarts = ";
+      //for (int k = 0; k <= nCols; ++k) cout << colStarts[k] << " ";
+      //cout << endl;
+
+      //cout << "rowIdxs = ";
+      //for (int k = 0; k < nnz; ++k) cout << rowIdxs[k] << " ";
+      //cout << endl;
+
+      //freopen("test6.txt","w",stdout);
+
+      //cout << "destIdxs = ";
+      //for (int k = 0; k < nnz; ++k) cout << destIdxs[k] << "\n";
+      //cout << endl;
+      //fclose(stdout);
+
+      /*cout << "values = ";
       for (int k = 0; k < nnz; ++k) cout << values[k] << " ";
       cout << endl;
+      */
+
    } // end showSparseMatrixInfo()
 
 } // end namespace V3D
