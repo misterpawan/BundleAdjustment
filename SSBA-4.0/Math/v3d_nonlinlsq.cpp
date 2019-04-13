@@ -280,6 +280,7 @@ namespace V3D
       _perm_JtJ.back() = _perm_JtJ.size() - 1;
       //cout << "_perm_JtJ = "; displayVector(_perm_JtJ);
 
+
       // Finally, compute the inverse of the full permutation.
       _invPerm_JtJ.resize(_perm_JtJ.size());
       for (size_t k = 0; k < _perm_JtJ.size(); ++k) _invPerm_JtJ[_perm_JtJ[k]] = k;
@@ -652,6 +653,13 @@ namespace V3D
 
          this->fillJtJ();
 
+         
+         //auto hess = getJtJ();
+         //showSparseMatrixInfo(_JtJ);
+         //displaySparseMatrix(_JtJ);
+
+         
+
          bool success_LDL = true;
 
          double rho = 0.0;
@@ -822,7 +830,13 @@ namespace V3D
      end:;
       if (optimizerVerbosenessLevel >= 2)
          cout << "Leaving NLSQ_LM_Optimizer::minimize()." << endl;
+
+      
+   showSparseMatrixInfo(_JtJ); // Call to Function, dumps the Matrix JtJ
+     
+
    } // end NLSQ_LM_Optimizer::minimize()
+ 
 
 } // end namespace V3D
 
