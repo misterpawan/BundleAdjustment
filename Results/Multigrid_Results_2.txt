@@ -1,0 +1,51 @@
+Size: 683394
+****ENTERING AGMG ************************************************************* 
+
+****        Number of unknowns:      683394                                     
+****                 Nonzeros :    35267876 (per row:  51.61)                   
+
+****SETUP: Coarsening by multiple pairwise aggregation                          
+****  Rmk: Setup performed assuming the matrix symmetric                        
+****       Quality threshold (BlockD):  8.00 ;  Strong diag. dom. trs: 1.29     
+****         Maximal number of passes:  2  ; Target coarsening factor: 4.00     
+****                      Threshold for rows with large pos. offdiag.: 0.45     
+                                                                                
+****                      Level:           2                                    
+****        Number of variables:      167932          (reduction ratio: 4.07)   
+****                   Nonzeros:     6613359 (per row:39.4; red. ratio: 5.33)   
+                                                                                
+****                      Level:           3                                    
+****        Number of variables:        1248          (reduction ratio:*****)   
+****                   Nonzeros:        2859 (per row: 2.3; red. ratio:*****)   
+
+****                  Grid complexity:     1.25                                 
+****              Operator complexity:     1.19                                 
+****  Theoretical Weighted complexity:     1.38 (K-cycle at each level)         
+****    Effective Weighted complexity:     1.38 (V-cycle enforced where needed) 
+
+****       Setup time (Elapsed):     1.31E+01 seconds                           
+
+****SOLUTION: flexible conjugate gradient iterations (FCG(1))                   
+****     AMG preconditioner with 1 Gauss-Seidel pre- and post-smoothing sweeps  
+****         at each level                                                      
+****  Iter=    0        Resid= 0.48E+03        Relat. res.= 0.10E+01            
+****  Iter=    1        Resid= 0.12E-07        Relat. res.= 0.25E-10            
+****  - Convergence reached in    1 iterations -                                
+
+****     level 2   #call=     1   #cycle=     0   mean=   0.00    max=  0       
+
+****       Number of work units:     0.29 per digit of accuracy (*)             
+****    Solution time (Elapsed):     1.79E-01 seconds                           
+
+*** (*) 1 work unit represents the cost of 1 (fine grid) residual evaluation    
+****LEAVING AGMG * (MEMORY RELEASED) ****************************************** 
+Elapsed time is 13.500365 seconds.
+flag = 0
+relres = 6915.84
+iters = 1
+time=13.5011
+Convergence flag = 
+     0
+
+Relative residual = 
+   6.9158e+03
