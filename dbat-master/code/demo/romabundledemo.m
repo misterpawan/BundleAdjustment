@@ -1,4 +1,6 @@
 function [rr,s0,prob]=romabundledemo(damping,doPause)
+
+
 %ROMABUNDLEDEMO Bundle demo for DBAT.
 %
 %   ROMABUNDLEDEMO runs the bundle on the PhotoModeler export file
@@ -25,7 +27,7 @@ function [rr,s0,prob]=romabundledemo(damping,doPause)
 %       and without damping", Photogrammetric Record,
 %       vol. 28(144):396-415.
 
-if nargin<1, damping='gna'; end
+if nargin<1, damping='lm'; end
 
 if nargin<2, doPause='on'; end
 
