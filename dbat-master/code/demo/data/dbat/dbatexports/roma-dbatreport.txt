@@ -10,11 +10,11 @@ Damped Bundle Adjustment Toolbox result file
          One or more of the camera station parameters has a high correlation (see below).
          One or more of the object point coordinates has a high correlation.
    Information from last bundle
-      Last Bundle Run:        13-Jan-2019 15:35:00
+      Last Bundle Run:        24-Apr-2019 23:59:31
       DBAT version:           0.8.5.1 (2019-01-13)
       MATLAB version:         9.5.0.944444 (R2018b)
       Host system:            GLNXA64 (endian=L, max #elems=281474976710655)
-      Host name:              slartibartfast
+      Host name:              <unknown>
       Status:                 OK
       Sigma0:                 0.623075
       Sigma0 (pixels):        0.623075
@@ -31,16 +31,16 @@ Damped Bundle Adjustment Toolbox result file
          Termination criteria:    relative
          Singular test:           on
          Chirality veto:          off
-         Damping:                 gna
+         Damping:                 lm
          Camera unit (cu):        mm
          Object space unit (ou):  m
          Initial value comment:   
       Total error:
          Number of stages:     1
-         Number of iterations: 5
+         Number of iterations: 6
          First error:          8608.51
          Last error:           198.805
-         Execution time (s):   4.76
+         Execution time (s):   5.94
       Lens distortion models:
          Backward (Photogrammetry) model 3
       Cameras:
@@ -737,7 +737,7 @@ Damped Bundle Adjustment Toolbox result file
                   Value:     -128.387289 deg
                   Deviation: 0.0127 deg
                Phi:
-                  Value:     39.546219 deg
+                  Value:     39.546218 deg
                   Deviation: 0.00926 deg
                Kappa:
                   Value:     -13.694991 deg
