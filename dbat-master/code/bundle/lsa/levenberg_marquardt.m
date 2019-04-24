@@ -1,5 +1,6 @@
 function [x,code,n,final,T,rr,lambdas]=levenberg_marquardt(...
     resFun,vetoFun,x0,W,maxIter,termFun,doTrace,lambda0,lambdaMin,params)
+addpath('/home/siddhant/Desktop/Research/BundleAdjustment/AGMG_3.3.4-aca/Matlab');
 %LEVENBERG_MARQUARDT Levenberg-Marquardt least squares adjustment algorithm.
 %
 %   [X,CODE,I]=LEVENBERG_MARQUARDT(RES,VETO,X0,N,TERM,TRACE,L0,MINL)
@@ -116,7 +117,10 @@ while true
     % iterations.
     while n<=maxIter
         % Solve for update p.
-        p=(JTJ+lambda*I)\(-JTr);
+        %p=(JTJ+lambda*I)\(-JTr);
+        JTJ_n = JTJ+(lambda*I);
+        b = -JTr;
+        [p,~,~,~,~] = agmg(JTJ_n,b,1,1e-10,500);
         
         % Store current residual norm and used lambda value.
         rr(end+1)=sqrt(r'*r);
