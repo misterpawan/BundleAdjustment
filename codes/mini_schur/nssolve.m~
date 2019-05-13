@@ -1,0 +1,11 @@
+function [x] = nssolve(nD, nG, E, F, LD, UD, LG, UG, y)
+    y1 = y(1:nD); y2 = y(nD+1:nD+nG); 
+    sz_y1 = size(y1), sz_y2 = size(y2)
+    
+    sz_ud = size(UD), sz_ld = size(LD), sz_lg = size(LG), 
+    sz_ug = size(UG), sz_E = size(E), sz_F = size(F)
+    
+    z1 = UD\(LD\y1); z2 = UG\(LG\(y2 - F*z1)); size(z1), size(z2)
+    x2 = z2; x1 = z1 - UD\LD\(F * x2);
+    x = [x1; x2];
+end
