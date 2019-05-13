@@ -1,6 +1,6 @@
-function [sizes_parts, B, p] = domain_decomposition(A, nparts)
-    p = size(A,1):-1:1;
-    B = A(p,p);
+function [sizes_parts, B] = domain_decomposition(A, nparts)
+    %p = size(A,1):-1:1;
+    B = A;
     end_index = size(B,1);
     for i=size(B,1):-1:1
         if find(B(i,1:i),1) == find(B(1:i,i),1) && find(B(1:i,i),1) == i 
