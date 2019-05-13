@@ -5,3 +5,5 @@ For the moment, it is for navier stokes matrices. Change it for bundle adjustmen
 Right now, the code uses independent set ordering to make domain decomposition. 
 But since bundle adjustment matrix is already in DD form, this is not required. That is the blocks D, E, F, and G can be 
 identified directly.
+
+Moreover, you may use domain_decomposition.m from the ddm folder. It does the required partitioning suitable for bundle adjustment problem.
