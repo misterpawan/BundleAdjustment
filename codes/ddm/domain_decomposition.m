@@ -1,5 +1,5 @@
-function [sizes_parts, B] = domain_decomposition(A, nparts)
-    %p = size(A,1):-1:1;
+function [sizes_parts, B,p] = domain_decomposition(A, nparts)
+    p = size(A,1):-1:1;
     B = A;
     end_index = size(B,1);
     for i=size(B,1):-1:1
