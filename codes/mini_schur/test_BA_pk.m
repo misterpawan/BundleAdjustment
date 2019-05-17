@@ -14,8 +14,7 @@ addpath(genpath('/home/pawan/work/datasets')); % from IIIT
 
 P = load('JTJ49.txt'); 
 B = spconvert(P);
-
-B = B + triu(B,1)';
+B = B + triu(B,1)'; % since matrix is stored in symm form, need to copy to lower
 
 [m,n] = size(B); b = rand(m,1);
  
@@ -29,30 +28,26 @@ sizeD = m - sizeG;
 D = A(1 : sizeD, 1 : sizeD);
 L = A(sizeD + 1: m, 1 : sizeD);
 U = L';
-G = A(sizeG + 1:m, sizeG + 1:m);
+G = A(sizeD + 1:m, sizeD + 1:m);
     
 %% Identify MSCs
 % blocks for schur complements
 nmsc = 4; 
 r = rem(sizeG, nmsc); sz = (sizeG - r)/nmsc; r1 = 1; r2 = sz;
 GS = []; %ol = 0;
-   
-%nmsc
-%sz
 
 % blocks for D: good to take same number of blocks for D as for G
 nD = nmsc; rD = rem(sizeD, nD); szD = (sizeD - rD)/nD; rD1 = 1; rD2 = szD;
-
-%nD
-%szD
-    
+  
 % overlap size
 %ol = floor(sz);
-ol = sz; % try with zero overlap
+ol = 0; % try with zero overlap
 
 %keyboard;
     
 fprintf('Computing Mini Schur complements ...\n');
+
+tic
 for i = 1 : nmsc-2
    clear PD PU PL PG
    PD = D(rD1 : rD2 + ol, rD1 : rD2 + ol); 
@@ -124,50 +119,52 @@ if (i == nmsc)
   GS(r1:r2, r1:r2) = S{i};
   GS = sparse(GS); 
 end 
+t_construct = toc;
+
+%nnz(GS)
+
+%keyboard;
        
 fprintf('done with mini Schur complements!\n'); 
 fprintf('Computing LU of MSC ...');
 tic,[LG,UG] = lu(GS);t_factor_msc = toc; fprintf('done!!!\n');
 clear GS S PD PU PL PG
         
+
+
+
+
 setup.type='ilutp'; 
 setup.droptol = 1e-03; %ntol(ii); 
 fprintf('Computing ilu(%g) of D...', setup.droptol);
-%tic;
         
 tic; 
-%[LD,UD] = ilu(D,setup); 
 [LD,UD] = lu(D);
 t_factor_d = toc;
       
 fprintf('done!!!\n'); clear D G ;
-       
-%condest(B)
+
+% preconditioner memory
+total_nnz = nnz(LG)+nnz(UG)+nnz(LD) + nnz(UD) + nnz(A)
+keyboard;
         
 %% Solve with PCG
 %precfun=@nssolve; 
-sol=zeros(m,1); tol = 1e-3; maxit = 100;
+sol=zeros(m,1); tol = 1e-5; maxit = 30;
 restart = 60;
-%try
-  fprintf('Enter GMRES...\n');
-  %tic, [x,flag,relres,iter] = pcg(B,b,tol,maxit,@nssolve2); t_pcg = toc;
-  tic, [x,flag,relres,iter] = gmres(B,b,restart,tol,maxit,@nssolve2); t_pcg = toc;
+
+fprintf('Enter GMRES...\n');
+tic, [x,flag,relres,iter] = gmres(B,b,restart,tol,maxit,@nssolve2); t_pcg = toc;
 
 %% Display output
   %its = iter;
   its = (iter(1)-1)*restart + iter(2);
   fprintf('flag: %d\nits: %d\nrelres: %d\n', flag, its, relres);
-%fprintf('time lu MSC: %g\ntime ilu D: %g\ntime PCG: %g\n', t_factor_msc, t_factor_d, t_pcg);
-  t_total = t_factor_msc + t_factor_d + t_pcg;
+  t_total = t_factor_msc + t_factor_d + t_pcg + t_construct;
   fprintf('total time: %g\n', t_total);
-  fprintf('time lu MSC: %g\ntime ilu D: %g\n\ntime PCG: %g\n', t_factor_msc, t_factor_d, t_pcg);
-%catch
-%  fprintf('ERROR in pcg aborting\n');
-%end
-%fprintf('\nDifference in residual : %g\n',norm(xx-x));
+  fprintf('time lu MSC: %g\ntime ilu D: %g\n\ntime GMRES: %g\n', t_factor_msc, t_factor_d, t_pcg);
   clear LD UD LG UG x b     
   fprintf('Normal solve time : %g\n\n',normal_solve_time);
-%  fprintf('\n\nPCG solve time : %g\n\n',t_total);   
   fprintf('tests done!!!\n');
    
 %% Functions follow ...

@@ -1,0 +1,23 @@
+% test two grid for bundle adjustment problem
+
+Problem = load('JTJ49.mat');
+A = P.A;
+
+Problem = load('Parts.txt');
+
+P = Problem.P;
+
+Ac = P' * A * P;
+% define smoother
+setup.type = 'nofill';
+[L, U] = ilu(A, setup);
+
+[x, its, relres, res] = pcg(A, b, tol, maxit);
+
+fprintf('its = %d\nrelres = %g\nflag=%g\n', its, relres, flag);
+
+function y = mgsolve(x)
+   y = U \ L \ x)
+
+end
+
