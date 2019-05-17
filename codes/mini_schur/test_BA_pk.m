@@ -27,14 +27,14 @@ G = A(sizeG + 1:m, sizeG + 1:m);
 nmsc = 3; r = rem(sizeG, nmsc); sz = (sizeG - r)/nmsc; r1 = 1; r2 = sz;
 GS = []; %ol = 0;
    
-nmsc
-sz
+%nmsc
+%sz
 
 % blocks for D: good to take same number of blocks for D as for G
 nD = nmsc; rD = rem(sizeD, nD); szD = (sizeD - rD)/nD; rD1 = 1; rD2 = szD;
 
-nD
-szD
+%nD
+%szD
     
 % overlap size
 %ol = floor(sz);
