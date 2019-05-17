@@ -38,25 +38,17 @@ szD
     
 % overlap size
 %ol = floor(sz);
-ol = sz; % try with zero overlap
+ol = 0; % try with zero overlap
 
 %keyboard;
     
-fprintf('Computing Mini Schur complements ...\n');
+fprintf('Computing Mini Schur complements ...');
 for i = 1 : nmsc-2
    clear PD PU PL PG
    PD = D(rD1 : rD2 + ol, rD1 : rD2 + ol); 
    PU = U(rD1 : rD2 + ol, r1 : r2 + ol); 
    PL = PU'; % for BA L = U'
    PG = G(r1 : r2 + ol, r1 : r2 + ol);
-   
-  % printf block sizes
-   fprintf('\nPrinting block sizes for mini Schur complement: %d\n', i);
-   fprintf('block size of G = %d x %d (%d : %d, %d : %d) \n', size(PG,1), size(PG,2), r1,r2, r1, r2);
-   fprintf('block size of U = %d x %d (%d : %d, %d : %d) \n', size(PU,1), size(PU,2), rD1, rD2, r1, r2);
-   fprintf('block size of L = %d x %d (%d : %d, %d : %d) \n', size(PL,1), size(PL,2), r1, r2, rD1, rD2);
-   fprintf('block size of D = %d x %d (%d : %d, %d : %d) \n\n', size(PD,1), size(PD,2), rD1, rD2, rD1, rD2);
-   
    S{i} = PG - PL * (PD \ PU); 
    GS(r1:r2 + ol, r1 : r2 + ol) = S{i}; 
    GS = sparse(GS); 
@@ -76,14 +68,7 @@ if (i == nmsc-1)
    %PL = L(r1:r2+oll, r1:r2+oll); 
    PL = PU';
    PG = G(r1:r2+oll, r1:r2+oll);
-   
-  % printf block sizes
-   fprintf('Printing block sizes for mini Schur complement: %d\n', i);
-   fprintf('block size of G = %d x %d (%d : %d, %d : %d) \n', size(PG,1), size(PG,2), r1,r2, r1, r2);
-   fprintf('block size of U = %d x %d (%d : %d, %d : %d) \n', size(PU,1), size(PU,2), rD1, rD2, r1, r2);
-   fprintf('block size of L = %d x %d (%d : %d, %d : %d) \n', size(PL,1), size(PL,2), r1, r2, rD1, rD2);
-   fprintf('block size of D = %d x %d (%d : %d, %d : %d) \n\n', size(PD,1), size(PD,2), rD1, rD2, rD1, rD2);
-
+   fprintf('block size of G = %d x %d',)
    S{i} = PG - PL * (PD \ PU); 
    GS(r1:r2+oll, r1:r2+oll) = S{i};
    GS = sparse(GS); 
@@ -92,7 +77,6 @@ if (i == nmsc-1)
 end
     
 r2 = sizeG; i = i + 1;
-rD2 = sizeD; 
 
 if (i == nmsc)
   clear PD PU PL PG
@@ -101,15 +85,6 @@ if (i == nmsc)
   %PL = L(r1:r2, r1:r2); 
   PL = PU';
   PG = G(r1:r2, r1:r2);
-  
-   % printf block sizes
-   fprintf('Printing block sizes for mini Schur complement: %d\n', i);
-   fprintf('block size of G = %d x %d (%d : %d, %d : %d) \n', size(PG,1), size(PG,2), r1,r2, r1, r2);
-   fprintf('block size of U = %d x %d (%d : %d, %d : %d) \n', size(PU,1), size(PU,2), rD1, rD2, r1, r2);
-   fprintf('block size of L = %d x %d (%d : %d, %d : %d) \n', size(PL,1), size(PL,2), r1, r2, rD1, rD2);
-   fprintf('block size of D = %d x %d (%d : %d, %d : %d) \n\n', size(PD,1), size(PD,2), rD1, rD2, rD1, rD2);
-
-  
   S{i} = PG - PL * (PD \ PU); 
   GS(r1:r2, r1:r2) = S{i};
   GS = sparse(GS); 
@@ -136,16 +111,13 @@ fprintf('done!!!\n'); clear D G ;
         
 %% Solve with PCG
 %precfun=@nssolve; 
-sol=zeros(m,1); tol = 1e-3; maxit = 100;
-restart = 60;
-%try
-  fprintf('Enter GMRES...\n');
-  %tic, [x,flag,relres,iter] = pcg(B,b,tol,maxit,@nssolve2); t_pcg = toc;
-  tic, [x,flag,relres,iter] = gmres(B,b,restart,tol,maxit,@nssolve2); t_pcg = toc;
+sol=zeros(m,1); tol = 1e-3; maxit = 200;
 
+%try
+  fprintf('Enter PCG...\n');
+  tic, [x,flag,relres,iter] = pcg(B,b,tol,maxit,@nssolve2); t_pcg = toc;
 %% Display output
-  %its = iter;
-  its = (iter(1)-1)*restart + iter(2);
+  its = iter;
   fprintf('flag: %d\nits: %d\nrelres: %d\n', flag, its, relres);
 %fprintf('time lu MSC: %g\ntime ilu D: %g\ntime PCG: %g\n', t_factor_msc, t_factor_d, t_pcg);
   t_total = t_factor_msc + t_factor_d + t_pcg;
