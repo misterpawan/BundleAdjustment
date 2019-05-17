@@ -13,7 +13,7 @@ function [A_list, P_list, max_level] = Vcycle_GenMat(A, direct_n)
 	level  = 1;
 	A_list(level) = {A};
 	
-	while (n > direct_n)
+	while (n > direct_n && level<=2)
 		[CA, P] = cogs(A);   % Generate Coarse Matrix - Galerkin Projection 
 		P_list(level) = {P};
 		A_list(level + 1) = {CA};

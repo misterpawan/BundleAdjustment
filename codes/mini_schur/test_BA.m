@@ -5,19 +5,21 @@ function test_BA
     filepath = '../../../Test'
     addpath(filepath);
     addpath('../ddm');
-    lhs_filename = 'JTJ.mat';
-    rhs_filename = 'b49.mat';
+    lhs_filename = 'JTJ356.mat';
+    rhs_filename = 'b356.mat';
 
     %P = load(strcat(filepath,lhs_filename),'-mat')
-    P = load(lhs_filename)
+    P = load(lhs_filename,'-mat')
     %size(P.A)
     B = P.lhs;
     %load rhs
     b = load(rhs_filename);
     b = b.rhs;
     
+    fprintf('\nFile read complete...\n');
+    
     tic;
-    xx = normal_solve(B, b);
+    %xx = normal_solve(B, b);
     normal_solve_time = toc;
     
     nparts = 5;
@@ -27,6 +29,9 @@ function test_BA
 
     [sizes_parts, A, p] = domain_decomposition(P.lhs, nparts);
 
+    fprintf('\nDomain Decomposition complete...\n');
+    
+    clear P
     %sizes_parts
      %disp(sizes_parts);
         sum = 1;
@@ -45,14 +50,16 @@ function test_BA
         %%      | L   |  G |
         %%
         ncols = size(A,1);
-        %dd = []; uu = []; ll = []; 
+        %dd = []; 
+        uu = []; ll = []; 
         for i = 1 : nparts
-            L{i} = A(offset(nparts+1) : ncols, offset(i): offset(i+1)-1); %ll = [ll L{i}];
-            U{i} = A(offset(i): offset(i+1)-1, offset(nparts+1) : ncols); %uu = [uu;U{i}];
-            D{i} = A(offset(i): offset(i+1)-1, offset(i): offset(i+1)-1); %dd = [dd;D{i}];
+            L{i} = A(offset(nparts+1) : ncols, offset(i): offset(i+1)-1); ll = [ll L{i}];
+            U{i} = A(offset(i): offset(i+1)-1, offset(nparts+1) : ncols); uu = [uu;U{i}];
+            D{i} = A(offset(i): offset(i+1)-1, offset(i): offset(i+1)-1); 
         end
-        %clear L D U
-        %L = ll; U = uu; D = dd; clear ll uu dd
+        clear L U
+        L = sparse(ll); U = sparse(uu); %D = dd;
+        clear ll uu
         %size(L{1})
         %size(U{1})
         %size(D{1})
@@ -61,26 +68,20 @@ function test_BA
         %D{nparts+1} = G;
         nG = size(G,1);
         
+        fprintf('\nExtracting subblocks complete...\n');
         
         dd = []; %for storing the D block
-        ll = []; %for storing the L block
-        uu = []; %for storing the U block
         row1 = 1;
         row2 = 0;
-        for i = 1: nparts
-            row2 = row2 + size(D{i},1);
-            dd(row1:row2,row1:row2) = D{i};
-            ll(1:nG,row1:row2) = L{i};
-            uu(row1:row2,1:nG) = U{i};
-            row1 = row2+1;
-        end
-        clear D L U
-        D = sparse(dd);%spy(D)
-        L = sparse(ll);%spy(L)
-        U = sparse(uu);%spy(U)
-        nD = size(D,1);
-        clear dd ll uu
         
+        dd = sparse(blkdiag(D{:}));
+        clear D 
+        D = dd;disp('fill D');%spy(D);
+        %min(diag(D))
+        nD = size(D,1);
+        clear dd
+        
+        fprintf('\nMatrix fill complete...\n');
         
         %% Identify MSCs
         nmsc = 3; r = rem(nG, nmsc); sz = (nG - r)/nmsc; r1 = 1; r2 = sz;
@@ -124,7 +125,8 @@ function test_BA
         clear GS S PD PU PL PG
         
         setup.type='ilutp'; 
-        setup.droptol = 1e-03; %ntol(ii); 
+        setup.droptol = 1e-02; %ntol(ii); 
+        setup.udiag = 1;
         fprintf('Computing ilu(%g) of D...', setup.droptol);
         %tic;
         
@@ -135,7 +137,7 @@ function test_BA
         fprintf('done!!!\n');            
         clear D G ;
         
-        condest(B)
+        %condest(B)
         
         %% Solve with PCG
         precfun=@nssolve; sol=zeros(ncols,1);

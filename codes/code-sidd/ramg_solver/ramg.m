@@ -1,4 +1,4 @@
-function [x, vcycle_cnt, rel_res] = ramg(A, b, smoother, pre_steps, pos_steps, rn_tol, max_vcycle)
+function [x, vcycle_cnt, rel_res] = ramg(A, b, x, smoother, pre_steps, pos_steps, rn_tol, max_vcycle)
 
 % Algebraci Multigrid solver for A * x = b 
 % A          : [in]  The inital coefficient matrix
@@ -16,15 +16,15 @@ function [x, vcycle_cnt, rel_res] = ramg(A, b, smoother, pre_steps, pos_steps, r
 	if (nargin < 4) pre_steps  = 1;	       end
 	if (nargin < 5) pos_steps  = 1;	       end
 	if (nargin < 6) rn_tol     = 1e-10;    end
-	if (nargin < 7) max_vcycle = 100;      end
+	if (nargin < 7) max_vcycle = 10;      end
 	
 	n  = size(A, 1);
-	x  = zeros(n, 1);
+	%x  = zeros(n, 1);     % passed as a parameter to ramg
 	rn = norm(b);
 	vcycle_cnt = 0;
 	rel_res(1) = rn;
 	rn_stop    = rn * rn_tol;
-	direct_n   = 16;
+	direct_n   = 10000;
 	PR_coef    = 1;
 	
 	% Generate coefficient matrices and interpolation operators of each level at once
