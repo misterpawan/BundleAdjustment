@@ -1,0 +1,18 @@
+% Two-level Grid as Preconditioner for Conjugate Gradient
+
+ M = load('/home/siddhant.katyan/Research/SSBA-master/TEST/LadyBug/JTJ318.txt');
+ A = spconvert(M);     % converting the data in matrix form
+ A = tril(A.',-1) + A; % constructing full hessian matrix 
+ [m,~] = size(A); 
+ b = rand(m,1);        % random right hand side mx1 vector
+ 
+ tol = 1e-6;           % tolerance
+ maxit = 500;          % maximum number of iterations
+ 
+ % call to matlab's pcg
+ [x,flag,relres,iter,resvec] = pcg(A, b, tol, maxit ,@pre_solve);
+ x_exact = rand(m,1);
+`b = A*x_exact;
+
+ 
+ 
