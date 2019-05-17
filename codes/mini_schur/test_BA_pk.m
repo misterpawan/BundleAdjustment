@@ -4,14 +4,23 @@
 function test
 
 clc; warning('off','all'); addpath('../ddm');
-addpath(genpath('/media/pawan/Data/datasets'));
 
-lhs_filename = 'JTJ49.mat';
-P = load(lhs_filename); B = P.A;
+%addpath(genpath('/media/pawan/Data/datasets')); % from home
+addpath(genpath('/home/pawan/work/datasets')); % from IIIT
+
+%lhs_filename = 'JTJ49.mat';
+%P = load(lhs_filename); 
+%B = P.A;
+
+P = load('JTJ49.txt'); 
+B = spconvert(P);
+
+B = B + triu(B,1)';
+
 [m,n] = size(B); b = rand(m,1);
  
 tic; xx = normal_solve(B, b); normal_solve_time = toc;
-nparts = 5;
+nparts = 3;
   
 [sizes_parts, A, p] = domain_decomposition(B, nparts);
 sizeG = m - sum(sizes_parts(1:nparts));
@@ -24,7 +33,8 @@ G = A(sizeG + 1:m, sizeG + 1:m);
     
 %% Identify MSCs
 % blocks for schur complements
-nmsc = 3; r = rem(sizeG, nmsc); sz = (sizeG - r)/nmsc; r1 = 1; r2 = sz;
+nmsc = 4; 
+r = rem(sizeG, nmsc); sz = (sizeG - r)/nmsc; r1 = 1; r2 = sz;
 GS = []; %ol = 0;
    
 %nmsc
