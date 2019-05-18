@@ -14,8 +14,8 @@ int main(int argc, char *argv[]){
   pfile = fopen("parts.txt", "w");
 
   
-  //  nparts = atoi(argv[2]);
-  nparts = 4;
+  nparts = atoi(argv[2]);
+ // nparts = 4;
 
   if( f == NULL )
     {
@@ -24,7 +24,8 @@ int main(int argc, char *argv[]){
     }
 
   err = readMatrixCoo(f, &ACOO);
-  printf("nrows = %d\n", ACOO.M); 
+ 
+// printf("nrows = %d\n", ACOO.M); 
 
   part = (idx_t*) calloc (ACOO.M, sizeof(idx_t));
 
