@@ -5,6 +5,7 @@ This code can be used to benchmark different optimizers for bundle adjustment.
 ## Before getting started:
 Here we use colmap to generate inital set of correspondences among multiple images. The process to genearte dataset.mat is as follows:
 
+0. [Install colmap] (https://colmap.github.io/install.html)- make sure to install dependencies first
 1. Start colmap and using File -> New project
 2. Create a new Database and select location of images. (sort images into folders based on camera) then save it.
 3. Next in Processing -> Feature extraction, select "PINHOLE" and select "shared per sub-folder" for camera parameters.
