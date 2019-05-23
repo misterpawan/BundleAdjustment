@@ -1,0 +1,24 @@
+
+various preconditioning techniques .
+
+-- ssor(k) preconditioner
+-- ilu(0)
+-- ilu(k) 
+-- ilut [as provided from luinc]
+
+* accelerators
+ -- fgmres
+ -- fgmres with deflation.
+
+== drivers:
+
+ demoEasy: 2000 x 2000 problem [3-D] : 20x20x5 .. shows that 3-D problems 
+           are intrinsically easier to solve... 
+           try shift = 0.1 and them 1.0 
+           also try nx=50, ny=40.. nz =1 
+
+ demoILU: fd3d(30, 40, 1, 0.2, -0.1, 0.0, 0.1) ;
+   runs noPrec, ilu(0), ilu(1), ilut, 
+
+ demoDFGMR : runs similar example [a little larger shift] 
+   but uses deflated gmres. 
