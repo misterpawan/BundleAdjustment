@@ -1,4 +1,4 @@
-#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
 
 #IncludeRegexScan: ^.*$
 
@@ -71,6 +71,8 @@ Geometry/v3d_distortion.h
 .././Math/v3d_linear.h
 Math/v3d_linearbase.h
 .././Math/Math/v3d_linearbase.h
+stdio.h
+-
 iostream
 -
 
@@ -112,13 +114,13 @@ vector
 iostream
 -
 
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/bundle_common.cpp
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_common.cpp
 Math/v3d_linear.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/Math/v3d_linear.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/Math/v3d_linear.h
 Base/v3d_vrmlio.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/Base/v3d_vrmlio.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/Base/v3d_vrmlio.h
 Geometry/v3d_metricbundle.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/Geometry/v3d_metricbundle.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/Geometry/v3d_metricbundle.h
 iostream
 -
 fstream

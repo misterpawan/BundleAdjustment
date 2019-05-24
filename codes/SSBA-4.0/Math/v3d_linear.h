@@ -704,7 +704,7 @@ namespace V3D
 
    template <typename Elem>
    inline void
-   showSparseMatrixInfo(CCS_Matrix<Elem> const& A)
+   showSparseMatrixInfo(int iteration,CCS_Matrix<Elem> const& A)
    {
       int const nCols = A.num_cols();
       int const nnz = A.getNonzeroCount();
@@ -712,12 +712,24 @@ namespace V3D
       int const * rowIdxs   = A.getRowIndices();
       int const * destIdxs  = A.getDestIndices();
       Elem const * values = A.getValues();
+      string filename;
+      FILE* fp;
+      switch(iteration)
+      {
+      	case 0: fp = fopen("JTJ138_1.txt","w"); break;
+      	case 1: fp = fopen("JTJ138_2.txt","w"); break;
+      	case 2: fp = fopen("JTJ138_3.txt","w"); break;
+      	case 3: fp = fopen("JTJ138_4.txt","w"); break;
+      	case 4: fp = fopen("JTJ138_5.txt","w"); break;
+      }
+
+      //FILE* fp = fopen(filename,"w");
       
       // Dump Matrix in Matlab Matrix Format - indexing with 1
 
       //int count = 0;
       int j, k;
-      freopen("test9.txt","w",stdout);
+      //freopen("test9.txt","w",stdout);
 
       for (j = 0; j < nCols; j++)
       {
@@ -725,10 +737,12 @@ namespace V3D
          const int end   = colStarts[j+1];
 
          for (k = start; k < end; k++)
-            cout << rowIdxs[k] + 1 << " " << j+1 << " " << values[k] << "\n";
+            //cout << rowIdxs[k] + 1 << " " << j+1 << " " << values[k] << "\n";
+            fprintf(fp, "%d %d %f\n", rowIdxs[k] + 1,j+1,values[k]);
       }
 
-      fclose(stdout);
+      //fclose(stdout);
+      fclose(fp);
 
 
 
@@ -770,6 +784,41 @@ namespace V3D
       */
 
    } // end showSparseMatrixInfo()
+
+   //template <typename Elem>
+   inline void
+   writeJtetofile(int iteration,Vector<double>& Jt_e)
+   {
+   	  int const nRows = Jt_e.size();
+   	  string filename;
+      FILE* fp;
+      switch(iteration)
+      {
+      	case 0: fp = fopen("JTe138_1.txt","w"); break;
+      	case 1: fp = fopen("JTe138_2.txt","w"); break;
+      	case 2: fp = fopen("JTe138_3.txt","w"); break;
+      	case 3: fp = fopen("JTe138_4.txt","w"); break;
+      	case 4: fp = fopen("JTe138_5.txt","w"); break;
+      }
+      
+      //FILE* fp = fopen(filename,"w");
+      
+      
+      int j;
+      //freopen("test_rhs.txt","w",stdout);
+
+      for (j = 0; j < nRows; j++)
+      {
+      		//cout << Jt_e[j];
+      		fprintf(fp, "%f\n", Jt_e[j]);
+      }
+
+      fclose(fp);
+
+
+
+   } // end writeJtetofile()
+
 
 } // end namespace V3D
 

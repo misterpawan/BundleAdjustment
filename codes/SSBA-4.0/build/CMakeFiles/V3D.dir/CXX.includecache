@@ -1,4 +1,4 @@
-#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
 
 #IncludeRegexScan: ^.*$
 
@@ -71,6 +71,8 @@ Geometry/v3d_cameramatrix.h
 .././Math/v3d_linear.h
 Math/v3d_linearbase.h
 .././Math/Math/v3d_linearbase.h
+stdio.h
+-
 iostream
 -
 
@@ -126,65 +128,65 @@ vector
 iostream
 -
 
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Geometry/v3d_metricbundle.cpp
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Geometry/v3d_metricbundle.cpp
 Geometry/v3d_metricbundle.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Geometry/Geometry/v3d_metricbundle.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Geometry/Geometry/v3d_metricbundle.h
 
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Geometry/v3d_stereobundle.cpp
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Geometry/v3d_stereobundle.cpp
 Geometry/v3d_stereobundle.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Geometry/Geometry/v3d_stereobundle.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Geometry/Geometry/v3d_stereobundle.h
 
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Math/v3d_nonlinlsq.cpp
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Math/v3d_nonlinlsq.cpp
 Math/v3d_nonlinlsq.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Math/Math/v3d_nonlinlsq.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Math/Math/v3d_nonlinlsq.h
 map
 -
 colamd.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Math/colamd.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Math/colamd.h
 Math/v3d_ldl_private.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Math/Math/v3d_ldl_private.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Math/Math/v3d_ldl_private.h
 
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Math/v3d_optimization.cpp
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Math/v3d_optimization.cpp
 Math/v3d_optimization.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Math/Math/v3d_optimization.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Math/Math/v3d_optimization.h
 colamd.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Math/colamd.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Math/colamd.h
 ldl.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Math/ldl.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Math/ldl.h
 Math/v3d_ldl_private.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Math/Math/v3d_ldl_private.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Math/Math/v3d_ldl_private.h
 iostream
 -
 map
 -
 
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Math/v3d_optimization_lm.cpp
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Math/v3d_optimization_lm.cpp
 Math/v3d_optimization.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Math/Math/v3d_optimization.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Math/Math/v3d_optimization.h
 colamd.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Math/colamd.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Math/colamd.h
 ldl.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Math/ldl.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Math/ldl.h
 Math/v3d_ldl_private.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Math/Math/v3d_ldl_private.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Math/Math/v3d_ldl_private.h
 iostream
 -
 map
 -
 
-/home/iiit/siddhant.katyan/Research/SuiteSparse/include/SuiteSparse_config.h
+/usr/include/suitesparse/SuiteSparse_config.h
 limits.h
 -
 stdlib.h
 -
 
-/home/iiit/siddhant.katyan/Research/SuiteSparse/include/colamd.h
+/usr/include/suitesparse/colamd.h
 stdlib.h
 -
 SuiteSparse_config.h
-/home/iiit/siddhant.katyan/Research/SuiteSparse/include/SuiteSparse_config.h
+/usr/include/suitesparse/SuiteSparse_config.h
 
-/home/iiit/siddhant.katyan/Research/SuiteSparse/include/ldl.h
+/usr/include/suitesparse/ldl.h
 SuiteSparse_config.h
-/home/iiit/siddhant.katyan/Research/SuiteSparse/include/SuiteSparse_config.h
+/usr/include/suitesparse/SuiteSparse_config.h
 

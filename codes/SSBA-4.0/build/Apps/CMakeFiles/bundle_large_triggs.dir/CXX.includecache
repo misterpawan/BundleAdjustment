@@ -1,4 +1,4 @@
-#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
 
 #IncludeRegexScan: ^.*$
 
@@ -65,6 +65,8 @@ Math/v3d_linear.h
 .././Math/v3d_linear.h
 Math/v3d_linearbase.h
 .././Math/Math/v3d_linearbase.h
+stdio.h
+-
 iostream
 -
 
@@ -120,15 +122,15 @@ vector
 iostream
 -
 
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/bundle_large_common.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_large_common.h
 Geometry/v3d_cameramatrix.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/Geometry/v3d_cameramatrix.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/Geometry/v3d_cameramatrix.h
 
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/bundle_large_triggs.cpp
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_large_triggs.cpp
 bundle_large_common.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/bundle_large_common.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_large_common.h
 Base/v3d_timer.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/Base/v3d_timer.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/Base/v3d_timer.h
 Math/v3d_nonlinlsq.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/Math/v3d_nonlinlsq.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/Math/v3d_nonlinlsq.h
 

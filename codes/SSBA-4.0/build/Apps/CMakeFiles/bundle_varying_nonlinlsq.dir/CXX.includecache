@@ -1,4 +1,4 @@
-#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
 
 #IncludeRegexScan: ^.*$
 
@@ -81,6 +81,8 @@ Geometry/v3d_cameramatrix.h
 .././Math/v3d_linear.h
 Math/v3d_linearbase.h
 .././Math/Math/v3d_linearbase.h
+stdio.h
+-
 iostream
 -
 
@@ -136,19 +138,19 @@ vector
 iostream
 -
 
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/bundle_varying_nonlinlsq.cpp
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_varying_nonlinlsq.cpp
 Base/v3d_vrmlio.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/Base/v3d_vrmlio.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/Base/v3d_vrmlio.h
 Math/v3d_linear.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/Math/v3d_linear.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/Math/v3d_linear.h
 Math/v3d_nonlinlsq.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/Math/v3d_nonlinlsq.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/Math/v3d_nonlinlsq.h
 Geometry/v3d_mviewutilities.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/Geometry/v3d_mviewutilities.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/Geometry/v3d_mviewutilities.h
 Geometry/v3d_distortion.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/Geometry/v3d_distortion.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/Geometry/v3d_distortion.h
 Geometry/v3d_metricbundle.h
-/home/iiit/siddhant.katyan/Research/SSBA-master/SSBA-4.0/Apps/Geometry/v3d_metricbundle.h
+/home/shrutimoy/Desktop/BundleAdjustment/codes/SSBA-4.0/Apps/Geometry/v3d_metricbundle.h
 iostream
 -
 fstream

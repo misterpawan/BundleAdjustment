@@ -537,7 +537,8 @@ namespace V3D
 
       int const nObjs = _costFunctions.size();
 
-      for (currentIteration = 0; currentIteration < maxIterations; ++currentIteration)
+      //for (currentIteration = 0; currentIteration < maxIterations; ++currentIteration)
+      for (currentIteration = 0; currentIteration < 5; ++currentIteration)
       {
          if (optimizerVerbosenessLevel >= 2)
             cout << "NLSQ_LM_Optimizer: currentIteration: " << currentIteration << endl;
@@ -655,8 +656,9 @@ namespace V3D
 
          
          //auto hess = getJtJ();
-         //showSparseMatrixInfo(_JtJ);
+         showSparseMatrixInfo(currentIteration,_JtJ);
          //displaySparseMatrix(_JtJ);
+         writeJtetofile(currentIteration,Jt_e);
 
          
 
@@ -832,7 +834,7 @@ namespace V3D
          cout << "Leaving NLSQ_LM_Optimizer::minimize()." << endl;
 
       
-   showSparseMatrixInfo(_JtJ); // Call to Function, dumps the Matrix JtJ
+   //showSparseMatrixInfo(_JtJ); // Call to Function, dumps the Matrix JtJ
      
 
    } // end NLSQ_LM_Optimizer::minimize()
