@@ -2,11 +2,11 @@
 function test_BA
     clc;
     warning('off','all');
-    filepath = '../../../Test/356'
+    filepath = '../../../Test/49'
     addpath(filepath);
     addpath('../ddm');
-    lhs_filename = 'JTJ356_5.mat';
-    rhs_filename = 'JTe356_5.mat';
+    lhs_filename = 'JTJ49_5.mat';
+    rhs_filename = 'JTe49_5.mat';
 
     %P = load(strcat(filepath,lhs_filename),'-mat')
     P = load(lhs_filename,'-mat')
@@ -188,8 +188,7 @@ function test_BA
         if(pos_def == 0)
             LD = UD';
         else
-           [LD,UD] = lu(D);
-        end
+            [UD,LD]
         t_factor_d = toc;
 
         fprintf('done!!!\n'); clear D G ;      

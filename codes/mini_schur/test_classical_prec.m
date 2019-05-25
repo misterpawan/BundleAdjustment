@@ -1,7 +1,7 @@
 function test_classical_prec
     clc;
     warning('off','all');
-    filepath = '../../../Test/356'
+    filepath = '../../../Test/49'
     addpath(filepath);
     addpath('../ddm');
     lhs_filename = 'JTJ49_1.mat';
