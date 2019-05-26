@@ -712,7 +712,14 @@ namespace V3D
       int const * rowIdxs   = A.getRowIndices();
       int const * destIdxs  = A.getDestIndices();
       Elem const * values = A.getValues();
-      string filename;
+      //string filename = "JTJ49_1";
+      int j, k;
+      
+      FILE *fp_col = fopen("JTJ49_1_col.txt","w");
+      FILE *fp_row = fopen("JTJ49_1_row.txt","w");
+      FILE *fp_val = fopen("JTJ49_1_val.txt","w");
+
+      /*
       FILE* fp;
       switch(iteration)
       {
@@ -722,15 +729,17 @@ namespace V3D
       	case 3: fp = fopen("JTJ138_4.txt","w"); break;
       	case 4: fp = fopen("JTJ138_5.txt","w"); break;
       }
-
+      */
       //FILE* fp = fopen(filename,"w");
       
       // Dump Matrix in Matlab Matrix Format - indexing with 1
 
       //int count = 0;
-      int j, k;
+      
       //freopen("test9.txt","w",stdout);
 
+      /***** writes the matrix in COO format ***/
+      /*
       for (j = 0; j < nCols; j++)
       {
          const int start = colStarts[j];
@@ -740,9 +749,26 @@ namespace V3D
             //cout << rowIdxs[k] + 1 << " " << j+1 << " " << values[k] << "\n";
             fprintf(fp, "%d %d %f\n", rowIdxs[k] + 1,j+1,values[k]);
       }
+      */
+
+      
+      for(j = 0;j<nCols;j++)
+      {
+         fprintf(fp_col, "%d\n", colStarts[j]);
+      }
+      fclose(fp_col);
+
+      for(k = 0; k < nnz; k++)
+      {
+         fprintf(fp_row, "%d\n", rowIdxs[k]);
+         fprintf(fp_val, "%f\n", values[k]);
+      }
+      fclose(fp_row);
+      fclose(fp_val);
+      
 
       //fclose(stdout);
-      fclose(fp);
+      //fclose(fp);
 
 
 

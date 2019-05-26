@@ -9,7 +9,8 @@
 using namespace std;
 using namespace V3D;
 
-#define ONLY_UPPER_TRIANGULAR_HESSIAN 1
+//#define ONLY_UPPER_TRIANGULAR_HESSIAN 1
+//#define ONLY_UPPER_TRIANGULAR_HESSIAN 0 //changed for getting complete matrix
 
 inline pair<double, double> two_sum(double const a, double const b)
 {
@@ -538,7 +539,7 @@ namespace V3D
       int const nObjs = _costFunctions.size();
 
       //for (currentIteration = 0; currentIteration < maxIterations; ++currentIteration)
-      for (currentIteration = 0; currentIteration < 5; ++currentIteration)
+      for (currentIteration = 0; currentIteration < 1; ++currentIteration)
       {
          if (optimizerVerbosenessLevel >= 2)
             cout << "NLSQ_LM_Optimizer: currentIteration: " << currentIteration << endl;
@@ -658,7 +659,7 @@ namespace V3D
          //auto hess = getJtJ();
          showSparseMatrixInfo(currentIteration,_JtJ);
          //displaySparseMatrix(_JtJ);
-         writeJtetofile(currentIteration,Jt_e);
+         //writeJtetofile(currentIteration,Jt_e);
 
          
 

@@ -1,0 +1,3 @@
+// run the code as 
+
+g++ -o mini_schur_complement mini_schur_complement.cpp -I /usr/include/suitesparse -L /usr/lib/x86_64-linux-gnu -lumfpack
