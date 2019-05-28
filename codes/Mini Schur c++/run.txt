@@ -1,3 +1,10 @@
 // run the code as 
 
+
+%% For UMFPACK
 g++ -o mini_schur_complement mini_schur_complement.cpp -I /usr/include/suitesparse -L /usr/lib/x86_64-linux-gnu -lumfpack
+
+
+%%For CHOLMOD
+g++ -o mini_schur_complement_CHOLMOD mini_schur_complement_CHOLMOD.cpp -I /usr/include/suitesparse -L /usr/lib/x86_64-linux-gnu -lcholmod -lumfpack -lspqr
+

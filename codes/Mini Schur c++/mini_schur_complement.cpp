@@ -47,13 +47,13 @@ void compute_PDinv_times_PU(cs* PD,cs* PU,cs* AA)
 	void* Symbolic;
 	void* Numeric;
 	double* null = ( double* ) NULL;
-	int j;
+	int j,k;
 	double* b;
 	double* x1;
 	int status;
 
 	//for(j=0;j<PU->n;j++)
-	for(j=0;j<10;j++)
+	for(j=0;j<1;j++)
 	{
 		b = new double[PU->m]; //vector to store the densified rhs at each iteration
 		x1 = new double[PD->n]; //vector to store the solution at each iteration
@@ -62,7 +62,7 @@ void compute_PDinv_times_PU(cs* PD,cs* PU,cs* AA)
 
 		//  From the matrix data, create the symbolic factorization information.
 		status = umfpack_di_symbolic ( PD->m, PD->n, PD->p, PD->i, PD->x, &Symbolic, null, null );
-		cout << "\n Symbolic status :" << status << "\n";
+		//cout << "\n Symbolic status :" << status << "\n";
 		//  From the symbolic factorization information, carry out the numeric factorization.
   		status = umfpack_di_numeric ( PD->p, PD->i, PD->x, Symbolic, &Numeric, null, null );
   		cout << "\n Numeric status :" << status << "\n";
@@ -73,6 +73,8 @@ void compute_PDinv_times_PU(cs* PD,cs* PU,cs* AA)
   		cout << "\n Solve status :" << status << "\n";
 		//  Free the numeric factorization.
   		umfpack_di_free_numeric ( &Numeric );
+
+  		//for(k = 0; k < PU->m)
 
 		delete []  x1; delete [] b;
 	}
@@ -189,7 +191,7 @@ void compute_mini_schur_complement(cs* A,cs* MSC,cs* D,cs* L,cs* U,cs* G)
 				else continue;
 			}
 		}
-		//cout << "\n nzPD : "<< nzPD<<"\tnzPL :"<<nzPL<<"\tnzPU :"<<nzPU<<"\tnzPG :"<<nzPG<<"\n";
+		cout << "\n nzPD : "<< nzPD<<"\tnzPL :"<<nzPL<<"\tnzPU :"<<nzPU<<"\tnzPG :"<<nzPG<<"\n";
 
 
 		cout << "\n Allocating memory..."<<"\n";		
