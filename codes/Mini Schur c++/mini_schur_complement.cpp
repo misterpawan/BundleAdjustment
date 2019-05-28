@@ -16,20 +16,91 @@ using namespace std;
 
 #define sizeG 441 //hardcoding it for the time being
 
+/* This function densifies the jth column of input matrix A
+*/
+double* densify_column(cs* A, int j)
+{
+	double* b = new double[A->m];
+	int k;
+	int l = A->p[j]; //start index for rows of column j
+
+	for(k = 0; k < A->m && l < A->p[j+1]; k++ )
+	{
+		if(k == A->i[l])
+		{
+			b[k] = A->x[l];
+			l += 1;
+		}
+		else b[k] = 0;
+	}
+
+	return b;
+}
+
+
+/* This function does the computation PD\PU (MATLAB '\') by solving 
+a linear system with multiple right hand sides. The output is written 
+in the AA structure.
+*/
+void compute_PDinv_times_PU(cs* PD,cs* PU,cs* AA)
+{
+	void* Symbolic;
+	void* Numeric;
+	double* null = ( double* ) NULL;
+	int j;
+	double* b;
+	double* x1;
+	int status;
+
+	//for(j=0;j<PU->n;j++)
+	for(j=0;j<10;j++)
+	{
+		b = new double[PU->m]; //vector to store the densified rhs at each iteration
+		x1 = new double[PD->n]; //vector to store the solution at each iteration
+
+		b = densify_column(PU,j); // densifies the jth column of PU 
+
+		//  From the matrix data, create the symbolic factorization information.
+		status = umfpack_di_symbolic ( PD->m, PD->n, PD->p, PD->i, PD->x, &Symbolic, null, null );
+		cout << "\n Symbolic status :" << status << "\n";
+		//  From the symbolic factorization information, carry out the numeric factorization.
+  		status = umfpack_di_numeric ( PD->p, PD->i, PD->x, Symbolic, &Numeric, null, null );
+  		cout << "\n Numeric status :" << status << "\n";
+  		//  Free the symbolic factorization memory.
+  		umfpack_di_free_symbolic ( &Symbolic );
+  		//  Using the numeric factorization, solve the linear system.
+  		status = umfpack_di_solve ( UMFPACK_A, PD->p, PD->i, PD->x, x1, b, Numeric, null, null );
+  		cout << "\n Solve status :" << status << "\n";
+		//  Free the numeric factorization.
+  		umfpack_di_free_numeric ( &Numeric );
+
+		delete []  x1; delete [] b;
+	}
+
+	return;
+}
+
+
 /* This function computes the full Schur complement using the blocks 
 given as input. The output id written in MSC.
 */
-void compute_full_schur_complement(cs* MSC,cs* PD,cs* PL,cs* PU,cs* PG)
+void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,cs* MSC,cs* PD,cs* PL,cs* PU,cs* PG)
 {
 	cs* S = new cs;
 	S->nz = -1;
 	S->m = PG->m; S->n = PG->n; S->nzmax = S->m * S->n;
 	S->p = new int[S->n+1]; S->i = new int[S->nzmax]; S->x = new double[S->nzmax];
 
-	compute_PDinv_times_PU();
+	cs* AA;
+	AA->nz = -1;
+	AA->m = PG->m; AA->n = PG->n; AA->nzmax = AA->m * AA->n;
+	AA->p = new int[AA->n+1]; AA->i = new int[AA->nzmax]; AA->x = new double[AA->nzmax];
+
+	compute_PDinv_times_PU(PD,PU,AA);
 
 	delete [] S->p; delete [] S->i; delete S->x;
-	delete S; 
+	delete [] AA->p; delete [] AA->i; delete AA->x;
+	delete S;delete AA; 
 
 	return;
 }
@@ -184,7 +255,7 @@ void compute_mini_schur_complement(cs* A,cs* MSC,cs* D,cs* L,cs* U,cs* G)
 		//cout << "\n Diff PG : "<< nzPG - iterPG << "\n";
 
 		//compute the full schur complement of the extracted blocks
-		compute_full_schur_complement(MSC,PD,PL,PU,PG);
+		compute_full_schur_complement(r1,r2,rD1,rD2,MSC,PD,PL,PU,PG);
 
 		delete [] PD->p;delete [] PL->p;delete [] PU->p;delete [] PG->p;
 		delete [] PD->i;delete [] PL->i;delete [] PU->i;delete [] PG->i;
