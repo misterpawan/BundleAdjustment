@@ -22,21 +22,25 @@ using namespace std;
 
 /* This function densifies the jth column of input matrix A
 */
-cholmod_dense* densify_column(cholmod_sparse* A, int j,cholmod_common* Common)
+//cholmod_dense* densify_column(cholmod_sparse* A, int j,cholmod_common* Common)
+double* densify_column(cholmod_sparse* A, int j,cholmod_common* Common)
 {
-	cholmod_dense* b = cholmod_l_allocate_dense(A->nrow,1,A->nrow,CHOLMOD_REAL,Common);
+	//cholmod_dense* b = cholmod_l_allocate_dense(A->nrow,1,A->nrow,CHOLMOD_REAL,Common);
+	double* b = new double[A->nrow];
 	int k;
 	int l = ((int*)A->p)[j]; //start index for rows of column j
 
-	b->nzmax = b->nrow;
+	//b->nzmax = b->nrow;
 	for(k = 0; k < A->nrow && l < ((int*)A->p)[j+1]; k++ )
 	{
 		if(k == ((int*)A->i)[l])
 		{
-			((double*)b->x)[k] = ((double*)A->x)[l];
+			//((double*)b->x)[k] = ((double*)A->x)[l];
+			b[k] = ((double*)A->x)[l];
 			l += 1;
 		}
-		else ((double*)b->x)[k] = 0;
+		//else ((double*)b->x)[k] = 0;
+		else b[k] = 0;
 	}
 
 	return b;
@@ -55,21 +59,22 @@ void compute_PDinv_times_PU(cholmod_sparse* PD,cholmod_sparse* PU,cholmod_sparse
 	int j,k;
 	double* b;
 	double* x1;
-	int status;
+	int sym_status=10,num_status=10,solve_status=10;
 	int nnz_b = 0;
 	int index;
 	int free_status;
 	int factor;
 
-	//for(j=0;j<PU->nrow;j++)
-	for(j=0;j<1;j++)
+	for(j=0;j<PU->nrow;j++)
+	//for(j=0;j<1;j++)
 	{
-		cholmod_factor* F; //  for storing factorization information
-		cholmod_dense* b;// = cholmod_l_allocate_dense(PU->nrow,1,PU->nrow,CHOLMOD_REAL,Common);
-		cholmod_dense* x1;// = cholmod_l_allocate_dense(PD->ncol,1,PD->ncol,CHOLMOD_REAL,Common);;
+		//cholmod_factor* F; //  for storing factorization information
+		//cholmod_dense* b;// = cholmod_l_allocate_dense(PU->nrow,1,PU->nrow,CHOLMOD_REAL,Common);
+		//cholmod_dense* x1;// = cholmod_l_allocate_dense(PD->ncol,1,PD->ncol,CHOLMOD_REAL,Common);;
 		//cholmod_sparse* b; //vector to store the rhs at each iteration
 		//cholmod_sparse* x1;//vector to store the solution at each iteration
-
+		double* b;
+		double* x1 = new double[PD->ncol];
 
 		// Copying the jth column of PU to b(rhs)
 		b = densify_column(PU,j,Common);
@@ -93,34 +98,34 @@ void compute_PDinv_times_PU(cholmod_sparse* PD,cholmod_sparse* PU,cholmod_sparse
 
 		//  From the matrix data, create the symbolic factorization information.
 		//F = cholmod_l_analyze(PD,Common);
-		//status = umfpack_di_symbolic ( PD->nrow, PD->ncol, (int*)PD->p, (int*)PD->i, (double*)PD->x, &Symbolic, null, null );
-		//cout << "\n Symbolic status :" << status << "\n";
+		sym_status = umfpack_di_symbolic ( PD->nrow, PD->ncol, (int*)PD->p, (int*)PD->i, (double*)PD->x, &Symbolic, null, null );
+		//cout << "\n Symbolic status :" << sym_status << "\n";
 
 		//  From the symbolic factorization information, carry out the numeric factorization.
 		//factor = cholmod_l_factorize(PD,F,Common);  cout << "\n Factor: "<< factor << "\n";
-  		//status = umfpack_di_numeric ( (int*)PD->p, (int*)PD->i, (double*)PD->x, Symbolic, &Numeric, null, null );
-  		//cout << "\n Numeric status :" << status << "\n";
+  		num_status = umfpack_di_numeric ( (int*)PD->p, (int*)PD->i, (double*)PD->x, Symbolic, &Numeric, null, null );
+  		//cout << "\n Numeric status :" << num_status << "\n";
 
   		//  Free the symbolic factorization memory.
-  		
+  		umfpack_di_free_symbolic ( &Symbolic );
 
   		//  Using the numeric factorization, solve the linear system.
-		x1 = SuiteSparseQR<double>(PD,b,Common);
+		//x1 = SuiteSparseQR<double>(PD,b,Common);
 
   		//x1 = cholmod_l_spsolve(CHOLMOD_A,F,b,Common);
-  		//status = umfpack_di_solve ( UMFPACK_A, (int*)PD->p, (int*)PD->i, (double*)PD->x, x1, b, Numeric, null, null );
-  		//cout << "\n Solve status :" << status << "\n";
+  		solve_status = umfpack_di_solve ( UMFPACK_A, (int*)PD->p, (int*)PD->i, (double*)PD->x, x1, b, Numeric, null, null );
+  		//cout << "\n Solve status :" << solve_status << "\n";
 		//  Free the numeric factorization.
-  		//umfpack_di_free_numeric ( &Numeric );
+  		umfpack_di_free_numeric ( &Numeric );
 
   		//for(k = 0; k < PU->m)
 
-		free_status = cholmod_l_free_dense(&b,Common); //cout << "\nfree status : " << free_status <<"\n";
+		//free_status = cholmod_l_free_dense(&b,Common); //cout << "\nfree status : " << free_status <<"\n";
 		//free_status = cholmod_l_free_factor(&F,Common);
-		free_status = cholmod_l_free_dense(&x1,Common);
-		//delete [] b; delete [] x1;
+		//free_status = cholmod_l_free_dense(&x1,Common);
+		delete [] b; delete [] x1;
 	}
-
+	cout << "\n inv(PD) PU dome ! \n";
 	return;
 }
 
