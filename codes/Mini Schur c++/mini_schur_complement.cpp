@@ -20,7 +20,9 @@ using namespace std;
 */
 double* densify_column(cs_di* A, int j)
 {
+
 	double* b = new double[A->m];
+	
 	int k;
 	int l = A->p[j]; //start index for rows of column j
 
@@ -32,10 +34,40 @@ double* densify_column(cs_di* A, int j)
 			l += 1;
 		}
 		else b[k] = 0;
+		//cout << "\n In densify .. j,k : "<< j<< "\t" << k << "\n";
 	}
 
 	return b;
 }
+
+double* densify_column_S(cs_di* A, int j)
+{
+
+	double* b = new double[A->m];
+	
+	int k;
+	int l = A->p[j]; //start index for rows of column j
+	//cout << A->p[j];
+	for(k = 0; k < A->m && l < A->p[j+1]; k++ )
+	{
+		//cout << "\n In densify .. j,k,l : "<< j<< "\t" << k << "\t" << l << "\n";
+		if(k == A->i[l])
+		{
+			//cout << "\n In ifdensify .. j,k : "<< j<< "\t" << k << "\n";
+			b[k] = A->x[l];
+			l += 1;
+		}
+		else 
+		{
+			//cout << "\n In elsedensify .. j,k : "<< j<< "\t" << k << "\n";
+			b[k] = 0;
+		}
+		
+	}
+
+	return b;
+}
+
 
 /* This function stores the dense array x1 into the jth column of AA as a sparse array
 */
@@ -53,14 +85,15 @@ void make_x_sparse(cs_di* AA,int j,double* x1)
 	{
 		if(x1[k] != 0)
 		{
-			++nz_count;
+			//nz_count += 1;
 			AA->i[row_arr_count+nz_count] = k;
-			AA->x[row_arr_count+nz_count] = -x1[k];  //taking the negative 
+			AA->x[row_arr_count+nz_count] = x1[k];  
+			nz_count += 1;
 		}
 		else continue;
 	}
 
-	if(j < AA->n) AA->p[j+1] = nz_count+1;
+	if(j < AA->n) AA->p[j+1] = nz_count;
 
 	//cout << "\nAA->x[3] : " << AA->x[3] << "\n";
 
@@ -122,17 +155,54 @@ void compute_PDinv_times_PU(cs_di* PD,cs_di* PU,cs_di* AA)
 	return;
 }
 
+/* This function sums the sparse matrices PG and LDU  adn stores it in S.
+   The addition is done in a column wise order.
+*/
+void add_PG_LDU(cs_di* PG, cs_di* LDU, cs_di* S)
+{
+	//cout << "\n LDU->m : " << LDU->m <<"\n";
+	int k,l;
+	double* col_PG;
+	double* col_LDU ;
+	double* col_S; 
+	//cout << "\n Add PG : " << PG->p[9] << "\n";
+	for(k = 0; k < PG -> n; k++)
+	{
+		k = 9;
+		col_PG = new double[PG->m];
+
+		col_LDU= new double[LDU->m];
+
+		col_PG = densify_column_S(PG,k);//new double[PG->m];
+		//cout << "\n k :" << k << "\n";
+		col_LDU = densify_column_S(LDU,k); 
+		col_S = new double[S->m];
+
+		
+
+		for(l=0; l<S->m; l++)
+		{
+			if(col_PG[l] == 0 && col_LDU == 0) col_S[l] = 0;
+			else if(col_PG[l] == 0) col_S[l] = col_LDU[l];
+			else if(col_LDU[l] == 0) col_S[l] = col_PG[l];
+			else col_S[l] = col_PG[l] + col_LDU[l] ;
+		}
+
+		make_x_sparse(S,k,col_S);
+
+
+		delete [] col_PG; delete [] col_LDU; delete [] col_S;
+	}
+
+	return;
+}
 
 /* This function computes the full Schur complement using the blocks 
 given as input. The output id written in MSC.
 */
 void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* MSC,cs_di* PD,cs_di* PL,cs_di* PU,cs_di* PG)
 {
-	cs_di* S = new cs_di;
-	S->nz = -1;
-	S->m = PG->m; S->n = PG->n; S->nzmax = S->m * S->n;
-	S->p = new int[S->n+1]; S->i = new int[S->nzmax]; S->x = new double[S->nzmax];
-
+	
 	cs_di* AA = new cs_di;
 	AA->nz = -1;
 	AA->m = PD->m; AA->n = PU->n; AA->nzmax = AA->m * AA->n;
@@ -142,12 +212,12 @@ void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* M
 	//LDU->nz = -1;
 	//LDU->m = PL->m; LDU->n = AA->n; LDU->nzmax = LDU->m * LDU->n;
 	//LDU->p = new int[LDU->n+1]; LDU->i = new int[LDU->nzmax]; LDU->x = new double[LDU->nzmax];
-	cs_di* LD = new cs_di;
-	LD->nz = -1;
-	LD->m = LDU->m; LD->n = LDU->n; LD->nzmax = LDU->m * LDU->n;
-	LD->p = new int[LD->n+1]; LD->i = new int[LD->nzmax]; LD->x = new double[LD->nzmax];
+	//cs_di* LD = new cs_di;
+	//LD->nz = -1;
+	//LD->m = LDU->m; LD->n = LDU->n; LD->nzmax = LD->m * LD->n;
+	//LD->p = new int[LD->n+1]; LD->i = new int[LD->nzmax]; LD->x = new double[LD->nzmax];
 
-	cs_di* PSC;// = new cs_di;
+	//cs_di* PSC;// = new cs_di;
 	//PSC->nz = -1;
 	//PSC->m = PG->m; PSC->n = PG->n; PSC->nzmax = PSC->m * PSC->n;
 	//PSC->p = new int[PSC->n+1]; PSC->i = new int[PSC->nzmax]; PSC->x = new double[PSC->nzmax];	
@@ -162,22 +232,48 @@ void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* M
 	//cout << "\nAA->x[210] : " << AA->x[210] << "\n";
 
 	LDU = cs_di_multiply(PL,AA);
-	//cout << "\nLDU->p[3] : " << LDU->p[3] << "\n";	
+	//cout << "\nLDU->nzmax : " << LDU->nzmax << "\n";
+	//cout << "\nLDU->m : " << LDU->m << "\n";
+	//cout << "\nLDU->n : " << LDU->n << "\n";
+	//cout << "\nLDU->p[9] : " << LDU->p[9] << "\n";
+	//cout << "\nLDU->i[9] : " << LDU->i[9] << "\n";
+	//cout << "\nLDU->x[9] : " << LDU->x[9] << "\n";
+	/*
+	cs_di* LD =  new cs_di;
+	LD->nz = -1;
+	LD->m = LDU->m; LD->n = LDU->n; LD->nzmax = LDU->nzmax;//->m * LD->n;
+	LD->p = new int[LD->n+1]; LD->i = new int[LD->nzmax]; LD->x = new double[LD->nzmax];	
 	LD->p = LDU->p;  LD->i = LDU->i;  LD->x = LDU->x;
+	*/
 	//cout << "\nLD->p[3] : " << LD->p[3] << "\n";
+	//delete [] LDU->p; delete [] LDU->i; delete LDU->x;
 	delete [] AA->p; delete [] AA->i; delete AA->x;
-	delete LDU;delete AA;
+	delete AA; //delete LDU;
 
+	//cout << "\nLD->p[3] : " << LD->p[3] << "\n";
+	//cout << "\n LDU : " << LDU << "\n";
+	//cout << "\n LD : " << LD << "\n";
+	//cout << "\n AA : " << AA << "\n";
+	//cout << "\nPG->m : " << PG->m << "\n";
+	//cout << "\nLD->m : " << LD->m << "\n";
 
+	cs_di* S ;//= new cs_di;
+	//S->nz = -1;
+	//S->m = PG->m; S->n = PG->n; S->nzmax = S->m * S->n;
+	//S->p = new int[S->n+1]; S->i = new int[S->nzmax]; S->x = new double[S->nzmax];
 
-	//PSC = cs_di_add(PG,LD,1.0,1.0);
+	
+	S = cs_di_add(PG,LDU,1.0,-1.0); //subtraction
+	//add_PG_LDU(PG,LDU,S);
+	
 
 	//if(PSC == NULL) cout <<  "\nAdd not done!\n";
-	printf("\nAddress : %d\n", cs_add(PG,LD,1.0,1.0));
+	//printf("\nAddress : %d\n", cs_di_multiply(PL,AA));
 
-	cout << "\nPG->x[3] : " << PG->x[3] << "\n";
-	cout << "\nLD->x[3] : " << LD->x[3] << "\n";
-	cout << "\nPSC->p[3] : " << PSC->p[3] << "\n";
+
+	//cout << "\nPG->x[3] : " << PG->x[PG->p[0]] << "\n";
+	//cout << "\nLDU->x[3] : " << LDU->x[LDU->p[0]] << "\n";
+	//cout << "\nS->x[3] : " << S->x[S->p[0]] << "\n";
 
 	//filling up the msc block
 	//int j,k;
@@ -187,11 +283,11 @@ void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* M
 	//}
 
 
-
+	delete [] LDU->p; delete [] LDU->i; delete LDU->x;
 	delete [] S->p; delete [] S->i; delete S->x;
 	//delete [] AA->p; delete [] AA->i; delete AA->x;
-	delete [] LD->p; delete [] LD->i; delete LD->x;
-	delete S; delete PSC;delete LD; 
+	//delete [] LD->p; delete [] LD->i; delete LD->x;
+	delete S; delete LDU;//delete PSC;delete LD; 
 
 	return;
 }
@@ -247,7 +343,7 @@ void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* 
 		PD->p = new int[PD->n+1];PL->p = new int[PL->n+1];PU->p = new int[PU->n+1];PG->p = new int[PG->n+1];
 		PD->nz = -1; PL->nz = -1; PU->nz = -1;PG->nz = -1;
 
-		cout<< "\n Computing nnz..." << "\n";
+		//cout<< "\n Computing nnz..." << "\n";
 		//This is the wrong way as we only want the non zeros of the blocks and not the whole column
 		//nzPD = D->p[rD2] - D->p[rD1]; nzPL = L->p[rD2] - L->p[rD1];
 		//nzPU = U->p[r2] - U->p[r1];          // cout<< "U->p[r2] :"<< U->p[r2] <<"\t U->p[r1] :"<<U->p[r1] << "\n";
@@ -280,15 +376,15 @@ void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* 
 				else continue;
 			}
 		}
-		cout << "\n nzPD : "<< nzPD<<"\tnzPL :"<<nzPL<<"\tnzPU :"<<nzPU<<"\tnzPG :"<<nzPG<<"\n";
+		//cout << "\n nzPD : "<< nzPD<<"\tnzPL :"<<nzPL<<"\tnzPU :"<<nzPU<<"\tnzPG :"<<nzPG<<"\n";
 
 
-		cout << "\n Allocating memory..."<<"\n";		
+		//cout << "\n Allocating memory..."<<"\n";		
 		PD->nzmax = nzPD; PL->nzmax = nzPL; PU->nzmax = nzPU;PG->nzmax = nzPG;
 		PD->i = new int[nzPD];PL->i = new int[nzPL];PU->i = new int[nzPU];PG->i = new int[nzPG];
 		PD->x = new double[nzPD];PL->x = new double[nzPL];PU->x = new double[nzPU];PG->x = new double[nzPG];
 
-		cout << "\n Allocating PD and PL..."<<"\n";
+		//cout << "\n Allocating PD and PL..."<<"\n";
 		iterPD =0; iterPL = 0;
 		//filling the blocks PD and PL
 		for(j=rD1;j<rD2+ol;j++)
@@ -329,10 +425,11 @@ void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* 
 		iterPG = 0;
 		for(j = r1;j<r2+ol;j++)
 		{
+			PG->p[j-r1] = iterPG;
 			for(l = G->p[j];l< G->p[j+1];l++)
 			{
 				//cout << "\n G->i[j] "<< G->i[j] << "\n"; 
-				G->p[j-r1] = iterPG;
+				
 				if(G->i[l] >= r1 && G->i[l] < r2+ol) 
 				{
 					PG->i[iterPG] = G->i[l] - r1;
@@ -343,6 +440,8 @@ void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* 
 			}
 		}
 		PG->p[PG->n] = iterPG;
+		//cout << "\n MSC G->x[0]: "<< G->x[0] << "\n";
+		//cout << "\n MSC PG->p[0]: "<< PG->p[0] << "\n";
 		//cout << "\n Diff PG : "<< nzPG - iterPG << "\n";
 
 		//compute the full schur complement of the extracted blocks
@@ -355,7 +454,7 @@ void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* 
 	}
 
 
-	
+	cout << "\n Mini Schur Complement computation done! \n";
 
 	return;
 }
