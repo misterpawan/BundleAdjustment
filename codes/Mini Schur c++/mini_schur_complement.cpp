@@ -7,20 +7,24 @@
 #include <cstring>
 #include <ctime>
 #include <cmath>
+#include <algorithm>
 
 using namespace std;
 
 #include "cs.h"
 #include "umfpack.h"
 #include "util.h"
+#include "sort.h"
+#include "mkl.h"
 
 #define sizeG 441 //hardcoding it for the time being
+#define size_MKL_IPAR 128
 
 /* This function densifies the jth column of input matrix A
 */
 double* densify_column(cs_di* A, int j)
 {
-
+	cout << "\n In densify....! \n";
 	double* b = new double[A->m];
 	
 	int k;
@@ -86,8 +90,16 @@ void compute_PDinv_times_PU(cs_di* PD,cs_di* PU,cs_di* AA)
 	int j,k;
 	double* b;
 	double* x1;
-	int sym_status=10,num_status = 10,solve_status = 10;
+	int sym_status,num_status,solve_status;
 	//int nz_count;
+
+	//  From the matrix data, create the symbolic factorization information.
+	sym_status = umfpack_di_symbolic ( PD->m, PD->n, PD->p, PD->i, PD->x, &Symbolic, null, null );
+	//cout << "\n Symbolic status :" << sym_status << "\n";
+
+	//  From the symbolic factorization information, carry out the numeric factorization.
+	num_status = umfpack_di_numeric ( PD->p, PD->i, PD->x, Symbolic, &Numeric, null, null );
+	//cout << "\n Numeric status :" << num_status << "\n";
 
 	for(j=0;j<PU->n;j++)
 	//for(j=0;j<1;j++)
@@ -97,26 +109,22 @@ void compute_PDinv_times_PU(cs_di* PD,cs_di* PU,cs_di* AA)
 
 		b = densify_column(PU,j); // densifies the jth column of PU 
 
-		//  From the matrix data, create the symbolic factorization information.
-		sym_status = umfpack_di_symbolic ( PD->m, PD->n, PD->p, PD->i, PD->x, &Symbolic, null, null );
-		//cout << "\n Symbolic status :" << sym_status << "\n";
-		//  From the symbolic factorization information, carry out the numeric factorization.
-  		num_status = umfpack_di_numeric ( PD->p, PD->i, PD->x, Symbolic, &Numeric, null, null );
-  		//cout << "\n Numeric status :" << num_status << "\n";
-  		//  Free the symbolic factorization memory.
-  		umfpack_di_free_symbolic ( &Symbolic );
+  		
   		//  Using the numeric factorization, solve the linear system.
   		solve_status = umfpack_di_solve ( UMFPACK_A, PD->p, PD->i, PD->x, x1, b, Numeric, null, null );
   		//cout << "\n Solve status :" << solve_status << "\n";
-		//  Free the numeric factorization.
-  		umfpack_di_free_numeric ( &Numeric );
-  		
+	
 		
   		//Store x1 in the jth column of AA
   		make_x_sparse(AA,j,x1);
 
 		delete []  x1; delete [] b;
 	}
+
+	//  Free the symbolic factorization memory.
+  	umfpack_di_free_symbolic ( &Symbolic );
+  	//  Free the numeric factorization.
+  	umfpack_di_free_numeric ( &Numeric );
 
 	//cout << "\nAA->x[210] : " << AA->x[210] << "\n";
 
@@ -130,7 +138,6 @@ given as input. The output id written in MSC.
 */
 void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* MSC,cs_di* PD,cs_di* PL,cs_di* PU,cs_di* PG,int* total_nz)
 {
-	
 	cs_di* AA = new cs_di;
 	AA->nz = -1;
 	AA->m = PD->m; AA->n = PU->n; AA->nzmax = AA->m * AA->n;
@@ -140,28 +147,44 @@ void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* M
 	
 	compute_PDinv_times_PU(PD,PU,AA);
 
-	cout << "\nAA->p[AA->n] : " << AA->p[AA->n] << "\n";
+	//cout << "\nAA->p[AA->n] : " << AA->p[AA->n] << "\n";
+
 
 	LDU = cs_di_multiply(PL,AA);
 	
-	delete [] AA->p; delete [] AA->i; delete AA->x;
-	delete AA; //delete LDU;
 
+	delete [] AA->p; delete [] AA->i; delete AA->x;
+	delete AA; 
+
+	
 	cs_di* S ;//= new cs_di;
 	//S->nz = -1;
 	//S->m = PG->m; S->n = PG->n; S->nzmax = S->m * S->n;
 	//S->p = new int[S->n+1]; S->i = new int[S->nzmax]; S->x = new double[S->nzmax];
 
+
 	
 	S = cs_di_add(PG,LDU,1.0,-1.0); //subtraction
-	
-	//filling up the msc block
+	//S = cs_add(PG,PG,1.0,-1.0); //subtraction
+	cout << "S->nzmax : " << S->nzmax << "\n";
+	//cout << "S->nzmax : " << S->p[10] << "\n";
+
 	int j,k,l;
+
+	//filling up the msc block
+	
 	for(j=0;j< S->n; j++)
 	{
 		if(r1 == 0 && j == 0) MSC->p[0] = 0;
+		else if(j==0) continue;
 		else
-			MSC->p[r1+j] = S->p[j]+MSC->p[r1+j-1];
+			MSC->p[r1+j] = (S->p[j]-S->p[j-1])+MSC->p[r1+j-1];
+
+		if(j == S->n-1) 
+		{	
+			MSC->p[r1+j+1] = (S->p[S->n] - S->p[S->n-1]) + MSC->p[r1+j];
+			//cout << "\nMSC->p["<<r1+j+1<<"] : " <<  MSC->p[r1+j+1] << "\n";
+		}	
 	}	
 	
 	l = 0;
@@ -169,6 +192,7 @@ void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* M
 	{
 		if(j < sizeG-1)
 		{
+			//cout <<  "\n MSC->p[j+1] : "<< MSC->p[j+1] << "\n";
 			for(k = MSC->p[j];k  < MSC->p[j+1] && l < S->nzmax; k++)
 			{
 				MSC->i[k] = S->i[l] + r1;
@@ -179,6 +203,7 @@ void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* M
 		else
 		{
 			for(k = MSC->p[j];k  < MSC->nzmax && l < S->nzmax; k++)
+			//for(k = MSC->p[j];k  < MSC->p[j+1] && l < S->nzmax; k++)
 			{
 				MSC->i[k] = S->i[l] + r1;
 				MSC->x[k] = S->x[l];
@@ -186,29 +211,42 @@ void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* M
 			}
 		}
 	}
-	*total_nz += S->nzmax;  cout << "\nTotal nnz : " << *total_nz << "\n";
+	*total_nz += S->nzmax; //cout << "\nTotal nnz : " << *total_nz << "\n";
 	//cout << "\n Total nnz : "<< S->nzmax << "\n";
 	//cout << "\n Last element : "<< S->x[S->nzmax-1] << "\n";
 
+	for(j=r1;j< r2+ol; j++)
+	{
+		if(j < sizeG-1)
+		{
+			sort_rows_val(&(MSC->i[MSC->p[j]]),&(MSC->x[MSC->p[j]]),(MSC->p[j+1]-MSC->p[j]));	
+		}
+		else
+		{
+			sort_rows_val(&(MSC->i[MSC->p[j]]),&(MSC->x[MSC->p[j]]),((MSC->p[r1]+S->nzmax)-MSC->p[j]));
+		}
+	}
+//	cout << "\nSorting done!\n";
+/*
+	for(k = MSC->p[0]; k < MSC->p[1]; k++)
+	{
+		//if(MSC->i[k] > 420 &&  MSC->i[k] < 440)
+			cout << "MSC->i["<<k<<"]: "<< MSC->i[k] << "\n";
+	}
+*/
 	delete [] LDU->p; delete [] LDU->i; delete LDU->x;
 	delete [] S->p; delete [] S->i; delete S->x;
-	//delete [] AA->p; delete [] AA->i; delete AA->x;
-	//delete [] LD->p; delete [] LD->i; delete LD->x;
-	delete S; delete LDU;//delete PSC;delete LD; 
+	delete S;
+	delete LDU; 
 
 	return;
 }
 
 
-/* This function computed the mini schur complement of the input matrix.
+/* This function computes the mini schur complement of the input matrix.
 PARAMS : 
-	n : INPUT, no of columns of the input matrix
-	cc_row : INPUT,row indices of the input matrix
-	cc_col : INPUT,pointers to start of the columns for the input matrix
-	cc_val : INPUT,values of the input matrix 
-	row_msc : OUTPUT,row indices of the output matrix
-	col_msc : OUTPUT,pointers to start of the columns for the output matrix
-	val_msc : OUTPUT,values of the output matrix
+	A,D,L,U : INPUT, the blocks obtained after domain decomposition
+	MSC : OUTPUT,  the mini schur complement block computed.
 
 The domain decomposition step is not shown as it is assumed that the size of 
 block G is available. 
@@ -355,7 +393,7 @@ void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* 
 		//cout << "\n MSC G->x[0]: "<< G->x[0] << "\n";
 		//cout << "\n MSC PG->p[0]: "<< PG->p[0] << "\n";
 		//cout << "\n Diff PG : "<< nzPG - iterPG << "\n";
-
+		//cout << "\n Block 1 : r1 : "<<r1 << " "<< "r2 : "<< r2 << "\n";
 		//compute the full schur complement of the extracted blocks
 		compute_full_schur_complement(r1,r2,rD1,rD2,ol,MSC,PD,PL,PU,PG,&total_nz);
 
@@ -366,7 +404,7 @@ void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* 
 		//updating the coordinates
 		r1 = r2;  r2 = r2+sz;
 		rD1 = rD2; rD2 = rD2 + szD;
-
+		cout << "\n1st k blocks done!\n";
 		delete [] PD->p;delete [] PL->p;delete [] PU->p;delete [] PG->p;
 		delete [] PD->i;delete [] PL->i;delete [] PU->i;delete [] PG->i;
 		delete [] PD->x;delete [] PL->x;delete [] PU->x;delete [] PG->x;
@@ -374,7 +412,7 @@ void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* 
 	}
 
 	//i = i + 1;
-	//cout << "\n i : " << i <<"\n";
+	cout << "\n i : " << i <<"\n";
 	if(i == nmsc_block - 2)
 	{
 		//cout << "\n i : " << i << "\n";
@@ -489,7 +527,7 @@ void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* 
 		//cout << "\n MSC G->x[0]: "<< G->x[0] << "\n";
 		//cout << "\n MSC PG->p[0]: "<< PG->p[0] << "\n";
 		//cout << "\n Diff PG : "<< nzPG - iterPG << "\n";
-
+		//cout << "\n Block 2 : r1 : "<<r1 << " "<< "r2 : "<< r2 << "\n";
 		//compute the full schur complement of the extracted blocks
 		compute_full_schur_complement(r1,r2,rD1,rD2,oll,MSC,PD,PL,PU,PG,&total_nz);
 
@@ -617,13 +655,13 @@ void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* 
 		//cout << "\n MSC G->x[0]: "<< G->x[0] << "\n";
 		//cout << "\n MSC PG->p[0]: "<< PG->p[0] << "\n";
 		//cout << "\n Diff PG : "<< nzPG - iterPG << "\n";
-
+		//cout << "\n Block 3 : r1 : "<<r1 << " "<< "r2 : "<< r2 << "\n";
 		//compute the full schur complement of the extracted blocks
 		compute_full_schur_complement(r1,r2,rD1,rD2,0,MSC,PD,PL,PU,PG,&total_nz);
 
 		MSC->p[sizeG] = total_nz;
 		//cout << "\n MSC->p[0] : "<< MSC->p[0] << "\n";
-		cout << "\n MSC->nnz : "<< MSC->p[sizeG] << "\n";
+		//cout << "\n MSC->nnz : "<< MSC->p[sizeG] << "\n";
 		//cout << "\n MSC->x[total_nz-1] : "<< MSC->x[total_nz-1] << "\n";
 
 
@@ -649,11 +687,12 @@ int main()
 	int num_cols; // no of columns
 	int ncc = 0; // no of non zeros
 	int *null = ( int * ) NULL;
+	double *solve_null = ( double * ) NULL;
 	void *Numeric;
 	string prefix = "49/1/JTJ49_1";
 	double r;
-	int status;
-	void *Symbolic;
+	int status,sym_status,num_status,solve_status;
+	void* Symbolic;
 	int sizeD;
 	int j,k;
 	int nzD = 0;
@@ -674,8 +713,6 @@ int main()
 	//string line;
 	string rhs_filename = "49/1/JTe49_1.txt";
 
-	//string col_filename = prefix + "_col.txt";
-	//ifstream in_file(col_filename,ios::in);
 
 	// getting the matrix size: n -> no of cols, ncc -> no of non zeros
 	cc_header_read ( prefix, ncc, num_cols );
@@ -683,6 +720,29 @@ int main()
 	cout << "\nNo of non zeros = "<< ncc << "\n";
 	cout << "\nNo of columns = "<< num_cols << "\n";
 
+	
+
+	//initializing variables and data structures for DFGMRES call
+	MKL_INT restart = 20;  //DFGMRES restarts
+	MKL_INT ipar[size_MKL_IPAR];
+	ipar[14] = restart;
+
+	//cout << "\n tmp size : "<< num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1) << "\n";
+
+	double dpar[size_MKL_IPAR]; 
+	double tmp[num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1)];
+	//double expected_solution[num_cols];
+	double rhs[num_cols];
+	double computed_solution[num_cols];
+	double residual[num_cols];   
+	double nrm2;
+
+	MKL_INT itercount,ierr=0;
+	MKL_INT RCI_request, RCI_count, ivar;
+	double dvar;
+	char cvar,cvar1,cvar2;
+
+	cout << "\nMKL var init done !\n";
 	//size of the D matrix
 	sizeD = num_cols - sizeG; 
 	//cout << "\nsizeD = "<< sizeD << "\n";
@@ -719,25 +779,11 @@ int main()
 	G->p = new int[sizeG+1];	
 	U->p = new int[sizeG+1];
 
-	MSC->nz = -1;
-	MSC->m = sizeG;
-	MSC->n = sizeG;
-	
-	D->nz = -1;
-	D->m = sizeD;
-	D->n = sizeD;
-
-	G->nz = -1;
-	G->m = sizeG;
-	G->n = sizeG;
-
-	L->nz = -1;
-	L->m = sizeG;
-	L->n = sizeD;
-
-	U->nz = -1;
-	U->m = sizeD;
-	U->n = sizeG;
+	MSC->nz = -1;MSC->m = sizeG;MSC->n = sizeG;
+	D->nz = -1;D->m = sizeD;D->n = sizeD;
+	G->nz = -1;G->m = sizeG;G->n = sizeG;
+	L->nz = -1;L->m = sizeG;L->n = sizeD;
+	U->nz = -1;U->m = sizeD;U->n = sizeG;
 
 
 	cout << "\nCounting non zeros ...\n";
@@ -878,29 +924,85 @@ int main()
 	//compute the mini schur complement in the Ccs_di format.
 	compute_mini_schur_complement(A,MSC,D,L,U,G);
 
-	/****GMRES CALL AFTER THIS ****/
+
+	int ok = cs_di_sprealloc(MSC,MSC->p[sizeG]);
+	//cout << "\n ok : "<< ok << "\n";
+
+	//cout << "\nMSC ->nzmax : " << MSC->p[sizeG+1] << "\n";
+	//cout << "\nMSC ->i[MSC->p[sizeG]] : " << MSC->i[MSC->p[401]-1] << "\n"; //rows are being stored in reverse
+
+	//std::sort(&MSC->i[MSC->p[0]],&MSC->i[MSC->p[sizeG-1]]);
 
 
-	delete [] JTe;
-	delete [] MSC->p;
-	delete [] D->p;
-	delete [] L->p;
-	delete [] G->p;
-	delete [] U->p;
-	delete [] D->i;
-	delete [] L->i;
-	delete [] U->i;
-	delete [] G->i;
-	delete [] D->x;
-	delete [] L->x;
-	delete [] U->x;
-	delete [] G->x;
-	delete U;
-	delete A;
-	delete MSC;
-	delete D;
-	delete L;
-	delete G;
+	/***TESTING THE CORRECTNESS OF COMPUTED MSC WITH MATLAB***/
+/*	double* MSC_b = new double[sizeG];
+	string test_filename = "49/1/MSC_b.txt";
+	void* MSC_Numeric;
+	void* MSC_Symbolic;
+	double* x_msc = new double[sizeG];
+
+
+	r8vec_data_read ( test_filename, sizeG, MSC_b);
+
+	//  From the matrix data, create the symbolic factorization information.
+	sym_status = umfpack_di_symbolic ( MSC->m, MSC->n, MSC->p, MSC->i, MSC->x, &MSC_Symbolic, solve_null, solve_null );
+	cout << "\n MSC Symbolic status :" << sym_status << "\n";
+	//  From the symbolic factorization information, carry out the numeric factorization.
+	num_status = umfpack_di_numeric ( MSC->p, MSC->i, MSC->x, MSC_Symbolic, &MSC_Numeric, solve_null, solve_null );
+	cout << "\n MSC Numeric status :" << num_status << "\n";
+	//  Using the numeric factorization, solve the linear system.
+  	solve_status = umfpack_di_solve ( UMFPACK_A, MSC->p, MSC->i, MSC->x, x_msc, MSC_b, MSC_Numeric, solve_null, solve_null );
+  	cout << "\n MSC Solve status :" << solve_status << "\n";
+
+  	ofstream outfile("x_msc.txt");
+
+  	if(outfile.is_open())
+  	{
+  		for(k = 0; k < sizeG; k++)
+  			outfile << x_msc[k] << "\n";
+  	}
+  	outfile.close();
+
+  	// The difference between x from matlab and c++ code here is 6.2413e-06.
+*/
+
+
+	/**********************GMRES CALL******************************/
+	ivar = num_cols;
+	//cvar = 'num_cols';
+
+	/*---------------------------------------------------------------------------
+	/* Save the right-hand side in vector rhs for future use
+	/*---------------------------------------------------------------------------*/
+	RCI_count=1;
+	dcopy(&ivar, JTe, &RCI_count, rhs, &RCI_count);
+
+	/*---------------------------------------------------------------------------
+	/* Initialize the initial guess
+	/*---------------------------------------------------------------------------*/
+	for(RCI_count=0; RCI_count<num_cols; RCI_count++)
+	{
+		computed_solution[RCI_count]=0.0;
+	}
+	//computed_solution[0]=100.0;
+
+	/*---------------------------------------------------------------------------
+	/* Initialize the solver
+	/*---------------------------------------------------------------------------*/
+	dfgmres_init(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp);
+	if (RCI_request!=0) goto FAILED;
+
+	//ONE:  dfgmres(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp);
+
+	FAILED:
+	printf("The solver has returned the ERROR code %lld \n", RCI_request);
+
+
+	delete [] JTe; 
+	delete [] MSC->p; delete [] D->p; delete [] L->p; delete [] G->p; delete [] U->p;
+	delete [] D->i; delete [] L->i; delete [] U->i; delete [] G->i;
+	delete [] D->x; delete [] L->x; delete [] U->x; delete [] G->x;
+	delete U; delete A; delete MSC; delete D; delete L; delete G;
 
 	return 0;
 }
