@@ -24,7 +24,7 @@ using namespace std;
 */
 double* densify_column(cs_di* A, int j)
 {
-	cout << "\n In densify....! \n";
+	//cout << "\n In densify....! \n";
 	double* b = new double[A->m];
 	
 	int k;
@@ -166,7 +166,7 @@ void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* M
 	
 	S = cs_di_add(PG,LDU,1.0,-1.0); //subtraction
 	//S = cs_add(PG,PG,1.0,-1.0); //subtraction
-	cout << "S->nzmax : " << S->nzmax << "\n";
+	//cout << "S->nzmax : " << S->nzmax << "\n";
 	//cout << "S->nzmax : " << S->p[10] << "\n";
 
 	int j,k,l;
@@ -404,7 +404,7 @@ void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* 
 		//updating the coordinates
 		r1 = r2;  r2 = r2+sz;
 		rD1 = rD2; rD2 = rD2 + szD;
-		cout << "\n1st k blocks done!\n";
+		//cout << "\n1st k blocks done!\n";
 		delete [] PD->p;delete [] PL->p;delete [] PU->p;delete [] PG->p;
 		delete [] PD->i;delete [] PL->i;delete [] PU->i;delete [] PG->i;
 		delete [] PD->x;delete [] PL->x;delete [] PU->x;delete [] PG->x;
@@ -412,7 +412,7 @@ void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* 
 	}
 
 	//i = i + 1;
-	cout << "\n i : " << i <<"\n";
+	//cout << "\n i : " << i <<"\n";
 	if(i == nmsc_block - 2)
 	{
 		//cout << "\n i : " << i << "\n";
@@ -722,27 +722,7 @@ int main()
 
 	
 
-	//initializing variables and data structures for DFGMRES call
-	MKL_INT restart = 20;  //DFGMRES restarts
-	MKL_INT ipar[size_MKL_IPAR];
-	ipar[14] = restart;
-
-	//cout << "\n tmp size : "<< num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1) << "\n";
-
-	double dpar[size_MKL_IPAR]; 
-	double tmp[num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1)];
-	//double expected_solution[num_cols];
-	double rhs[num_cols];
-	double computed_solution[num_cols];
-	double residual[num_cols];   
-	double nrm2;
-
-	MKL_INT itercount,ierr=0;
-	MKL_INT RCI_request, RCI_count, ivar;
-	double dvar;
-	char cvar,cvar1,cvar2;
-
-	cout << "\nMKL var init done !\n";
+	
 	//size of the D matrix
 	sizeD = num_cols - sizeG; 
 	//cout << "\nsizeD = "<< sizeD << "\n";
@@ -758,7 +738,7 @@ int main()
 	// reading the rhs
 	r8vec_data_read ( rhs_filename, num_cols, JTe);
 
-	cout << "\nRHS file read complete!!\n";
+	//cout << "\nRHS file read complete!!\n";
 
 	//Allocate space for the coefficient matrix
 	A->x = new double[ncc];
@@ -786,7 +766,7 @@ int main()
 	U->nz = -1;U->m = sizeD;U->n = sizeG;
 
 
-	cout << "\nCounting non zeros ...\n";
+	//cout << "\nCounting non zeros ...\n";
 	for(j=0;j<sizeD;j++)
 	{
 		//j = 1000;
@@ -801,7 +781,7 @@ int main()
 		//cout << "\n nzL = " << nzL << "\n";
 		//break;
 	}
-	cout << "\nCounting non zeros complete!!\n";
+	//cout << "\nCounting non zeros complete!!\n";
 	//cout << "\n nzD = " << nzD << "\n";
 	//cout << "\n nzL = " << nzL << "\n";
 
@@ -925,6 +905,9 @@ int main()
 	compute_mini_schur_complement(A,MSC,D,L,U,G);
 
 
+	// Since U is not used anymore
+	delete [] U->p;delete [] U->i;delete U;
+
 	int ok = cs_di_sprealloc(MSC,MSC->p[sizeG]);
 	//cout << "\n ok : "<< ok << "\n";
 
@@ -968,14 +951,41 @@ int main()
 
 
 	/**********************GMRES CALL******************************/
+
+	//initializing variables and data structures for DFGMRES call
+	int restart = 20;  //DFGMRES restarts
+	MKL_INT ipar[size_MKL_IPAR];
+	ipar[14] = restart;
+
+	//cout << "\n tmp size : "<< num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1) << "\n";
+
+	double dpar[size_MKL_IPAR]; 
+	double tmp[num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1)];
+	//double expected_solution[num_cols];
+	double rhs[num_cols];
+	double computed_solution[num_cols];
+	double residual[num_cols];   
+	double nrm2;
+
+	MKL_INT itercount,ierr=0;
+	MKL_INT RCI_request, RCI_count, ivar;
+	double dvar;
+	char cvar,cvar1,cvar2;
+
+	cout << "\nMKL var init done !\n";
+
+
+
 	ivar = num_cols;
-	//cvar = 'num_cols';
+	cvar = 'N';  //no transpose
 
 	/*---------------------------------------------------------------------------
 	/* Save the right-hand side in vector rhs for future use
 	/*---------------------------------------------------------------------------*/
 	RCI_count=1;
-	dcopy(&ivar, JTe, &RCI_count, rhs, &RCI_count);
+	// JTe vector is not altered
+	//rhs is used for residual calculations
+	dcopy(&ivar, JTe, &RCI_count, rhs, &RCI_count);   
 
 	/*---------------------------------------------------------------------------
 	/* Initialize the initial guess
@@ -984,25 +994,152 @@ int main()
 	{
 		computed_solution[RCI_count]=0.0;
 	}
-	//computed_solution[0]=100.0;
+	computed_solution[0]=100.0;
 
 	/*---------------------------------------------------------------------------
 	/* Initialize the solver
 	/*---------------------------------------------------------------------------*/
-	dfgmres_init(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp);
+	dfgmres_init(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp); 
 	if (RCI_request!=0) goto FAILED;
 
-	//ONE:  dfgmres(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp);
+	//cout << "\n RCI_request : " << RCI_request << "\n";
+	//cout << "\n ipar[3]] : " << ipar[3] << "\n";
+	//cout << "\n ipar[14]] : " << ipar[14] << "\n";
+	ipar[4] = 20;  // Max Iterations
+	ipar[10] = 0;  //Preconditioner used
 
-	FAILED:
-	printf("The solver has returned the ERROR code %lld \n", RCI_request);
+	//cout << "\n dpar[0] : "<<dpar[0] << "\n";
+	//cout << "\n dpar[1] : "<<dpar[1] << "\n";
+
+	dpar[0] = 1.0e-04; //Relative Tolerance
+
+	/*---------------------------------------------------------------------------
+	/* Check the correctness and consistency of the newly set parameters
+	/*---------------------------------------------------------------------------*/
+	dfgmres_check(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp); 
+	if (RCI_request!=0) goto FAILED;
+
+	//cout << "\n RCI_request : " << RCI_request << "\n";
+	/*---------------------------------------------------------------------------
+	/* Compute the solution by RCI (P)FGMRES solver with preconditioning
+	/* Reverse Communication starts here
+	/*---------------------------------------------------------------------------*/
+	ONE:  cout << "\n in gmres... \n";  
+	      cout << "\n computed_solution[0] : " << computed_solution[0] << "\n";
+	dfgmres(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp);
+	cout << "\n dfgmres RCI_request : "<<RCI_request << "\n";
+	/*---------------------------------------------------------------------------
+	/* If RCI_request=1, then compute the vector A*tmp[ipar[21]-1]
+	/* and put the result in vector tmp[ipar[22]-1]
+	/*---------------------------------------------------------------------------
+	/* NOTE that ipar[21] and ipar[22] contain FORTRAN style addresses,
+	/* therefore, in C code it is required to subtract 1 from them to get C style
+	/* addresses
+	/*---------------------------------------------------------------------------*/
+	/*---------------------------------------------------------------------------
+	/* Since the input matrix is symmetric , so the CSC format for coefficient matrix
+	   will be the same as CSR format with row and column arrays reversed. In the 
+	   mat-vec function call below, the pointers for row and col arrays 
+	   have been exchanged.
+	/*-----------------------------------------------------------------------------*/
+	/*------------------DEPRACATED ROUTINE (FIND ANOTHER )-------------------------*/
+	if (RCI_request==1)
+	{	
+		cout << "\n In mat-vec\n";
+		//cout << "\n A->x[ncc-1]: " << A->x[ncc-1] << "\n";
+		mkl_dcsrgemv(&cvar, &ivar, A->x, A->p, A->i, &tmp[ipar[21]-1], &tmp[ipar[22]-1]);
+		cout << "\n Mat-Vec done!!\n";
+		goto ONE;
+	}
+
+	/*---------------------------------------------------------------------------
+	/* If RCI_request=2, then do the user-defined stopping test
+	/* The residual stopping test for the computed solution is performed here
+	/*---------------------------------------------------------------------------
+	/* NOTE: from this point vector b[N] is no longer containing the right-hand
+	/* side of the problem! It contains the current FGMRES approximation to the
+	/* solution. If you need to keep the right-hand side, save it in some other
+	/* vector before the call to dfgmres routine. Here we saved it in vector
+	/* rhs[N]. The vector b is used instead of rhs to preserve the
+	/* original right-hand side of the problem and guarantee the proper
+	/* restart of FGMRES method. Vector b will be altered when computing the
+	/* residual stopping criterion!
+	/*---------------------------------------------------------------------------*/
+	if (RCI_request==2)
+	{
+		/* Request to the dfgmres_get routine to put the solution into b[N] via ipar[12]
+		/*---------------------------------------------------------------------------
+		/* WARNING: beware that the call to dfgmres_get routine with ipar[12]=0 at this stage may
+		/* destroy the convergence of the FGMRES method, therefore, only advanced users should
+		/* exploit this option with care */
+		ipar[12]=1;
+		/* Get the current FGMRES solution in the vector b[N] */
+		dfgmres_get(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp, &itercount);
+		/* Compute the current true residual via MKL (Sparse) BLAS routines */
+		mkl_dcsrgemv(&cvar, &ivar, A->x, A->p, A->i, rhs, residual); // A*x for new solution x
+		dvar=-1.0E0;
+		i=1;
+		daxpy(&ivar, &dvar, JTe, &i, residual, &i);  // Ax - A*x_correct
+		dvar=dnrm2(&ivar,residual,&i);
+		if (dvar<1.0E-4) goto COMPLETE;   //taking tolerance as 1e-04
+
+		else goto ONE;
+	}
+
+	/*---------------------------------------------------------------------------
+	/* If RCI_request=3, then apply the preconditioner on the vector
+	/* tmp[ipar[21]-1] and put the result in vector tmp[ipar[22]-1]
+	/*---------------------------------------------------------------------------
+	/* NOTE that ipar[21] and ipar[22] contain FORTRAN style addresses,
+	/* therefore, in C code it is required to subtract 1 from them to get C style
+	/* addresses
+	/* Here is the recommended usage of the result produced by ILU0 routine
+    /* via standard MKL Sparse Blas solver routine mkl_dcsrtrsv.
+    /*---------------------------------------------------------------------------*/
+	if (RCI_request==3)
+	{
+		cout << "\n Prec solve ..." << "\n";
+		goto ONE;
+	}
+
+	/*---------------------------------------------------------------------------
+	/* If RCI_request=4, then check if the norm of the next generated vector is
+	/* not zero up to rounding and computational errors. The norm is contained
+	/* in dpar[6] parameter
+	/*---------------------------------------------------------------------------*/
+	if (RCI_request==4)
+	{
+		if (dpar[6]<1.0E-12) goto COMPLETE;
+		else goto ONE;
+	}
+	/*---------------------------------------------------------------------------
+	/* If RCI_request=anything else, then dfgmres subroutine failed
+	/* to compute the solution vector: computed_solution[N]
+	/*---------------------------------------------------------------------------*/
+	else
+	{
+		goto FAILED;
+	}
+
+	/*---------------------------------------------------------------------------
+	/* Reverse Communication ends here
+	/* Get the current iteration number and the FGMRES solution (DO NOT FORGET to
+	/* call dfgmres_get routine as computed_solution is still containing
+	/* the initial guess!). Request to dfgmres_get to put the solution
+	/* into vector computed_solution[N] via ipar[12]
+	/*---------------------------------------------------------------------------*/
+	COMPLETE:   ipar[12]=0;
+	dfgmres_get(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp, &itercount);
+//	cout << "\n RCI_request : "<< RCI_request << "\n";
+
+	FAILED: printf("The solver has returned the ERROR code %d \n", RCI_request);
 
 
 	delete [] JTe; 
-	delete [] MSC->p; delete [] D->p; delete [] L->p; delete [] G->p; delete [] U->p;
-	delete [] D->i; delete [] L->i; delete [] U->i; delete [] G->i;
+	delete [] MSC->p; delete [] D->p;  delete [] G->p; 
+	delete [] D->i;  delete [] G->i;
 	delete [] D->x; delete [] L->x; delete [] U->x; delete [] G->x;
-	delete U; delete A; delete MSC; delete D; delete L; delete G;
+	delete A; delete MSC; delete D;  delete G;
 
 	return 0;
 }
