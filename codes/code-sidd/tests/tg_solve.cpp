@@ -90,7 +90,18 @@ int main()
 
 
 
-/* Call the Eigenvalue/Vector Solver for Intel MKL*/
+/*
+
+The above read JTJ matrix is in CSC to convert to CSR: 
+- Pass row pointers in place of column & column in place of rows 
+- And then pass them to the routines.
+This is true because for symmetric matrix JTJ, CSR = transpose(CSC)
+
+----------------------------------------------------------------------------------
+
+
+
+ Call the Eigenvalue/Vector Solver for Intel MKL*/
   /*
 !   Content: Example for Intel(R) MKL Extended Eigensolvers (sparse format,
 !            double precision)
@@ -206,7 +217,7 @@ int main()
         X[i] = zero;
     }
 
-    printf("Sparse matrix size %i\n", (int)N);
+    printf("Sparse matrix size %i\n", (int)num_cols);
 
     /* Search interval [Emin,Emax] */
     Emin = 3.0;   // change this for JTJ
@@ -258,6 +269,8 @@ int main()
     }
 
 // Prolongation Matrix , P = X (matrix of Eigenvectors)
+// coarse grid matrix , Ac = P*A*P'
+
 
 
 
@@ -270,7 +283,8 @@ double * tg_solve(double *){
         double* x;
         double* t;
         int sym_status,num_status,solve_status;
-                                                   
+        
+
         
         // 1st Step : Pre-smoothing
 
@@ -295,22 +309,101 @@ double * tg_solve(double *){
 
         // Check for matrix vector multiplication 
 
+        /* 1st perform the innermost matrix vector multiplication
+            P'*x  
+
+        */
+
+         printf("  INPUT DATA FOR MKL_DCSRMV \n");
+         
+         float x_0[num_cols];
+         float x_1[num_cols];
+         char        matdescra[6];
+
+         transa = 'T';           // Transpose of the prolongation matrix
+         
+         matdescra[1] = 's';    // Symmetric Matrix
+         matdescra[3] = 'c';    // zero-based indexing
+         float  alpha = 1.0, beta = 0.0;
+
+         for (i = 0; i < num_rows; i++) {
+            printf("%7.1f\n", x_0[i]);
+        };
+        // Constructing pointerE
+        MKL_INT  pointerE[M];
+        MKL_INT  i, j;   
+         for (i = 0; i < num_cols; i++) {
+              pointerE[i] = P->i[i+1];
+         }
+        
+        //mkl_dcsrmv(&transa, &m, &m, &alpha, matdescra, values, columns, pointerB, pointerE, sol_vec, &beta, rhs_vec);
+        /*
+          
+
+        */
+
+        mkl_dcsrmv(&transa, num_rows, num_cols, &alpha, matdescra, P->x, P->p, P->i, pointerE, &x, &beta, x_0);
+
+        /*
+        g = P * (Ac \ (P'*x))
+        Now : x_0 = P'*x  (done)
+        Next : solve (Ac \x)
+        */
+
+        printf("   Solve Ac\\ x_0 system   \n");
+
+        uplo = 'u';
+        nonunit = 'n';
+        transa = 'n'; 
+
+        mkl_cspblas_scsrtrsv(&uplo, &transa, &nonunit, num_cols, Ac->x, Ac->p, Ac->i, x_0, x_1);
+
+        /*
+          Now compute matrix -vector multiplication :g = P * x_1 ; x1 = (Ac \ (P'*x_0));
+          
+
+        */
+        transa = 'n';
+        
+        // x_2 (g) = P*x_1;   
+
+        mkl_dcsrmv(&transa, num_rows, num_cols, &alpha, matdescra, P->x, P->p, P->i, pointerE, &x_1, &beta, x_2);
+
+       // Compute : q(x_3) = A*(x_2); 
+
+        mkl_dcsrmv(&transa, num_rows, num_cols, &alpha, matdescra, A->x, A->p, A->i, pointerE, &x_1, &beta, x_3);
+
+        /*
+          y = t + g - U \ (L\q)
+
+          y = t + x_1 - U\(L\x_2)
+
+        
+        */
+
+        // Initializing parameters for sparse vector-vector addition 
+
+        double   alpha = 1;
+        int incx = 1, incy = 1;
+        // t + g; where g = x_2
+
+        cblas_daxpy(n, alpha, t, incx, x_2, incy);
+
+        //mkl_cspblas_scsrtrsv(&uplo, &transa, &nonunit, num_cols, Ac->x, Ac->p, Ac->i, x_0, x_1);
 
 
 
-
-
-
-
+        // Last Step : U\(L\q) remaining....
 
 
 
 
 
         //  Free the symbolic factorization memory.
-      umfpack_di_free_symbolic ( &Symbolic );
+        umfpack_di_free_symbolic ( &Symbolic );
         //  Free the numeric factorization.
-      umfpack_di_free_numeric ( &Numeric );
+        umfpack_di_free_numeric ( &Numeric );
+
 }
 
 
