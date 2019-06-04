@@ -7,7 +7,6 @@
 #include <cstring>
 #include <ctime>
 #include <cmath>
-#include <algorithm>
 
 using namespace std;
 
@@ -50,7 +49,7 @@ double* densify_column(cs_di* A, int j)
 */
 void make_x_sparse(cs_di* AA,int j,double* x1)
 {
-	int k,l;
+	int k;
 	int row_arr_count; //displacement on the row and val array where the next iterm must be stored.
 	int nz_count = 0;
 
@@ -153,7 +152,7 @@ void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* M
 	LDU = cs_di_multiply(PL,AA);
 	
 
-	delete [] AA->p; delete [] AA->i; delete AA->x;
+	delete[] AA->p; delete[] AA->i; delete[] AA->x;
 	delete AA; 
 
 	
@@ -234,8 +233,8 @@ void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* M
 			cout << "MSC->i["<<k<<"]: "<< MSC->i[k] << "\n";
 	}
 */
-	delete [] LDU->p; delete [] LDU->i; delete LDU->x;
-	delete [] S->p; delete [] S->i; delete S->x;
+	delete [] LDU->p; delete [] LDU->i; delete [] LDU->x;
+	delete [] S->p; delete [] S->i; delete [] S->x;
 	delete S;
 	delete LDU; 
 
@@ -688,11 +687,11 @@ int main()
 	int ncc = 0; // no of non zeros
 	int *null = ( int * ) NULL;
 	double *solve_null = ( double * ) NULL;
-	void *Numeric;
+	void *Numeric, *Numeric_D,*Numeric_MSC;
 	string prefix = "49/1/JTJ49_1";
 	double r;
 	int status,sym_status,num_status,solve_status;
-	void* Symbolic;
+	void* Symbolic,*Symbolic_D,*Symbolic_MSC;
 	int sizeD;
 	int j,k;
 	int nzD = 0;
@@ -905,8 +904,8 @@ int main()
 	compute_mini_schur_complement(A,MSC,D,L,U,G);
 
 
-	// Since U is not used anymore
-	delete [] U->p;delete [] U->i;delete U;
+	// Since L is not used anymore
+	delete [] L->p;delete [] L->i;delete [] L->x;delete L;
 
 	int ok = cs_di_sprealloc(MSC,MSC->p[sizeG]);
 	//cout << "\n ok : "<< ok << "\n";
@@ -916,6 +915,24 @@ int main()
 
 	//std::sort(&MSC->i[MSC->p[0]],&MSC->i[MSC->p[sizeG-1]]);
 
+	/************LU Factorization of D and MSC******************************/
+
+	sym_status = umfpack_di_symbolic ( D->m, D->n, D->p, D->i, D->x, &Symbolic_D, solve_null, solve_null );
+	//cout << "\n Symbolic status for D :" << sym_status << "\n";
+
+	num_status = umfpack_di_numeric ( D->p, D->i, D->x, Symbolic_D, &Numeric_D, solve_null, solve_null );
+	//cout << "\n Numeric status for D:" << num_status << "\n";
+
+	//  Free the symbolic factorization memory.
+  	umfpack_di_free_symbolic ( &Symbolic_D );
+
+	sym_status = umfpack_di_symbolic ( MSC->m, MSC->n, MSC->p, MSC->i, MSC->x, &Symbolic_MSC, solve_null, solve_null );
+	//cout << "\n Symbolic status for MSC :" << sym_status << "\n";
+
+	num_status = umfpack_di_numeric ( MSC->p, MSC->i, MSC->x, Symbolic_MSC, &Numeric_MSC, solve_null, solve_null );
+	//cout << "\n Numeric status for MSC:" << num_status << "\n";
+	umfpack_di_free_symbolic ( &Symbolic_MSC );
+  	
 
 	/***TESTING THE CORRECTNESS OF COMPUTED MSC WITH MATLAB***/
 /*	double* MSC_b = new double[sizeG];
@@ -954,17 +971,18 @@ int main()
 
 	//initializing variables and data structures for DFGMRES call
 	int restart = 20;  //DFGMRES restarts
-	MKL_INT ipar[size_MKL_IPAR];
+	MKL_INT* ipar = new MKL_INT[size_MKL_IPAR];
 	ipar[14] = restart;
 
 	//cout << "\n tmp size : "<< num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1) << "\n";
 
-	double dpar[size_MKL_IPAR]; 
-	double tmp[num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1)];
+	double* dpar = new double[size_MKL_IPAR]; 
+	//double tmp[num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1)];
+	double* tmp = new double[num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1)];
 	//double expected_solution[num_cols];
-	double rhs[num_cols];
-	double computed_solution[num_cols];
-	double residual[num_cols];   
+	double* rhs = new double[num_cols];
+	double* computed_solution = new double[num_cols];
+	double* residual = new double[num_cols];   
 	double nrm2;
 
 	MKL_INT itercount,ierr=0;
@@ -1005,8 +1023,9 @@ int main()
 	//cout << "\n RCI_request : " << RCI_request << "\n";
 	//cout << "\n ipar[3]] : " << ipar[3] << "\n";
 	//cout << "\n ipar[14]] : " << ipar[14] << "\n";
+	ipar[7] = 0;
 	ipar[4] = 20;  // Max Iterations
-	ipar[10] = 0;  //Preconditioner used
+	ipar[10] = 1;  //Preconditioner used
 
 	//cout << "\n dpar[0] : "<<dpar[0] << "\n";
 	//cout << "\n dpar[1] : "<<dpar[1] << "\n";
@@ -1026,11 +1045,14 @@ int main()
 	/*---------------------------------------------------------------------------*/
 	ONE:  cout << "\n in gmres... \n";  
 	      cout << "\n computed_solution[0] : " << computed_solution[0] << "\n";
+	      cout << "\n JTe[1] : " << JTe[1] << "\n";
+	      cout << "\n ipar[0] : " << ipar[0] << "\n";
+	      cout << "\n dpar[0] : " << dpar[0] << "\n";
 	dfgmres(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp);
 	cout << "\n dfgmres RCI_request : "<<RCI_request << "\n";
 	/*---------------------------------------------------------------------------
 	/* If RCI_request=1, then compute the vector A*tmp[ipar[21]-1]
-	/* and put the result in vector tmp[ipar[22]-1]
+	/* and put the result in vector tmp[ipar[22]-1]	
 	/*---------------------------------------------------------------------------
 	/* NOTE that ipar[21] and ipar[22] contain FORTRAN style addresses,
 	/* therefore, in C code it is required to subtract 1 from them to get C style
@@ -1045,10 +1067,11 @@ int main()
 	/*------------------DEPRACATED ROUTINE (FIND ANOTHER )-------------------------*/
 	if (RCI_request==1)
 	{	
-		cout << "\n In mat-vec\n";
+		//cout << "\n In mat-vec\n";
 		//cout << "\n A->x[ncc-1]: " << A->x[ncc-1] << "\n";
 		mkl_dcsrgemv(&cvar, &ivar, A->x, A->p, A->i, &tmp[ipar[21]-1], &tmp[ipar[22]-1]);
-		cout << "\n Mat-Vec done!!\n";
+		//cout << "\n Mat-Vec done!!\n";
+		//cout << "\n tmp[(ipar[22]-1)] : " << tmp[ipar[22]-1]<< "\n";
 		goto ONE;
 	}
 
@@ -1078,8 +1101,8 @@ int main()
 		/* Compute the current true residual via MKL (Sparse) BLAS routines */
 		mkl_dcsrgemv(&cvar, &ivar, A->x, A->p, A->i, rhs, residual); // A*x for new solution x
 		dvar=-1.0E0;
-		i=1;
-		daxpy(&ivar, &dvar, JTe, &i, residual, &i);  // Ax - A*x_correct
+		RCI_count=1;
+		daxpy(&ivar, &dvar, JTe, &RCI_count, residual, &RCI_count);  // Ax - A*x_correct
 		dvar=dnrm2(&ivar,residual,&i);
 		if (dvar<1.0E-4) goto COMPLETE;   //taking tolerance as 1e-04
 
@@ -1099,6 +1122,41 @@ int main()
 	if (RCI_request==3)
 	{
 		cout << "\n Prec solve ..." << "\n";
+		double y1[sizeD], y2[sizeG];
+		double z1[sizeD], z2[sizeG],Lz1[sizeG];
+		int prec_solve_status;
+		double* null = (double*)NULL;
+		int zvar = sizeG ; //no of rows of L
+		int kk;
+
+		for(kk = 0; kk<ivar; kk++)
+		{
+			if(kk < sizeD) y1[kk] = tmp[(ipar[21]-1) + kk];
+			else y2[kk-sizeD] = tmp[(ipar[21]-1)+kk];  //splitting vector into y1,y2
+		}
+
+		prec_solve_status = umfpack_di_solve ( UMFPACK_A, D->p, D->i, D->x, z1, y1, Numeric_D, null, null );
+  		cout << "\n  Prec solve status D :" << prec_solve_status << "\n";
+
+  		
+
+  		// performing L*z1 ... since U and L are transposes of each other, so
+  		// using csc of U as CSR of L
+  		mkl_dcsrgemv(&cvar, &zvar, U->x, U->p, U->i, z1, Lz1);
+  		RCI_count = 1;
+  		dvar = -1.0E0;
+  		//y2 = y2 - L*z1
+  		daxpy(&zvar, &dvar, Lz1, &RCI_count, y2, &RCI_count);  // Ax - A*x_correct
+
+  		prec_solve_status = umfpack_di_solve ( UMFPACK_A, MSC->p, MSC->i, MSC->x, z2, y2, Numeric_MSC, null, null );
+  		cout << "\n  Prec solve status MSC :" << prec_solve_status << "\n";
+
+  		for(kk = 0; kk < ivar; kk++)
+  		{
+  			if(kk < sizeD) tmp[(ipar[22]-1)+kk] = z1[kk];
+  			else tmp[(ipar[22]-1)+kk] = z2[kk - sizeD];
+  		}
+
 		goto ONE;
 	}
 
@@ -1130,16 +1188,23 @@ int main()
 	/*---------------------------------------------------------------------------*/
 	COMPLETE:   ipar[12]=0;
 	dfgmres_get(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp, &itercount);
+	cout << "The system has been solved \n";
 //	cout << "\n RCI_request : "<< RCI_request << "\n";
 
-	FAILED: printf("The solver has returned the ERROR code %d \n", RCI_request);
+	FAILED: cout << "The solver has returned the ERROR code " << RCI_request << "\n";
 
+
+	//  Free the numeric factorization.
+  	umfpack_di_free_numeric ( &Numeric_D );
+  	umfpack_di_free_numeric ( &Numeric_MSC );
 
 	delete [] JTe; 
-	delete [] MSC->p; delete [] D->p;  delete [] G->p; 
-	delete [] D->i;  delete [] G->i;
-	delete [] D->x; delete [] L->x; delete [] U->x; delete [] G->x;
-	delete A; delete MSC; delete D;  delete G;
+	delete [] MSC->p; delete [] D->p;  delete [] G->p; delete [] U->p;
+	delete [] D->i;  delete [] G->i; delete [] U->i;
+	delete [] D->x; delete [] U->x; delete [] G->x;
+	delete A; delete MSC; delete D;  delete G; delete U; 
+	delete [] tmp; delete [] ipar; delete [] dpar;
+	delete [] rhs; delete [] computed_solution; delete [] residual;
 
 	return 0;
 }
