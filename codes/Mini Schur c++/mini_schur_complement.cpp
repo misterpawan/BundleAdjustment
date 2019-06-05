@@ -142,7 +142,7 @@ void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* M
 	AA->m = PD->m; AA->n = PU->n; AA->nzmax = AA->m * AA->n;
 	AA->p = new int[AA->n+1]; AA->i = new int[AA->nzmax]; AA->x = new double[AA->nzmax];
 
-	cs_di* LDU;// = new cs_di;
+	cs_di* LDU;
 	
 	compute_PDinv_times_PU(PD,PU,AA);
 
@@ -156,10 +156,7 @@ void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* M
 	delete AA; 
 
 	
-	cs_di* S ;//= new cs_di;
-	//S->nz = -1;
-	//S->m = PG->m; S->n = PG->n; S->nzmax = S->m * S->n;
-	//S->p = new int[S->n+1]; S->i = new int[S->nzmax]; S->x = new double[S->nzmax];
+	cs_di* S ;
 
 
 	
@@ -746,7 +743,8 @@ int main()
 
 	//read the matrix data
 	cc_data_read ( prefix, ncc, num_cols, A->i, A->p, A->x );
-
+	A->p[num_cols] = ncc;
+	//cout << "After data read , A->p[num_cols] : " << A->p[num_cols] << "\n"; 
 	cout << "\nFile read complete!\n";
 
 	/***Domain Decomposition***/
@@ -933,6 +931,9 @@ int main()
 	//cout << "\n Numeric status for MSC:" << num_status << "\n";
 	umfpack_di_free_symbolic ( &Symbolic_MSC );
   	
+  	delete [] G->p; delete [] G->i; delete [] G->x; delete G;
+//  	delete [] MSC->p; delete [] MSC->i; delete [] MSC->x; delete MSC;
+//  	delete [] D->p; delete [] D->i; delete [] D->x; delete D;
 
 	/***TESTING THE CORRECTNESS OF COMPUTED MSC WITH MATLAB***/
 /*	double* MSC_b = new double[sizeG];
@@ -970,15 +971,16 @@ int main()
 	/**********************GMRES CALL******************************/
 
 	//initializing variables and data structures for DFGMRES call
-	int restart = 20;  //DFGMRES restarts
+	//int restart = 20;  //DFGMRES restarts
 	MKL_INT* ipar = new MKL_INT[size_MKL_IPAR];
-	ipar[14] = restart;
+	ipar[14] = 3;  //non restarted iterations
 
 	//cout << "\n tmp size : "<< num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1) << "\n";
 
 	double* dpar = new double[size_MKL_IPAR]; 
 	//double tmp[num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1)];
-	double* tmp = new double[num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1)];
+	double* tmp = new double[num_cols*(2*ipar[14]+1)+(ipar[14]*(ipar[14]+9))/2+1];
+	//double* tmp = new double[num_cols*(2*num_cols+1)+(num_cols*(num_cols+9))/2+1];
 	//double expected_solution[num_cols];
 	double* rhs = new double[num_cols];
 	double* computed_solution = new double[num_cols];
@@ -988,7 +990,7 @@ int main()
 	MKL_INT itercount,ierr=0;
 	MKL_INT RCI_request, RCI_count, ivar;
 	double dvar;
-	char cvar,cvar1,cvar2;
+	char cvar;
 
 	cout << "\nMKL var init done !\n";
 
@@ -1012,7 +1014,7 @@ int main()
 	{
 		computed_solution[RCI_count]=0.0;
 	}
-	computed_solution[0]=100.0;
+	//computed_solution[0]=100.0;
 
 	/*---------------------------------------------------------------------------
 	/* Initialize the solver
@@ -1023,12 +1025,13 @@ int main()
 	//cout << "\n RCI_request : " << RCI_request << "\n";
 	//cout << "\n ipar[3]] : " << ipar[3] << "\n";
 	//cout << "\n ipar[14]] : " << ipar[14] << "\n";
-	ipar[7] = 0;
-	ipar[4] = 20;  // Max Iterations
+	ipar[7] = 1;
+	ipar[4] = 400;  // Max Iterations
 	ipar[10] = 1;  //Preconditioner used
+	
 
 	//cout << "\n dpar[0] : "<<dpar[0] << "\n";
-	//cout << "\n dpar[1] : "<<dpar[1] << "\n";
+	//cout << "\n ipar[9] : "<<ipar[9] << "\n";
 
 	dpar[0] = 1.0e-04; //Relative Tolerance
 
@@ -1038,18 +1041,27 @@ int main()
 	dfgmres_check(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp); 
 	if (RCI_request!=0) goto FAILED;
 
+	/*	from https://software.intel.com/en-us/mkl-developer-reference-fortran-mkl-csrgemv
+	ia(m + 1) is equal to the number of non-zeros plus one
+	*/
+	A->p[ivar] = A->p[ivar]+1;
+	//cout << "A->p[ivar] : " << A->p[ivar] << "\n";
+
 	//cout << "\n RCI_request : " << RCI_request << "\n";
 	/*---------------------------------------------------------------------------
 	/* Compute the solution by RCI (P)FGMRES solver with preconditioning
 	/* Reverse Communication starts here
 	/*---------------------------------------------------------------------------*/
-	ONE:  cout << "\n in gmres... \n";  
-	      cout << "\n computed_solution[0] : " << computed_solution[0] << "\n";
-	      cout << "\n JTe[1] : " << JTe[1] << "\n";
-	      cout << "\n ipar[0] : " << ipar[0] << "\n";
-	      cout << "\n dpar[0] : " << dpar[0] << "\n";
+	ONE:  //cout << "\n in gmres... \n";  
+	      //cout << "\n computed_solution[0] : " << computed_solution[0] << "\n";
+	      //cout << "\n JTe[1] : " << JTe[1] << "\n";
+	      //cout << "\n ipar[0] : " << ipar[0] << "\n";
+	      //cout << "\n dpar[0] : " << dpar[0] << "\n";
 	dfgmres(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp);
 	cout << "\n dfgmres RCI_request : "<<RCI_request << "\n";
+
+	//ipar[13] = 20; // No of inner iterations
+
 	/*---------------------------------------------------------------------------
 	/* If RCI_request=1, then compute the vector A*tmp[ipar[21]-1]
 	/* and put the result in vector tmp[ipar[22]-1]	
@@ -1104,6 +1116,7 @@ int main()
 		RCI_count=1;
 		daxpy(&ivar, &dvar, JTe, &RCI_count, residual, &RCI_count);  // Ax - A*x_correct
 		dvar=dnrm2(&ivar,residual,&i);
+		cout << "\n dvar : " << dvar << "\n";
 		if (dvar<1.0E-4) goto COMPLETE;   //taking tolerance as 1e-04
 
 		else goto ONE;
@@ -1122,8 +1135,11 @@ int main()
 	if (RCI_request==3)
 	{
 		cout << "\n Prec solve ..." << "\n";
-		double y1[sizeD], y2[sizeG];
-		double z1[sizeD], z2[sizeG],Lz1[sizeG];
+		double* y1 = new double[sizeD];
+		double* y2 = new double[sizeG];
+		double* z1 = new double[sizeD];
+		double* z2 = new double[sizeG];
+		double* Lz1 = new double[sizeG];
 		int prec_solve_status;
 		double* null = (double*)NULL;
 		int zvar = sizeG ; //no of rows of L
@@ -1136,7 +1152,7 @@ int main()
 		}
 
 		prec_solve_status = umfpack_di_solve ( UMFPACK_A, D->p, D->i, D->x, z1, y1, Numeric_D, null, null );
-  		cout << "\n  Prec solve status D :" << prec_solve_status << "\n";
+  		//cout << "\n  Prec solve status D :" << prec_solve_status << "\n";
 
   		
 
@@ -1149,13 +1165,15 @@ int main()
   		daxpy(&zvar, &dvar, Lz1, &RCI_count, y2, &RCI_count);  // Ax - A*x_correct
 
   		prec_solve_status = umfpack_di_solve ( UMFPACK_A, MSC->p, MSC->i, MSC->x, z2, y2, Numeric_MSC, null, null );
-  		cout << "\n  Prec solve status MSC :" << prec_solve_status << "\n";
+  		//cout << "\n  Prec solve status MSC :" << prec_solve_status << "\n";
 
   		for(kk = 0; kk < ivar; kk++)
   		{
   			if(kk < sizeD) tmp[(ipar[22]-1)+kk] = z1[kk];
   			else tmp[(ipar[22]-1)+kk] = z2[kk - sizeD];
   		}
+
+  		delete [] y1; delete [] y2; delete [] z1; delete [] z2; delete [] Lz1;
 
 		goto ONE;
 	}
@@ -1199,10 +1217,15 @@ int main()
   	umfpack_di_free_numeric ( &Numeric_MSC );
 
 	delete [] JTe; 
-	delete [] MSC->p; delete [] D->p;  delete [] G->p; delete [] U->p;
-	delete [] D->i;  delete [] G->i; delete [] U->i;
-	delete [] D->x; delete [] U->x; delete [] G->x;
-	delete A; delete MSC; delete D;  delete G; delete U; 
+	delete [] A->x; delete [] A->p; delete [] A->i; 
+	//delete [] MSC->p; delete [] D->p;  delete [] G->p; 
+	delete [] U->p;
+	//delete [] D->i;  delete [] G->i;
+	 delete [] U->i;
+	//delete [] D->x;  delete [] G->x;
+	delete [] U->x;
+	//delete MSC; delete D;  delete G;
+	delete A;  delete U; 
 	delete [] tmp; delete [] ipar; delete [] dpar;
 	delete [] rhs; delete [] computed_solution; delete [] residual;
 
