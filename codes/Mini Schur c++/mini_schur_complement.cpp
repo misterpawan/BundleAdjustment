@@ -985,11 +985,10 @@ int main()
 	double* rhs = new double[num_cols];
 	double* computed_solution = new double[num_cols];
 	double* residual = new double[num_cols];   
-	double nrm2;
+	double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev;
 
 	MKL_INT itercount,ierr=0;
 	MKL_INT RCI_request, RCI_count, ivar;
-	double dvar;
 	char cvar;
 
 	cout << "\nMKL var init done !\n";
@@ -998,11 +997,15 @@ int main()
 
 	ivar = num_cols;
 	cvar = 'N';  //no transpose
+	
 
 	/*---------------------------------------------------------------------------
 	/* Save the right-hand side in vector rhs for future use
 	/*---------------------------------------------------------------------------*/
 	RCI_count=1;
+	/** extracting the norm of the rhs for computing rel res norm**/
+	rhs_nrm = dnrm2(&ivar,JTe,&RCI_count); 
+	cout << "\n rhs_nrm : " << rhs_nrm << "\n";
 	// JTe vector is not altered
 	//rhs is used for residual calculations
 	dcopy(&ivar, JTe, &RCI_count, rhs, &RCI_count);   
@@ -1026,8 +1029,8 @@ int main()
 	//cout << "\n ipar[3]] : " << ipar[3] << "\n";
 	//cout << "\n ipar[14]] : " << ipar[14] << "\n";
 	ipar[7] = 1;
-	ipar[4] = 400;  // Max Iterations
-	ipar[10] = 1;  //Preconditioner used
+	ipar[4] = 100;  // Max Iterations
+	ipar[10] = 0;  //Preconditioner used
 	
 
 	//cout << "\n dpar[0] : "<<dpar[0] << "\n";
@@ -1057,10 +1060,12 @@ int main()
 	      //cout << "\n JTe[1] : " << JTe[1] << "\n";
 	      //cout << "\n ipar[0] : " << ipar[0] << "\n";
 	      //cout << "\n dpar[0] : " << dpar[0] << "\n";
+	
 	dfgmres(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp);
-	cout << "\n dfgmres RCI_request : "<<RCI_request << "\n";
+	//cout << "\n dfgmres RCI_request : "<<RCI_request << "\n";
 
 	//ipar[13] = 20; // No of inner iterations
+	if(RCI_request==0) goto COMPLETE;
 
 	/*---------------------------------------------------------------------------
 	/* If RCI_request=1, then compute the vector A*tmp[ipar[21]-1]
@@ -1081,6 +1086,7 @@ int main()
 	{	
 		//cout << "\n In mat-vec\n";
 		//cout << "\n A->x[ncc-1]: " << A->x[ncc-1] << "\n";
+		//cout << "\n Current Iteration : " << itercount << "\n";
 		mkl_dcsrgemv(&cvar, &ivar, A->x, A->p, A->i, &tmp[ipar[21]-1], &tmp[ipar[22]-1]);
 		//cout << "\n Mat-Vec done!!\n";
 		//cout << "\n tmp[(ipar[22]-1)] : " << tmp[ipar[22]-1]<< "\n";
@@ -1108,16 +1114,26 @@ int main()
 		/* destroy the convergence of the FGMRES method, therefore, only advanced users should
 		/* exploit this option with care */
 		ipar[12]=1;
-		/* Get the current FGMRES solution in the vector b[N] */
+		/* Get the current FGMRES solution in the vector rhs[N] */
 		dfgmres_get(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp, &itercount);
 		/* Compute the current true residual via MKL (Sparse) BLAS routines */
 		mkl_dcsrgemv(&cvar, &ivar, A->x, A->p, A->i, rhs, residual); // A*x for new solution x
 		dvar=-1.0E0;
 		RCI_count=1;
-		daxpy(&ivar, &dvar, JTe, &RCI_count, residual, &RCI_count);  // Ax - A*x_correct
-		dvar=dnrm2(&ivar,residual,&i);
-		cout << "\n dvar : " << dvar << "\n";
-		if (dvar<1.0E-4) goto COMPLETE;   //taking tolerance as 1e-04
+		daxpy(&ivar, &dvar, JTe, &RCI_count, residual, &RCI_count);  // Ax - A*x_solution
+		dvar=dnrm2(&ivar,residual,&RCI_count);
+		relres_nrm = dvar/rhs_nrm;
+
+		if(itercount > 0)
+		{
+			cout << "\n Iteration : " << itercount << "\n";
+			if((relres_nrm- relres_prev ) == 0) goto NOT_CONVERGE;
+		}
+
+		printf("\n relres_nrm- relres_prev = %10.6lf",relres_nrm- relres_prev);
+		relres_prev = relres_nrm;
+		cout << "\n relres_nrm : " << relres_nrm << "\n";
+		if (relres_nrm<1.0E-4) goto COMPLETE;   //taking tolerance as 1e-04
 
 		else goto ONE;
 	}
@@ -1174,7 +1190,7 @@ int main()
   		}
 
   		delete [] y1; delete [] y2; delete [] z1; delete [] z2; delete [] Lz1;
-
+  		
 		goto ONE;
 	}
 
@@ -1196,7 +1212,6 @@ int main()
 	{
 		goto FAILED;
 	}
-
 	/*---------------------------------------------------------------------------
 	/* Reverse Communication ends here
 	/* Get the current iteration number and the FGMRES solution (DO NOT FORGET to
@@ -1206,10 +1221,10 @@ int main()
 	/*---------------------------------------------------------------------------*/
 	COMPLETE:   ipar[12]=0;
 	dfgmres_get(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp, &itercount);
-	cout << "The system has been solved \n";
+	cout << "The system has been solved  in " << itercount << " iterations!\n";
 //	cout << "\n RCI_request : "<< RCI_request << "\n";
 
-	FAILED: cout << "The solver has returned the ERROR code " << RCI_request << "\n";
+	MKL_Free_Buffers();
 
 
 	//  Free the numeric factorization.
@@ -1230,4 +1245,16 @@ int main()
 	delete [] rhs; delete [] computed_solution; delete [] residual;
 
 	return 0;
+
+	FAILED: cout << "The solver has returned the ERROR code " << RCI_request << "\n";
+
+	MKL_Free_Buffers();
+
+	return 0;
+
+    NOT_CONVERGE: cout << "The relative residual did not change for successive iterations !\n";
+
+    return 0;
+
+
 }

@@ -23,4 +23,4 @@ time ./mini_schur_complement
 #gcc -o dfgmres dfgmres.c -DMKL_LP64 -m64 -I /opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/include/  -L /opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64_lin -w -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl
 
 # for dfgmres test
-g++ -g -o dfgmres_test dfgmres_test.cpp -DMKL_LP64 -m64 -I ../SuiteSparse/include/ -I /opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/include/ -L ../SuiteSparse/lib  -L /opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64_lin -lumfpack -lcxsparse -w -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl
+#g++ -g -o dfgmres_test dfgmres_test.cpp -DMKL_LP64 -m64 -I ../SuiteSparse/include/ -I /opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/include/ -L ../SuiteSparse/lib  -L /opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64_lin -lumfpack -lcxsparse -w -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl
