@@ -15,6 +15,7 @@ using namespace std;
 #include "util.h"
 #include "sort.h"
 #include "mkl.h"
+#include "test.h"
 
 #define sizeG 441 //hardcoding it for the time being
 #define size_MKL_IPAR 128
@@ -672,6 +673,56 @@ void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* 
 	return;
 }
 
+/* This function computes the preconditioner solve for the input array y_in
+	and writes the output in z_out
+*/
+void prec_solve(cs_di *A,cs_di *D,cs_di *MSC,void *Numeric_D,void *Numeric_MSC,double *lcsr,int *il,int *jl,double *y_in,double *z_out)
+{
+	double* y1 = new double[D->n];
+	double* y2 = new double[MSC->n];
+	double* z1 = new double[D->n];
+	double* z2 = new double[MSC->n];
+	double* Lz1 = new double[MSC->n];
+	int prec_solve_status;
+	double* null = (double*)NULL;
+	int zvar = MSC->n ; //no of rows of L
+	int kk;
+	char cvar = 'N';
+
+	int ivar = A->n;
+	int p = 1;
+	double dvar = -1.0E0;
+
+
+	for(kk = 0; kk<ivar; kk++)
+	{
+		if(kk < (D->n)) y1[kk] = y_in[kk];
+		else y2[kk-(D->n)] = y_in[kk];  //splitting vector into y1,y2
+	}
+
+	prec_solve_status = umfpack_di_solve ( UMFPACK_A, D->p, D->i, D->x, z1, y1, Numeric_D, null, null );
+	//cout << "\n Prec Solve status : " << prec_solve_status << "\n";
+	
+	mkl_dcsrgemv(&cvar, &zvar, lcsr, il, jl, z1, Lz1);
+	
+	//y2 = y2 - L*z1
+	daxpy(&zvar, &dvar, Lz1, &p, y2, &p);  // Ax - A*x_correct
+
+	prec_solve_status = umfpack_di_solve ( UMFPACK_A, MSC->p, MSC->i, MSC->x, z2, y2, Numeric_MSC, null, null );
+	//cout << "\n  Prec solve status MSC :" << prec_solve_status << "\n";
+
+	for(kk = 0; kk < ivar; kk++)
+	{
+		if(kk < (D->n)) z_out[kk] = z1[kk];
+		else z_out[kk] = z2[kk - (D->n)];
+	}
+
+
+	delete [] y1; delete [] y2; delete [] z1; delete [] z2; delete [] Lz1;
+	
+	return;
+}
+
 
 
 int main()
@@ -716,12 +767,8 @@ int main()
 	cout << "\nNo of non zeros = "<< ncc << "\n";
 	cout << "\nNo of columns = "<< num_cols << "\n";
 
-	
-
-	
 	//size of the D matrix
 	sizeD = num_cols - sizeG; 
-	//cout << "\nsizeD = "<< sizeD << "\n";
 
 	A->nzmax = ncc;
 	A->m = num_cols;
@@ -734,7 +781,6 @@ int main()
 	// reading the rhs
 	r8vec_data_read ( rhs_filename, num_cols, JTe);
 
-	//cout << "\nRHS file read complete!!\n";
 
 	//Allocate space for the coefficient matrix
 	A->x = new double[ncc];
@@ -744,8 +790,9 @@ int main()
 	//read the matrix data
 	cc_data_read ( prefix, ncc, num_cols, A->i, A->p, A->x );
 	A->p[num_cols] = ncc;
-	//cout << "After data read , A->p[num_cols] : " << A->p[num_cols] << "\n"; 
 	cout << "\nFile read complete!\n";
+
+
 
 	/***Domain Decomposition***/
 
@@ -766,21 +813,12 @@ int main()
 	//cout << "\nCounting non zeros ...\n";
 	for(j=0;j<sizeD;j++)
 	{
-		//j = 1000;
-		
 		for(k=A->p[j]; k < A->p[j+1]; k++)
 		{
 			if(A->i[k] < sizeD) ++nzD;
 			else ++nzL;
-			//cout << "\nk :"<<k<<"\n";
 		}
-		//cout << "\n nzD = " << nzD << "\n";
-		//cout << "\n nzL = " << nzL << "\n";
-		//break;
 	}
-	//cout << "\nCounting non zeros complete!!\n";
-	//cout << "\n nzD = " << nzD << "\n";
-	//cout << "\n nzL = " << nzL << "\n";
 
 	
 	nzG = ncc - (nzD + 2*nzL); 
@@ -799,7 +837,7 @@ int main()
 
 	//setting values
 	D->nzmax = nzD;
-	L->nzmax = nzL; //cout << "\n L nnz :"<< L->nzmax << "\n";
+	L->nzmax = nzL; 
 	U->nzmax = nzL;
 	G->nzmax = nzG;  
 	MSC->nzmax = sizeG*sizeG;
@@ -808,8 +846,6 @@ int main()
 	cout << "\nFilling non zeros ...\n";
 	for(j=0;j<sizeD;j++)
 	{
-		//j = 1000;
-		//nzD_col = 0;
 		D->p[j] = iterD;
 		L->p[j] = iterL;
 		for(k=A->p[j]; k < A->p[j+1]; k++)
@@ -827,30 +863,14 @@ int main()
 				L->x[iterL] = A->x[k];
 				iterL += 1;
 			}
-			//cout << "\nk :"<<k<<"\n";
 		}
-		
-		//cout << "\n nzD = " << nzD << "\n";
-		//cout << "\n nzL = " << nzL << "\n";
-		//break;
 	}
 	D->p[sizeD] = iterD;
 	L->p[sizeD] = iterL;
 	
-
-	//cout << "\n nzD = " << D->p[sizeD] << "\n";
-	//cout << "\n nzL = " << L->p[sizeD] << "\n";
-	
-
-	//status = umfpack_di_transpose (n_row, n_col, Ap, Ai, Ax, P, Q, Rp, Ri, Rx) ;
 	status = umfpack_di_transpose(sizeG,sizeD, L->p,L->i,L->x,null,null,U->p,U->i,U->x) ;
-
 	//cout << "\n TRANSPOSE STATUS : "<< status<< "\n";
-	//cout << "\nD[9][9](591.616) = "<< L->x[0]<<"\n";
-	//cout << "\nL[23714][9](335.400) = "<< U->x[0]<<"\n";
-	//cout << "\n Diff D: "<<iterD - D->nzmax<<"\n";
-	//cout << "\n Diff L: "<<iterL - L->nzmax<<"\n";
-	//cout << "\n Diff U: "<<iterU - U->nzmax<<"\n";
+	
 
 	for(j = sizeD;j<num_cols;j++)
 	{
@@ -892,9 +912,7 @@ int main()
 	}
 
 	G->p[sizeG] = iterG;
-	//cout << "\n Col Count : " << col_count << "\n";
-	//cout << "\n Diff G : "<<iterG - G->nzmax<<"\n";
-	//cout << "\n U Last element : "<<L->x[54975]<<"\n";
+
 	cout << "\nFilling non zeros complete!!\n";
 	
 	
@@ -903,15 +921,11 @@ int main()
 
 
 	// Since L is not used anymore
-	delete [] L->p;delete [] L->i;delete [] L->x;delete L;
+	delete [] U->p;delete [] U->i;delete [] U->x;delete U;
 
 	int ok = cs_di_sprealloc(MSC,MSC->p[sizeG]);
 	//cout << "\n ok : "<< ok << "\n";
 
-	//cout << "\nMSC ->nzmax : " << MSC->p[sizeG+1] << "\n";
-	//cout << "\nMSC ->i[MSC->p[sizeG]] : " << MSC->i[MSC->p[401]-1] << "\n"; //rows are being stored in reverse
-
-	//std::sort(&MSC->i[MSC->p[0]],&MSC->i[MSC->p[sizeG-1]]);
 
 	/************LU Factorization of D and MSC******************************/
 
@@ -932,60 +946,35 @@ int main()
 	umfpack_di_free_symbolic ( &Symbolic_MSC );
   	
   	delete [] G->p; delete [] G->i; delete [] G->x; delete G;
-//  	delete [] MSC->p; delete [] MSC->i; delete [] MSC->x; delete MSC;
-//  	delete [] D->p; delete [] D->i; delete [] D->x; delete D;
 
-	/***TESTING THE CORRECTNESS OF COMPUTED MSC WITH MATLAB***/
-/*	double* MSC_b = new double[sizeG];
-	string test_filename = "49/1/MSC_b.txt";
-	void* MSC_Numeric;
-	void* MSC_Symbolic;
-	double* x_msc = new double[sizeG];
+  	// Testing A solve with LU and comparing with MATLAB
+	//test_A_solve(A);
+	//test_D_solve(D);
+	//test_MSC_solve(MSC);
+	//test_matvec_multiply(A);
+	
 
-
-	r8vec_data_read ( test_filename, sizeG, MSC_b);
-
-	//  From the matrix data, create the symbolic factorization information.
-	sym_status = umfpack_di_symbolic ( MSC->m, MSC->n, MSC->p, MSC->i, MSC->x, &MSC_Symbolic, solve_null, solve_null );
-	cout << "\n MSC Symbolic status :" << sym_status << "\n";
-	//  From the symbolic factorization information, carry out the numeric factorization.
-	num_status = umfpack_di_numeric ( MSC->p, MSC->i, MSC->x, MSC_Symbolic, &MSC_Numeric, solve_null, solve_null );
-	cout << "\n MSC Numeric status :" << num_status << "\n";
-	//  Using the numeric factorization, solve the linear system.
-  	solve_status = umfpack_di_solve ( UMFPACK_A, MSC->p, MSC->i, MSC->x, x_msc, MSC_b, MSC_Numeric, solve_null, solve_null );
-  	cout << "\n MSC Solve status :" << solve_status << "\n";
-
-  	ofstream outfile("x_msc.txt");
-
-  	if(outfile.is_open())
-  	{
-  		for(k = 0; k < sizeG; k++)
-  			outfile << x_msc[k] << "\n";
-  	}
-  	outfile.close();
-
-  	// The difference between x from matlab and c++ code here is 6.2413e-06.
-*/
-
-
+ 
 	/**********************GMRES CALL******************************/
 
 	//initializing variables and data structures for DFGMRES call
 	//int restart = 20;  //DFGMRES restarts
 	MKL_INT* ipar = new MKL_INT[size_MKL_IPAR];
-	ipar[14] = 3;  //non restarted iterations
+	//ipar[14] = 150;  //non restarted iterations
 
 	//cout << "\n tmp size : "<< num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1) << "\n";
 
 	double* dpar = new double[size_MKL_IPAR]; 
 	//double tmp[num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1)];
-	double* tmp = new double[num_cols*(2*ipar[14]+1)+(ipar[14]*(ipar[14]+9))/2+1];
-	//double* tmp = new double[num_cols*(2*num_cols+1)+(num_cols*(num_cols+9))/2+1];
+	//double* tmp = new double[num_cols*(2*ipar[14]+1)+(ipar[14]*(ipar[14]+9))/2+1];
+	double* tmp = new double[num_cols*(2*num_cols+1)+(num_cols*(num_cols+9))/2+1];
 	//double expected_solution[num_cols];
 	double* rhs = new double[num_cols];
 	double* computed_solution = new double[num_cols];
 	double* residual = new double[num_cols];   
-	double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev;
+	double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev,prec_rhs_nrm,prec_relres_nrm;
+	double *prec_rhs = new double[num_cols];
+	
 
 	MKL_INT itercount,ierr=0;
 	MKL_INT RCI_request, RCI_count, ivar;
@@ -998,6 +987,27 @@ int main()
 	ivar = num_cols;
 	cvar = 'N';  //no transpose
 	
+	/**********Converting A & L from CSC to CSR*****************/
+  	MKL_INT job[6] = {1,1,0,0,0,1};
+    double *acsr =  new double[ncc];
+    double *lcsr =  new double[L->nzmax];
+    MKL_INT *ja = new MKL_INT[ncc];
+    MKL_INT *jl = new MKL_INT[L->nzmax];
+    MKL_INT *ia = new MKL_INT[ivar+1];
+    MKL_INT *il = new MKL_INT[sizeG+1];
+    MKL_INT info;
+    MKL_INT lvar = sizeG;
+
+      //converting COO to CSR
+    mkl_dcsrcsc(job,&ivar,acsr,ja,ia,A->x,A->i,A->p,&info);
+    //cout << "\n Conversion info A : "<< info << "\n";
+
+
+    mkl_dcsrcsc(job,&lvar,lcsr,jl,il,L->x,L->i,L->p,&info);
+    //cout << "\n Conversion info L : "<< info << "\n";
+
+    /***Testing the preconditioner solve with MATLAB***/
+    //test_prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl);
 
 	/*---------------------------------------------------------------------------
 	/* Save the right-hand side in vector rhs for future use
@@ -1005,10 +1015,17 @@ int main()
 	RCI_count=1;
 	/** extracting the norm of the rhs for computing rel res norm**/
 	rhs_nrm = dnrm2(&ivar,JTe,&RCI_count); 
-	cout << "\n rhs_nrm : " << rhs_nrm << "\n";
+	//cout << "\n rhs_nrm : " << rhs_nrm << "\n";
 	// JTe vector is not altered
 	//rhs is used for residual calculations
 	dcopy(&ivar, JTe, &RCI_count, rhs, &RCI_count);   
+
+	// PRECONDITIONED RHS
+	prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,JTe,prec_rhs);
+	//norm of the preconditioned rhs
+	prec_rhs_nrm = dnrm2(&ivar,prec_rhs,&RCI_count);
+	delete [] prec_rhs; 
+	cout << "\n prec rhs norm : "<< prec_rhs_nrm << "\n";
 
 	/*---------------------------------------------------------------------------
 	/* Initialize the initial guess
@@ -1017,7 +1034,7 @@ int main()
 	{
 		computed_solution[RCI_count]=0.0;
 	}
-	//computed_solution[0]=100.0;
+	computed_solution[0]=800.0;
 
 	/*---------------------------------------------------------------------------
 	/* Initialize the solver
@@ -1025,17 +1042,12 @@ int main()
 	dfgmres_init(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp); 
 	if (RCI_request!=0) goto FAILED;
 
-	//cout << "\n RCI_request : " << RCI_request << "\n";
-	//cout << "\n ipar[3]] : " << ipar[3] << "\n";
-	//cout << "\n ipar[14]] : " << ipar[14] << "\n";
-	ipar[7] = 1;
-	ipar[4] = 100;  // Max Iterations
-	ipar[10] = 0;  //Preconditioner used
 	
-
-	//cout << "\n dpar[0] : "<<dpar[0] << "\n";
-	//cout << "\n ipar[9] : "<<ipar[9] << "\n";
-
+	ipar[7] = 1;
+	ipar[4] = 20;  // Max Iterations
+	ipar[10] = 1;  //Preconditioner used
+	ipar[14] = 20;
+	
 	dpar[0] = 1.0e-04; //Relative Tolerance
 
 	/*---------------------------------------------------------------------------
@@ -1044,24 +1056,11 @@ int main()
 	dfgmres_check(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp); 
 	if (RCI_request!=0) goto FAILED;
 
-	/*	from https://software.intel.com/en-us/mkl-developer-reference-fortran-mkl-csrgemv
-	ia(m + 1) is equal to the number of non-zeros plus one
-	*/
-	A->p[ivar] = A->p[ivar]+1;
-	//cout << "A->p[ivar] : " << A->p[ivar] << "\n";
-
-	//cout << "\n RCI_request : " << RCI_request << "\n";
 	/*---------------------------------------------------------------------------
 	/* Compute the solution by RCI (P)FGMRES solver with preconditioning
 	/* Reverse Communication starts here
 	/*---------------------------------------------------------------------------*/
-	ONE:  //cout << "\n in gmres... \n";  
-	      //cout << "\n computed_solution[0] : " << computed_solution[0] << "\n";
-	      //cout << "\n JTe[1] : " << JTe[1] << "\n";
-	      //cout << "\n ipar[0] : " << ipar[0] << "\n";
-	      //cout << "\n dpar[0] : " << dpar[0] << "\n";
-	
-	dfgmres(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp);
+	ONE: dfgmres(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp);
 	//cout << "\n dfgmres RCI_request : "<<RCI_request << "\n";
 
 	//ipar[13] = 20; // No of inner iterations
@@ -1075,21 +1074,10 @@ int main()
 	/* therefore, in C code it is required to subtract 1 from them to get C style
 	/* addresses
 	/*---------------------------------------------------------------------------*/
-	/*---------------------------------------------------------------------------
-	/* Since the input matrix is symmetric , so the CSC format for coefficient matrix
-	   will be the same as CSR format with row and column arrays reversed. In the 
-	   mat-vec function call below, the pointers for row and col arrays 
-	   have been exchanged.
-	/*-----------------------------------------------------------------------------*/
-	/*------------------DEPRACATED ROUTINE (FIND ANOTHER )-------------------------*/
+	/*------------------DEPRECATED ROUTINE (FIND ANOTHER )-------------------------*/
 	if (RCI_request==1)
-	{	
-		//cout << "\n In mat-vec\n";
-		//cout << "\n A->x[ncc-1]: " << A->x[ncc-1] << "\n";
-		//cout << "\n Current Iteration : " << itercount << "\n";
-		mkl_dcsrgemv(&cvar, &ivar, A->x, A->p, A->i, &tmp[ipar[21]-1], &tmp[ipar[22]-1]);
-		//cout << "\n Mat-Vec done!!\n";
-		//cout << "\n tmp[(ipar[22]-1)] : " << tmp[ipar[22]-1]<< "\n";
+	{
+		mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, &tmp[ipar[21]-1], &tmp[ipar[22]-1]);
 		goto ONE;
 	}
 
@@ -1117,25 +1105,43 @@ int main()
 		/* Get the current FGMRES solution in the vector rhs[N] */
 		dfgmres_get(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp, &itercount);
 		/* Compute the current true residual via MKL (Sparse) BLAS routines */
-		mkl_dcsrgemv(&cvar, &ivar, A->x, A->p, A->i, rhs, residual); // A*x for new solution x
+		mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, rhs, residual); // A*x for new solution x
 		dvar=-1.0E0;
 		RCI_count=1;
 		daxpy(&ivar, &dvar, JTe, &RCI_count, residual, &RCI_count);  // Ax - A*x_solution
-		dvar=dnrm2(&ivar,residual,&RCI_count);
-		relres_nrm = dvar/rhs_nrm;
+		
 
-		if(itercount > 0)
+		cout << "\n Iteration : " << itercount << "\n";
+		if(ipar[10] == 0)   // non preconditioned system
 		{
-			cout << "\n Iteration : " << itercount << "\n";
-			if((relres_nrm- relres_prev ) == 0) goto NOT_CONVERGE;
+			dvar=dnrm2(&ivar,residual,&RCI_count);
+			relres_nrm = dvar/rhs_nrm;
+			
+	/*		if(itercount > 0)
+			{
+				cout << "\n Iteration : " << itercount << "\n";
+				if((relres_nrm- relres_prev ) == 0) goto NOT_CONVERGE;
+			}
+	*/
+		}
+		else if(ipar[10] == 1)  //preconditioned system
+		{
+			double *prec_relres = new double[num_cols];
+			prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,residual,prec_relres);
+			prec_relres_nrm = dnrm2(&ivar,prec_relres,&RCI_count); 
+			delete [] prec_relres;
+			//cout << "\n prec relres norm : " << prec_relres_nrm << "\n";
+			printf("\nPrec relres norm : %10.9f",prec_relres_nrm);
+			relres_nrm = prec_relres_nrm/prec_rhs_nrm;
+
 		}
 
-		printf("\n relres_nrm- relres_prev = %10.6lf",relres_nrm- relres_prev);
-		relres_prev = relres_nrm;
 		cout << "\n relres_nrm : " << relres_nrm << "\n";
+
 		if (relres_nrm<1.0E-4) goto COMPLETE;   //taking tolerance as 1e-04
 
 		else goto ONE;
+		
 	}
 
 	/*---------------------------------------------------------------------------
@@ -1151,46 +1157,8 @@ int main()
 	if (RCI_request==3)
 	{
 		cout << "\n Prec solve ..." << "\n";
-		double* y1 = new double[sizeD];
-		double* y2 = new double[sizeG];
-		double* z1 = new double[sizeD];
-		double* z2 = new double[sizeG];
-		double* Lz1 = new double[sizeG];
-		int prec_solve_status;
-		double* null = (double*)NULL;
-		int zvar = sizeG ; //no of rows of L
-		int kk;
+		prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,&tmp[(ipar[21]-1)],&tmp[(ipar[22]-1)]);
 
-		for(kk = 0; kk<ivar; kk++)
-		{
-			if(kk < sizeD) y1[kk] = tmp[(ipar[21]-1) + kk];
-			else y2[kk-sizeD] = tmp[(ipar[21]-1)+kk];  //splitting vector into y1,y2
-		}
-
-		prec_solve_status = umfpack_di_solve ( UMFPACK_A, D->p, D->i, D->x, z1, y1, Numeric_D, null, null );
-  		//cout << "\n  Prec solve status D :" << prec_solve_status << "\n";
-
-  		
-
-  		// performing L*z1 ... since U and L are transposes of each other, so
-  		// using csc of U as CSR of L
-  		mkl_dcsrgemv(&cvar, &zvar, U->x, U->p, U->i, z1, Lz1);
-  		RCI_count = 1;
-  		dvar = -1.0E0;
-  		//y2 = y2 - L*z1
-  		daxpy(&zvar, &dvar, Lz1, &RCI_count, y2, &RCI_count);  // Ax - A*x_correct
-
-  		prec_solve_status = umfpack_di_solve ( UMFPACK_A, MSC->p, MSC->i, MSC->x, z2, y2, Numeric_MSC, null, null );
-  		//cout << "\n  Prec solve status MSC :" << prec_solve_status << "\n";
-
-  		for(kk = 0; kk < ivar; kk++)
-  		{
-  			if(kk < sizeD) tmp[(ipar[22]-1)+kk] = z1[kk];
-  			else tmp[(ipar[22]-1)+kk] = z2[kk - sizeD];
-  		}
-
-  		delete [] y1; delete [] y2; delete [] z1; delete [] z2; delete [] Lz1;
-  		
 		goto ONE;
 	}
 
@@ -1232,17 +1200,16 @@ int main()
   	umfpack_di_free_numeric ( &Numeric_MSC );
 
 	delete [] JTe; 
-	delete [] A->x; delete [] A->p; delete [] A->i; 
-	//delete [] MSC->p; delete [] D->p;  delete [] G->p; 
-	delete [] U->p;
-	//delete [] D->i;  delete [] G->i;
-	 delete [] U->i;
-	//delete [] D->x;  delete [] G->x;
-	delete [] U->x;
-	//delete MSC; delete D;  delete G;
-	delete A;  delete U; 
+	delete [] A->p; delete [] A->i; delete [] A->x; 
+	delete [] MSC->p; delete [] MSC->i;delete [] MSC->x;
+	delete [] D->p;  delete [] D->i;delete [] D->x; 
+	delete [] L->p; delete [] L->i; delete [] L->x;
+	delete MSC; delete D; delete A;  delete L; 
+
 	delete [] tmp; delete [] ipar; delete [] dpar;
 	delete [] rhs; delete [] computed_solution; delete [] residual;
+	delete [] acsr; delete [] ia; delete [] ja;
+	delete [] lcsr; delete [] il; delete [] jl;
 
 	return 0;
 

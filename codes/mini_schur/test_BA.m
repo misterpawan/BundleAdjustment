@@ -2,17 +2,27 @@
 function test_BA
     clc;
     warning('off','all');
-    filepath = '../../../Test/356'
+    filepath = '../../../Test/49'
     addpath(filepath);
     addpath('../ddm');
-    lhs_filename = 'JTJ356_5.mat';
-    rhs_filename = 'JTe356_5.mat';
+    lhs_filename = 'JTJ49_1.mat';
+    rhs_filename = 'JTe49_1.mat';
 
     %P = load(strcat(filepath,lhs_filename),'-mat')
     P = load(lhs_filename,'-mat')
     %size(P.A)
     B = P.lhs; %condest(B)
     [m,n] = size(B);
+%     rand_vec = rand(m,1);
+%     fp = fopen("~/rand_vec.txt","w");
+%     fprintf(fp,"%10.9f\n",rand_vec);
+%     fclose(fp);
+%     rand_product = B * rand_vec;
+%     fp = fopen("~/rand_product.txt","w");
+%     fprintf(fp,"%10.9f\n",rand_product);
+%     fclose(fp);
+%     keyboard;
+    
     %load rhs
     b = load(rhs_filename);
     b = b.rhs;
@@ -51,8 +61,8 @@ function test_BA
     %% Identify MSCs
     % blocks for schur complements
     %nmsc = 3; 
-    nmsc_blocks = [3 4 5 6 7 8 9 10 15 20];
-    %nmsc_blocks = [4];
+   % nmsc_blocks = [3 4 5 6 7 8 9 10 15 20];
+    nmsc_blocks = [3];
     %nmsc_blocks = [25 30 35 40];
     %nmsc_blocks = [13 14 15 16 17 18];
     iters = zeros(1,length(nmsc_blocks));
@@ -74,10 +84,11 @@ function test_BA
         L = A(sizeD + 1: m, 1 : sizeD);
         U = L';
         G = A(sizeD + 1:m, sizeD + 1:m);%%change
-        
+        %keyboard;
         r = rem(sizeG, nmsc_blocks(z)); sz = (sizeG - r)/nmsc_blocks(z); r1 = 1; r2 = sz;
         GS = []; %ol = 0;
 
+      
         %nmsc
         %sz
 
@@ -172,9 +183,9 @@ function test_BA
 %          fprintf('Computing Cholesky of MSC ...');
 %          tic,UG = chol(GS);t_factor_msc = toc; LG = UG';
          fprintf('done!!!\n'); % matlab chol factorizes into upper triangular 
-
+        %keyboard;
         clear GS S PD PU PL PG
-
+ 
 %         setup.type='ilutp'; 
 %         setup.droptol = 1e-03; %ntol(ii); 
 %         setup.udiag = 1;
@@ -194,14 +205,18 @@ function test_BA
 
         fprintf('done!!!\n'); clear D G ;      
 
+       prec_rhs = nssolve2(b);
+       %keyboard;
+        
+        
             %% Solve with PCG
             precfun=@nssolve; sol=zeros(n,1);
-            tol = 1e-4; maxit = 20;restart = 20;
+            tol = 1e-4; maxit = 1;restart = 1;
             try
                 fprintf('Enter GMRES...\n');
                 %tic, [x,flag,relres,iter] = pcg(B,b,tol,maxit,@nssolve2); t_pcg = toc;
-                tic, [x_np,flag_np,relres_np,iter_np] = gmres(B,b,restart,tol,maxit); t_gmres_np = toc;
-                tic, [x,flag,relres,iter] = gmres(B,b,restart,tol,maxit,@nssolve2); t_gmres = toc;
+                tic, [x_np,flag_np,relres_np,iter_np,resvec_np] = gmres(B,b,restart,tol,maxit); t_gmres_np = toc;
+                tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@nssolve2); t_gmres = toc;
                 %tic, [x,flag,relres,iter] = gmres(B,b,restart,tol,maxit); t_gmres = toc;
                 %% Display output
                 its_np = (iter_np(1)-1)*restart+iter_np(2);
@@ -234,6 +249,7 @@ function test_BA
 %             fprintf('\n\nNormal solve time : %g\n\n',normal_solve_time);
 %             fprintf('\n\nPCG solve time : %g\n\n',t_total);
     end
+    keyboard;
     clear b
     
     fprintf('tests done!!!\n');
