@@ -20,7 +20,9 @@
 
 using namespace std;             // C++ standard libary namespace
 #define max(a, b) (a) < (b) ? (b): (a)    // for eigenvalue solve routine
-#define n_eig (num_cols*eig_N)
+#define n_eig (num_cols*eig_N)            
+#define size 128
+
 int main()
 
 {
@@ -29,17 +31,17 @@ int main()
 
   double* JTe; //rhs
   int i;
-  int num_rows;
+  int num_rows; // no of rows
   int num_cols; // no of columns
   int ncc = 0; // no of non zeros
   int *null = ( int * ) NULL;
   double *solve_null = ( double * ) NULL;
   void *Numeric;
-  string prefix = "JTJ49_1.txt";
+  string prefix = "JTJ49_1.txt";    // matrix JTJ file  
   double r;
   int status,sym_status,num_status,solve_status;
   void* Symbolic;
-  int sizeD;
+  int sizeD;  // size of Diagonal of JTJ    
   int j,k;
   int nzD = 0;
   int nzG = 0;
@@ -50,6 +52,7 @@ int main()
 
   //creating structures of cs_diPARSE
   cs_di* A = new cs_di;
+  cs_di* P = new cs_di;
   cs_di* MSC = new cs_di;
   cs_di* D = new cs_di;
   cs_di* L = new cs_di;
@@ -69,7 +72,7 @@ int main()
 
 
   A->nzmax = ncc;
-  A->m = num_cols;
+  A->m = num_cols;  // # rows = # cols
   A->n = num_cols; // since square matrix
   A->nz = -1;
 
@@ -142,7 +145,7 @@ This is true because for symmetric matrix JTJ, CSR = transpose(CSC)
   char UPLO = 'F'; /* Type of matrix: (F means full matrix, L/U - lower/upper triangular part of matrix) */
     /* Matrix A of size N in CSR format. Size N and 3 arrays are used to store matrix in CSR format */
   const MKL_INT N = num_cols;
-  const MKL_INT eig_N = 5;     // Hard-coding it change later 
+  const MKL_INT eig_N = 5;     // Hard-coding it change later
 
 /*MKL_INT  rows[12] = { 1, 5, 10, 16, 23, 30, 37, 44, 51, 57, 62, 66 };
   MKL_INT  cols[65] = {    1,   2,   3,   4,
@@ -182,13 +185,14 @@ This is true because for symmetric matrix JTJ, CSR = transpose(CSC)
   MKL_INT      M0;            /* Initial guess for subspace dimension to be used */
   MKL_INT      M;             /* Total number of eigenvalues found in the interval */
 
-  double       E[5];          /* # of Eigenvalues = 5*/
-  double       X[n_eig];      /* Eigenvectors, n_eig defined in macro*/
+  double       Ac[5];          /* # of Eigenvalues = 5* this is Coarse Grid Matrix in Vector Form */
+  double       P[n_eig];      /* Eigenvectors, n_eig defined in macro*/
   double       res[5];        /* Residual */
-  double       Ac[25];        /* Coarse Grid Matrix        
+      
   /* Declaration of local variables */
   MKL_INT      info;          /* Errors */
   double       Eig[5];        /* Eig - array for storing exact eigenvalues */
+  MKL_INT      i, j;
 //double       R[11];         /* R = |E-Eig| */
     
   /* Exact eigenvalues in range (3.0, 7.0) */
@@ -206,17 +210,17 @@ This is true because for symmetric matrix JTJ, CSR = transpose(CSC)
   }
 
   printf("\n FEAST DFEAST_SCSREV AND DFEAST_SCSRGV EXAMPLE\n");
-  /* Initialize matrix X */
+  /* Initialize Prolongation Matrix */
   for (i=0; i<n_eig; i++)
   {
-        X[i] = zero;
+        P[i] = zero;
   }
 
   printf("Sparse matrix size %i\n", (int)num_cols);
 
   /* Search interval [Emin,Emax] */
-  Emin = 1.0e+11;   // change this for JTJ
-  Emax = 1.0e+9;
+  Emin = 1.0e+9;   // change this for JTJ
+  Emax = 1.0e+11;
   printf("Search interval [ %.15e, %.15e  ]  \n", Emin, Emax);
 
   M0     = L;
@@ -250,8 +254,8 @@ This is true because for symmetric matrix JTJ, CSR = transpose(CSC)
       &Emin,   /* IN: Lower bound of search interval */
       &Emax,   /* IN: Upper bound of search interval */
       &M0,     /* IN: The initial guess for subspace dimension to be used. */
-      E,       /* OUT: The first M entries of Eigenvalues */
-      X,       /* IN/OUT: The first M entries of Eigenvectors */
+      Ac,       /* OUT: The first M entries of Eigenvalues = Coarse Grid Matrix in vector form*/
+      P,       /* IN/OUT: The first M entries of Eigenvectors = Prolongation Matrix*/
       &M,      /* OUT: The total number of eigenvalues found in the interval */
       res,     /* OUT: The first M components contain the relative residual vector */
       &info    /* OUT: Error code */
@@ -268,8 +272,10 @@ This is true because for symmetric matrix JTJ, CSR = transpose(CSC)
      Ac = diagonal matrix of eigenvalues
      hardcoding it for top 5 eigenvalues as of now, change later!
   */
+  
+  // No need to construct Coarse Grid matrix, work with Vector
 
-  int idx = 0;
+  /*int idx = 0;
   int j = 0;
   for ( int i = 0; i < 25 ; i++)
   {
@@ -279,10 +285,41 @@ This is true because for symmetric matrix JTJ, CSR = transpose(CSC)
      j++;
     }
   } // end of for: Coarse Grid Matrix Constructed
+ 
+  */
+
+
+
+  /******Convert Dense Prolongation Matrix to CSR*********/
+  
+  //*    Declaration of local variables :
+  
+  MKL_INT job[8];
+  locat=2;
+  ibase1=0;
+  ibase2=1;
+  job[1]=ibase1;
+  job[2]=ibase2;
+  job[3]=locat;      // whole matrix P
+  job[4]=nzmax;
+
+  job[0]=0;    // Convert from dense to CSR
+  job[5]=1;    // col, row, value generated
+  lda = max(1, num_cols);  // leading dimension of Dense Prolongation Matrix 
+
+  P->x = new double[ncc];
+  P->p = new int[num_cols+1];
+  P->i = new int[ncc];
+
+  // call to dense to CSR matrix format conversion routine
+  mkl_cdnscsr(job, &num_rows, &eig_N, P, &lda, P->x, P->i, P->p, &info);
+
+  printf("Conversion from Dense to CSR Prolongation Matrix Complete!!!");
+
   
 
-  // Prolongation Matrix , P = X (Matrix of Eigenvectors)
-  // coarse grid matrix , Ac = Diagonal matrix of eigenvalues
+  // Prolongation Matrix , P = (Matrix of Eigenvectors)
+  // coarse grid matrix , Ac = Vector (array) of eigenvalues
 
 
   // Construct Smoother: D = blkdiag(A(1:nJ1, 1:nJ1), A(nJ+1:n, nJ+1:n))
@@ -354,14 +391,289 @@ This is true because for symmetric matrix JTJ, CSR = transpose(CSC)
   L->p[sizeD] = iterL;
   
   cout << "\nConstruction of Smoother complete!\n";
+
+  /*****Compute LU factorization of Smoother BLK-diagonal Matrix*****/
+
+  MKL_INT ipar[size];
+  double dpar[size];
+
+  ipar[30] = 1;
+  dpar[30] = 1.E-20;
+  dpar[31] = 1.E-16;
+
+
+  dcsrilu0 (num_rows, D->x, D->p, D->i, bilu0, ipar, dpar, &ierr);
   
+  /*******Approximate LU factorization complete using ILU**********/
+
+
+  float* ptr_x = NULL;   // pointer to hold the address of tg_solve solution
+  ptr_x = tg_solve(&x);  // call to two-grid solve for check, should be made inside GMRES
+
+
+
+  /*********** Intel Mkl GMRES Call **********/
+
+
+  //initializing variables and data structures for DFGMRES call
+  //int restart = 20;  //DFGMRES restarts
+
+  MKL_INT* ipar = new MKL_INT[size_MKL_IPAR];
+  ipar[14] = 3;  //non restarted iterations
+
+  //cout << "\n tmp size : "<< num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1) << "\n";
+
+  double* dpar = new double[size_MKL_IPAR]; 
+  //double tmp[num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1)];
+  double* tmp = new double[num_cols*(2*ipar[14]+1)+(ipar[14]*(ipar[14]+9))/2+1];
+  //double* tmp = new double[num_cols*(2*num_cols+1)+(num_cols*(num_cols+9))/2+1];
+  //double expected_solution[num_cols];
+  double* rhs = new double[num_cols];
+  double* computed_solution = new double[num_cols];
+  double* residual = new double[num_cols];   
+  double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev;
+
+  MKL_INT itercount,ierr=0;
+  MKL_INT RCI_request, RCI_count, ivar;
+  char cvar;
+
+  cout << "\nMKL var init done !\n";
+
+
+
+  ivar = num_cols;
+  cvar = 'N';  //no transpose
+  
+
+  /*---------------------------------------------------------------------------
+  /* Save the right-hand side in vector rhs for future use
+  /*---------------------------------------------------------------------------*/
+  RCI_count=1;
+  /** extracting the norm of the rhs for computing rel res norm**/
+  rhs_nrm = dnrm2(&ivar,JTe,&RCI_count); 
+  cout << "\n rhs_nrm : " << rhs_nrm << "\n";
+  // JTe vector is not altered
+  //rhs is used for residual calculations
+  dcopy(&ivar, JTe, &RCI_count, rhs, &RCI_count);   
+
+  /*---------------------------------------------------------------------------
+  /* Initialize the initial guess
+  /*---------------------------------------------------------------------------*/
+  for(RCI_count=0; RCI_count<num_cols; RCI_count++)
+  {
+    computed_solution[RCI_count]=0.0;
+  }
+  //computed_solution[0]=100.0;
+
+  /*---------------------------------------------------------------------------
+  /* Initialize the solver
+  /*---------------------------------------------------------------------------*/
+  dfgmres_init(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp); 
+  if (RCI_request!=0) goto FAILED;
+
+  //cout << "\n RCI_request : " << RCI_request << "\n";
+  //cout << "\n ipar[3]] : " << ipar[3] << "\n";
+  //cout << "\n ipar[14]] : " << ipar[14] << "\n";
+  ipar[7] = 1;
+  ipar[4] = 100;  // Max Iterations
+  ipar[10] = 0;  //Preconditioner used
+  
+
+  //cout << "\n dpar[0] : "<<dpar[0] << "\n";
+  //cout << "\n ipar[9] : "<<ipar[9] << "\n";
+
+  dpar[0] = 1.0e-04; //Relative Tolerance
+
+  /*---------------------------------------------------------------------------
+  /* Check the correctness and consistency of the newly set parameters
+  /*---------------------------------------------------------------------------*/
+  dfgmres_check(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp); 
+  if (RCI_request!=0) goto FAILED;
+
+  /*  from https://software.intel.com/en-us/mkl-developer-reference-fortran-mkl-csrgemv
+  ia(m + 1) is equal to the number of non-zeros plus one
+  */
+  A->p[ivar] = A->p[ivar]+1;
+  //cout << "A->p[ivar] : " << A->p[ivar] << "\n";
+
+  //cout << "\n RCI_request : " << RCI_request << "\n";
+  /*---------------------------------------------------------------------------
+  /* Compute the solution by RCI (P)FGMRES solver with preconditioning
+  /* Reverse Communication starts here
+  /*---------------------------------------------------------------------------*/
+  ONE:  //cout << "\n in gmres... \n";  
+        //cout << "\n computed_solution[0] : " << computed_solution[0] << "\n";
+        //cout << "\n JTe[1] : " << JTe[1] << "\n";
+        //cout << "\n ipar[0] : " << ipar[0] << "\n";
+        //cout << "\n dpar[0] : " << dpar[0] << "\n";
+  
+  dfgmres(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp);
+  //cout << "\n dfgmres RCI_request : "<<RCI_request << "\n";
+
+  //ipar[13] = 20; // No of inner iterations
+  if(RCI_request==0) goto COMPLETE;
+
+  /*---------------------------------------------------------------------------
+  /* If RCI_request=1, then compute the vector A*tmp[ipar[21]-1]
+  /* and put the result in vector tmp[ipar[22]-1] 
+  /*---------------------------------------------------------------------------
+  /* NOTE that ipar[21] and ipar[22] contain FORTRAN style addresses,
+  /* therefore, in C code it is required to subtract 1 from them to get C style
+  /* addresses
+  /*---------------------------------------------------------------------------*/
+  /*---------------------------------------------------------------------------
+  /* Since the input matrix is symmetric , so the CSC format for coefficient matrix
+     will be the same as CSR format with row and column arrays reversed. In the 
+     mat-vec function call below, the pointers for row and col arrays 
+     have been exchanged.
+  /*-----------------------------------------------------------------------------*/
+  /*------------------DEPRACATED ROUTINE (FIND ANOTHER )-------------------------*/
+  if (RCI_request==1)
+  { 
+    //cout << "\n In mat-vec\n";
+    //cout << "\n A->x[ncc-1]: " << A->x[ncc-1] << "\n";
+    //cout << "\n Current Iteration : " << itercount << "\n";
+    mkl_dcsrgemv(&cvar, &ivar, A->x, A->p, A->i, &tmp[ipar[21]-1], &tmp[ipar[22]-1]);
+    //cout << "\n Mat-Vec done!!\n";
+    //cout << "\n tmp[(ipar[22]-1)] : " << tmp[ipar[22]-1]<< "\n";
+    goto ONE;
+  }
+
+  /*---------------------------------------------------------------------------
+  /* If RCI_request=2, then do the user-defined stopping test
+  /* The residual stopping test for the computed solution is performed here
+  /*---------------------------------------------------------------------------
+  /* NOTE: from this point vector b[N] is no longer containing the right-hand
+  /* side of the problem! It contains the current FGMRES approximation to the
+  /* solution. If you need to keep the right-hand side, save it in some other
+  /* vector before the call to dfgmres routine. Here we saved it in vector
+  /* rhs[N]. The vector b is used instead of rhs to preserve the
+  /* original right-hand side of the problem and guarantee the proper
+  /* restart of FGMRES method. Vector b will be altered when computing the
+  /* residual stopping criterion!
+  /*---------------------------------------------------------------------------*/
+  if (RCI_request==2)
+  {
+    /* Request to the dfgmres_get routine to put the solution into b[N] via ipar[12]
+    /*---------------------------------------------------------------------------
+    /* WARNING: beware that the call to dfgmres_get routine with ipar[12]=0 at this stage may
+    /* destroy the convergence of the FGMRES method, therefore, only advanced users should
+    /* exploit this option with care */
+    ipar[12]=1;
+    /* Get the current FGMRES solution in the vector rhs[N] */
+    dfgmres_get(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp, &itercount);
+    /* Compute the current true residual via MKL (Sparse) BLAS routines */
+    mkl_dcsrgemv(&cvar, &ivar, A->x, A->p, A->i, rhs, residual); // A*x for new solution x
+    dvar=-1.0E0;
+    RCI_count=1;
+    daxpy(&ivar, &dvar, JTe, &RCI_count, residual, &RCI_count);  // Ax - A*x_solution
+    dvar=dnrm2(&ivar,residual,&RCI_count);
+    relres_nrm = dvar/rhs_nrm;
+
+    if(itercount > 0)
+    {
+      cout << "\n Iteration : " << itercount << "\n";
+      if((relres_nrm- relres_prev ) == 0) goto NOT_CONVERGE;
+    }
+
+    printf("\n relres_nrm- relres_prev = %10.6lf",relres_nrm- relres_prev);
+    relres_prev = relres_nrm;
+    cout << "\n relres_nrm : " << relres_nrm << "\n";
+    if (relres_nrm<1.0E-4) goto COMPLETE;   //taking tolerance as 1e-04
+
+    else goto ONE;
+  }
+
+  /*---------------------------------------------------------------------------
+  /* If RCI_request=3, then apply the preconditioner on the vector
+  /* tmp[ipar[21]-1] and put the result in vector tmp[ipar[22]-1]
+  /*---------------------------------------------------------------------------
+  /* NOTE that ipar[21] and ipar[22] contain FORTRAN style addresses,
+  /* therefore, in C code it is required to subtract 1 from them to get C style
+  /* addresses
+  /* Here is the recommended usage of the result produced by ILU0 routine
+    /* via standard MKL Sparse Blas solver routine mkl_dcsrtrsv.
+    /*---------------------------------------------------------------------------*/
+  
+  if (RCI_request==3)
+ {
+    cout << "\n Two-Grid Prec solve ..." << "\n";
+
+    float* ptr_x = NULL;
+    ptr_x = tg_solve(&x);   // call to tg_solve preconditioner
+
+ }
+
+
+ /*---------------------------------------------------------------------------
+  /* If RCI_request=4, then check if the norm of the next generated vector is
+  /* not zero up to rounding and computational errors. The norm is contained
+  /* in dpar[6] parameter
+  /*---------------------------------------------------------------------------*/
+  if (RCI_request==4)
+  {
+    if (dpar[6]<1.0E-12) goto COMPLETE;
+    else goto ONE;
+  }
+  /*---------------------------------------------------------------------------
+  /* If RCI_request=anything else, then dfgmres subroutine failed
+  /* to compute the solution vector: computed_solution[N]
+  /*---------------------------------------------------------------------------*/
+  else
+  {
+    goto FAILED;
+  }
+  /*---------------------------------------------------------------------------
+  /* Reverse Communication ends here
+  /* Get the current iteration number and the FGMRES solution (DO NOT FORGET to
+  /* call dfgmres_get routine as computed_solution is still containing
+  /* the initial guess!). Request to dfgmres_get to put the solution
+  /* into vector computed_solution[N] via ipar[12]
+  /*---------------------------------------------------------------------------*/
+  
+  COMPLETE:   ipar[12]=0;
+  dfgmres_get(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp, &itercount);
+  cout << "The system has been solved  in " << itercount << " iterations!\n";
+//  cout << "\n RCI_request : "<< RCI_request << "\n";
+
+  MKL_Free_Buffers();
+
+
+  delete [] JTe; 
+  delete [] A->x; delete [] A->p; delete [] A->i; 
+  //delete [] MSC->p; delete [] D->p;  delete [] G->p; 
+  delete [] P->p;
+  //delete [] D->i;  delete [] G->i;
+   delete [] P->i;
+  //delete [] D->x;  delete [] G->x;
+  delete [] P->x;
+  //delete MSC; delete D;  delete G;
+  delete A;  delete P; 
+  delete [] tmp; delete [] ipar; delete [] dpar;
+  delete [] rhs; delete [] computed_solution; delete [] residual;
+
+
+  FAILED: cout << "The solver has returned the ERROR code " << RCI_request << "\n";
+
+  MKL_Free_Buffers();
+
+  
+
+  NOT_CONVERGE: cout << "The relative residual did not change for successive iterations !\n";
+
+ return 0;
+
+
+}
 
 
 
   /* Two-grid Solve Function */
 
+  /* returns a pointer to the solution of two-grid solve  */
 
-  float * tg_solve(float *){
+  float* tg_solve(float* x)
+{
 
   /* 1st Step : Pre-smoothing  */
     
@@ -376,17 +688,18 @@ This is true because for symmetric matrix JTJ, CSR = transpose(CSC)
   transa = 'n';      // not tranpose
 
   /* Compute L\x */
-  mkl_cspblas_scsrtrsv(&uplo, &transa, &nonunit, num_cols, D->x, D>p, D->i, x, t_0);
+  mkl_cspblas_scsrtrsv(&uplo, &transa, &nonunit, num_cols, bilu0, D>p, D->i, x, t_0);
   /* Computation of L\X complete: L\x = t_0  */
 
   uplo = 'u';        // upper triangular
   nonunit = 'n';     // diagonal is not unit triangular
   transa = 'n';      // not tranpose
+
   /* Compute U\(t_0); t_0 = L\x */
-  mkl_cspblas_scsrtrsv(&uplo, &transa, &nonunit, num_cols, D->x, D>p, D->i, t_0, t_1); 
+  mkl_cspblas_scsrtrsv(&uplo, &transa, &nonunit, num_cols, bilu0, D->p, D->i, t_0, t_1); 
   /*  Solution obtained in t_1  */
 
-  printf(" Pre-smoothing Complete");
+  printf(" Pre-smoothing Complete!!!");
 
 
         
@@ -398,8 +711,11 @@ This is true because for symmetric matrix JTJ, CSR = transpose(CSC)
 
     printf("  INPUT DATA FOR MKL_DCSRMV \n");
          
-    float x_0[num_cols];
-    float x_1[num_cols];
+    float x_0[eig_N];
+    float x_1[eig_N];
+    float x_2[num_rows];
+    float x_3[num_rows];
+
     char  matdescra[6];
     
     transa = 'T';           // Transpose of the prolongation matrix
@@ -437,11 +753,17 @@ This is true because for symmetric matrix JTJ, CSR = transpose(CSC)
     nonunit = 'n';
     transa = 'n'; 
 
-    mkl_cspblas_scsrtrsv(&uplo, &transa, &nonunit, num_cols, Ac->x, Ac->p, Ac->i, x_0, x_1);
+    //mkl_cspblas_scsrtrsv(&uplo, &transa, &nonunit, num_cols, Ac->x, Ac->p, Ac->i, x_0, x_1);
+
+    // Performs pointwise element by element division of vector x_0 by vector Ac
+    vsDiv(eig_N, x_0, Ac, x_1);  // number of elements = eig_N (number of eigenvalues) 
+
+    // Computed x_1 = (Ac \ (P'*x)); x_0 = P'*x
+
 
     /*
       
-      Now compute matrix -vector multiplication :g = P * x_1 ; x1 = (Ac \ (P'*x_0));
+      Now compute matrix -vector multiplication :g = P * x_1 ; x1 = (Ac \ (P'*x));
     
     */
     transa = 'n';
@@ -484,13 +806,13 @@ This is true because for symmetric matrix JTJ, CSR = transpose(CSC)
     /* Compute (L\q)
        q = x_3
     */
-    mkl_cspblas_scsrtrsv(&uplo, &transa, &nonunit, num_cols, D->x, D>p, D->i, x_3, q_0);
+    mkl_cspblas_scsrtrsv(&uplo, &transa, &nonunit, num_cols, bilu0, D>p, D->i, x_3, q_0);
     /* Computation of L\q complete: L\x = t_0  */
     uplo = 'u';             // upper - triangular
     nonunit = 'n';          // not unit tringular
     transa = 'n';           // not transpose
    /* Compute U\(t_0); t_0 = L\x */
-    mkl_cspblas_scsrtrsv(&uplo, &transa, &nonunit, num_cols, D->x, D>p, D->i, q_0, q_1); 
+    mkl_cspblas_scsrtrsv(&uplo, &transa, &nonunit, num_cols, bilu0, D>p, D->i, q_0, q_1); 
     /*  Solution obtained in t_1  */
 
     /* Initializing parameters for sparse vector-vector subtraction 
@@ -499,8 +821,9 @@ This is true because for symmetric matrix JTJ, CSR = transpose(CSC)
        and q_1 = U\(L\q)
 
     */
-    double   alpha = -1;      // for subtratcion
+    double   alpha = -1;      // for subtraction
     int incx = 1, incy = 1;
+
     cblas_daxpy(n, alpha, q_1, incx, x_2, incy);      // x_2 - q_1 written in form -q_1 + x_2
     // Subtraction Complete: x_2 = x_2 - q_1
 
@@ -515,15 +838,6 @@ This is true because for symmetric matrix JTJ, CSR = transpose(CSC)
 
  }
 
-/* Free Memory */
-  delete [] JTe; 
-  delete [] D->p;
-  delete [] D->i; 
-  delete [] D->x; 
-  delete A; 
-
-  return 0;
-}
 
 
 
