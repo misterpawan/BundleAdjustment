@@ -165,53 +165,141 @@ void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* M
 	//S = cs_add(PG,PG,1.0,-1.0); //subtraction
 	//cout << "S->nzmax : " << S->nzmax << "\n";
 	//cout << "S->nzmax : " << S->p[10] << "\n";
-
 	int j,k,l;
 
+	for(j=0;j< S->n; j++)
+	{
+		if(j < (S->n)-1)
+		{
+			sort_rows_val(&(S->i[S->p[j]]),&(S->x[S->p[j]]),(S->p[j+1]-S->p[j]));	
+		}
+		else
+		{
+			sort_rows_val(&(S->i[S->p[j]]),&(S->x[S->p[j]]),((S->nzmax)-(S->p[j])));
+		}
+	}
+
+   // keeping only values greater than 1e-12 in S 
+	cs_di* S_tol = new cs_di;
+	S_tol->nz = -1;
+	S_tol->m = S->m; S_tol->n = S->n;
+	S_tol->p = new int[S_tol->n+1];
+	int nzStol = 0;
+	S_tol->p[0] = 0;
+
+	for(l=0; l < S->n;l++)
+	{
+		if(l < ((S->n)-1))
+		{
+			for(j = S->p[l]; j<S->p[l+1]; j++)
+			{
+				if(abs(S->x[j]) >= 1e-12)
+				{	
+					nzStol += 1;
+				}
+			}
+			S_tol->p[l+1] = nzStol;
+		}
+		else
+		{
+			for(j = S->p[l]; j < S->nzmax; j++)
+			{
+				if(abs(S->x[j]) >= 1e-12)
+				{
+					nzStol += 1;
+				}
+			}
+			S_tol->nzmax = nzStol;
+		}
+		//cout << "\n l:"<< l<<"\tnzStol : "<< nzStol << "\n";
+	}
+	S_tol->p[S_tol->n] = S_tol->nzmax;
+	S_tol->i = new int[S_tol->nzmax]; S_tol->x = new double[S_tol->nzmax];
+
+	k =0;
+	for(l=0; l < S->n; l++)
+	{
+		if(l < ((S->n)-1))
+		{
+			for(j = S->p[l]; j<S->p[l+1]; j++)
+			{
+				if(abs(S->x[j]) >= 1e-12)
+				{
+					S_tol->i[k] = S->i[j];
+					S_tol->x[k] = S->x[j];
+					k++;
+				}
+			}
+		}
+		else
+		{
+			for(j = S->p[l]; j < S->nzmax; j++)
+			{
+				if(abs(S->x[j]) >= 1e-12)
+				{
+					S_tol->i[k] = S->i[j];
+					S_tol->x[k] = S->x[j];
+					k++;
+				}
+			}
+		}
+	}
+/*
+	for(l=0; l < 20; l++)
+		printf("\nS_tol->i[%d] = %d",l,S_tol->i[l]);
+*/
+	delete [] S->p; delete [] S->i; delete [] S->x; delete S;
+	//printf("\nS->p[%d] = %d\t\tS->p[%d] = %d\n\n",0,S->p[0],1,S->p[1]);
+	//cout << "\n S_tol->nzmax : "<< S_tol->nzmax << "\n";
 	//filling up the msc block
 	
-	for(j=0;j< S->n; j++)
+	for(j=0;j< S_tol->n; j++)
 	{
 		if(r1 == 0 && j == 0) MSC->p[0] = 0;
 		else if(j==0) continue;
 		else
-			MSC->p[r1+j] = (S->p[j]-S->p[j-1])+MSC->p[r1+j-1];
-
-		if(j == S->n-1) 
+			MSC->p[r1+j] = (S_tol->p[j]-S_tol->p[j-1])+MSC->p[r1+j-1];
+		//cout << "\np[j] : " << MSC->p[r1+j];
+		//cout << "\n r1 +j : " << r1+j << "\n";
+		if(j == S_tol->n-1) 
 		{	
-			MSC->p[r1+j+1] = (S->p[S->n] - S->p[S->n-1]) + MSC->p[r1+j];
+			MSC->p[r1+j+1] = (S_tol->p[S_tol->n] - S_tol->p[S_tol->n-1]) + MSC->p[r1+j];
 			//cout << "\nMSC->p["<<r1+j+1<<"] : " <<  MSC->p[r1+j+1] << "\n";
+			//cout << "\n r1 +j : " << r1+j << "\n";
 		}	
 	}	
-	
+
+
 	l = 0;
 	for(j = r1; j < r2+ol; j++)
 	{
 		if(j < sizeG-1)
 		{
 			//cout <<  "\n MSC->p[j+1] : "<< MSC->p[j+1] << "\n";
-			for(k = MSC->p[j];k  < MSC->p[j+1] && l < S->nzmax; k++)
+			for(k = MSC->p[j];k  < MSC->p[j+1] && l < S_tol->nzmax; k++)
 			{
-				MSC->i[k] = S->i[l] + r1;
-				MSC->x[k] = S->x[l];
+				MSC->i[k] = S_tol->i[l] + r1;
+				MSC->x[k] = S_tol->x[l];
 				l++;
 			}
 		}
 		else
 		{
-			for(k = MSC->p[j];k  < MSC->nzmax && l < S->nzmax; k++)
+			for(k = MSC->p[j];k  < MSC->nzmax && l < S_tol->nzmax; k++)
 			//for(k = MSC->p[j];k  < MSC->p[j+1] && l < S->nzmax; k++)
 			{
-				MSC->i[k] = S->i[l] + r1;
-				MSC->x[k] = S->x[l];
-				l++;
+				{
+					MSC->i[k] = S_tol->i[l] + r1;
+					MSC->x[k] = S_tol->x[l];
+					l++;
+				}
 			}
 		}
 	}
-	*total_nz += S->nzmax; //cout << "\nTotal nnz : " << *total_nz << "\n";
+	*total_nz += S_tol->nzmax; //cout << "\nTotal nnz : " << *total_nz << "\n";
 	//cout << "\n Total nnz : "<< S->nzmax << "\n";
 	//cout << "\n Last element : "<< S->x[S->nzmax-1] << "\n";
-
+/*
 	for(j=r1;j< r2+ol; j++)
 	{
 		if(j < sizeG-1)
@@ -222,19 +310,13 @@ void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* M
 		{
 			sort_rows_val(&(MSC->i[MSC->p[j]]),&(MSC->x[MSC->p[j]]),((MSC->p[r1]+S->nzmax)-MSC->p[j]));
 		}
-	}
+	}*/
 //	cout << "\nSorting done!\n";
-/*
-	for(k = MSC->p[0]; k < MSC->p[1]; k++)
-	{
-		//if(MSC->i[k] > 420 &&  MSC->i[k] < 440)
-			cout << "MSC->i["<<k<<"]: "<< MSC->i[k] << "\n";
-	}
-*/
+
 	delete [] LDU->p; delete [] LDU->i; delete [] LDU->x;
-	delete [] S->p; delete [] S->i; delete [] S->x;
-	delete S;
-	delete LDU; 
+	delete [] S_tol->p; delete [] S_tol->i; delete [] S_tol->x;
+	delete LDU;delete S_tol;
+
 
 	return;
 }
@@ -250,7 +332,7 @@ block G is available.
 */
 void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* U,cs_di* G)
 {
-	int nmsc_block = 3 ;  //no of blocks for G
+	int nmsc_block = 20 ;  //no of blocks for G
 	int r = sizeG % nmsc_block;
 	int sz = (sizeG - r)/nmsc_block ; //size of each nmsc block for G
 	int r1 = 0,r2 = sz; //C++ convention   
@@ -276,7 +358,7 @@ void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* 
 
 
 	cout<< "\nComputing Mini Schur Complement...\n";
-	for(i ; i < nmsc_block -2;i++ )
+	for(i ; i < nmsc_block - 2;i++ )
 	{
 		//cout << "\n i : " << i << "\n";
 		nzPD = 0; nzPL = 0; nzPU = 0; nzPG = 0;
@@ -925,8 +1007,13 @@ int main()
 
 	int ok = cs_di_sprealloc(MSC,MSC->p[sizeG]);
 	//cout << "\n ok : "<< ok << "\n";
-
-
+/*
+	for(int k = 0; k < 1; k++)
+	{
+		for(int l = MSC->p[k]; l<20; l++)
+			printf("\nMSC->i[%d] = %d\t\tMSC->x[%d] = %10.9f",l,MSC->i[l],l,MSC->x[l]);
+	}
+*/
 	/************LU Factorization of D and MSC******************************/
 
 	sym_status = umfpack_di_symbolic ( D->m, D->n, D->p, D->i, D->x, &Symbolic_D, solve_null, solve_null );
@@ -950,7 +1037,7 @@ int main()
   	// Testing A solve with LU and comparing with MATLAB
 	//test_A_solve(A);
 	//test_D_solve(D);
-	//test_MSC_solve(MSC);
+	test_MSC_solve(MSC);
 	//test_matvec_multiply(A);
 	
 
@@ -1034,7 +1121,7 @@ int main()
 	{
 		computed_solution[RCI_count]=0.0;
 	}
-	computed_solution[0]=800.0;
+	//computed_solution[0]=0.0;
 
 	/*---------------------------------------------------------------------------
 	/* Initialize the solver
@@ -1046,9 +1133,9 @@ int main()
 	ipar[7] = 1;
 	ipar[4] = 20;  // Max Iterations
 	ipar[10] = 1;  //Preconditioner used
-	ipar[14] = 20;
+	ipar[14] = 20; //internal iterations
 	
-	dpar[0] = 1.0e-04; //Relative Tolerance
+	dpar[0] = 1.0e-05; //Relative Tolerance
 
 	/*---------------------------------------------------------------------------
 	/* Check the correctness and consistency of the newly set parameters
@@ -1069,11 +1156,6 @@ int main()
 	/*---------------------------------------------------------------------------
 	/* If RCI_request=1, then compute the vector A*tmp[ipar[21]-1]
 	/* and put the result in vector tmp[ipar[22]-1]	
-	/*---------------------------------------------------------------------------
-	/* NOTE that ipar[21] and ipar[22] contain FORTRAN style addresses,
-	/* therefore, in C code it is required to subtract 1 from them to get C style
-	/* addresses
-	/*---------------------------------------------------------------------------*/
 	/*------------------DEPRECATED ROUTINE (FIND ANOTHER )-------------------------*/
 	if (RCI_request==1)
 	{
@@ -1083,27 +1165,17 @@ int main()
 
 	/*---------------------------------------------------------------------------
 	/* If RCI_request=2, then do the user-defined stopping test
-	/* The residual stopping test for the computed solution is performed here
-	/*---------------------------------------------------------------------------
-	/* NOTE: from this point vector b[N] is no longer containing the right-hand
-	/* side of the problem! It contains the current FGMRES approximation to the
-	/* solution. If you need to keep the right-hand side, save it in some other
-	/* vector before the call to dfgmres routine. Here we saved it in vector
-	/* rhs[N]. The vector b is used instead of rhs to preserve the
-	/* original right-hand side of the problem and guarantee the proper
-	/* restart of FGMRES method. Vector b will be altered when computing the
-	/* residual stopping criterion!
-	/*---------------------------------------------------------------------------*/
+	/* The residual stopping test for the computed solution is performed here*/
 	if (RCI_request==2)
 	{
-		/* Request to the dfgmres_get routine to put the solution into b[N] via ipar[12]
-		/*---------------------------------------------------------------------------
-		/* WARNING: beware that the call to dfgmres_get routine with ipar[12]=0 at this stage may
-		/* destroy the convergence of the FGMRES method, therefore, only advanced users should
-		/* exploit this option with care */
+		/* Request to the dfgmres_get routine to put the solution into b[N] via ipar[12]*/
 		ipar[12]=1;
 		/* Get the current FGMRES solution in the vector rhs[N] */
 		dfgmres_get(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp, &itercount);
+
+		//for(int kl = 0; kl < 10; kl++)
+		//	printf("\n comp_sol[%d] = %10.9f",kl, computed_solution[kl]);
+
 		/* Compute the current true residual via MKL (Sparse) BLAS routines */
 		mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, rhs, residual); // A*x for new solution x
 		dvar=-1.0E0;
@@ -1111,11 +1183,16 @@ int main()
 		daxpy(&ivar, &dvar, JTe, &RCI_count, residual, &RCI_count);  // Ax - A*x_solution
 		
 
-		cout << "\n Iteration : " << itercount << "\n";
+		cout << "\n Iteration : " << itercount;
+		//for(int k = 0; k < 10; k++)
+		//		printf("\nresildual[%d] = %10.9f\n",k,residual[k]);
+
 		if(ipar[10] == 0)   // non preconditioned system
 		{
 			dvar=dnrm2(&ivar,residual,&RCI_count);
 			relres_nrm = dvar/rhs_nrm;
+			//relres_nrm = dvar/prec_rhs_nrm;
+			//printf("\nresidual norm non prec = %10.9f\n",dvar);
 			
 	/*		if(itercount > 0)
 			{
@@ -1127,18 +1204,22 @@ int main()
 		else if(ipar[10] == 1)  //preconditioned system
 		{
 			double *prec_relres = new double[num_cols];
+			//dvar=dnrm2(&ivar,residual,&RCI_count);
+			//printf("\nresidual norm with prec = %10.9f\n",dvar);
+
 			prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,residual,prec_relres);
 			prec_relres_nrm = dnrm2(&ivar,prec_relres,&RCI_count); 
 			delete [] prec_relres;
 			//cout << "\n prec relres norm : " << prec_relres_nrm << "\n";
-			printf("\nPrec relres norm : %10.9f",prec_relres_nrm);
+			//printf("\nPrec relres norm : %10.9f",prec_relres_nrm);
 			relres_nrm = prec_relres_nrm/prec_rhs_nrm;
 
 		}
 
-		cout << "\n relres_nrm : " << relres_nrm << "\n";
+		//cout << "\n relres_nrm : " << relres_nrm << "\n";
+		printf("\nRelres norm = %10.9f\n",relres_nrm);
 
-		if (relres_nrm<1.0E-4) goto COMPLETE;   //taking tolerance as 1e-04
+		if (relres_nrm<1.0E-5) goto COMPLETE;   //taking tolerance as 1e-04
 
 		else goto ONE;
 		
@@ -1146,19 +1227,12 @@ int main()
 
 	/*---------------------------------------------------------------------------
 	/* If RCI_request=3, then apply the preconditioner on the vector
-	/* tmp[ipar[21]-1] and put the result in vector tmp[ipar[22]-1]
-	/*---------------------------------------------------------------------------
-	/* NOTE that ipar[21] and ipar[22] contain FORTRAN style addresses,
-	/* therefore, in C code it is required to subtract 1 from them to get C style
-	/* addresses
-	/* Here is the recommended usage of the result produced by ILU0 routine
-    /* via standard MKL Sparse Blas solver routine mkl_dcsrtrsv.
-    /*---------------------------------------------------------------------------*/
+	/* tmp[ipar[21]-1] and put the result in vector tmp[ipar[22]-1]*/
+	
 	if (RCI_request==3)
 	{
-		cout << "\n Prec solve ..." << "\n";
+		//cout << "\n Prec solve ..." << "\n";
 		prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,&tmp[(ipar[21]-1)],&tmp[(ipar[22]-1)]);
-
 		goto ONE;
 	}
 

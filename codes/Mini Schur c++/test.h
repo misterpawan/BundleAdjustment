@@ -126,8 +126,8 @@ void test_D_solve(cs_di_sparse* D)
 void test_MSC_solve(cs_di_sparse* MSC)
 {
 	double* b = new double[MSC->n];
-	string test_filename = "test/rand_rhs_MSC.txt";
-	string solve_filename = "test/rand_sol_MSC.txt";
+	string test_filename = "test/rand_rhs_MSC_20.txt";
+	string solve_filename = "test/rand_sol_MSC_20.txt";
 	void* Numeric;
 	void* Symbolic;
 	double* rhs = new double[MSC->n];
@@ -145,20 +145,20 @@ void test_MSC_solve(cs_di_sparse* MSC)
 	r8vec_data_read ( solve_filename, MSC->n, rhs_mat); // MATLAB solution
 
 	status = umfpack_di_symbolic ( MSC->m, MSC->n, MSC->p, MSC->i, MSC->x, &Symbolic, null, null );
-	//cout << "\n Symbolic status :" << status << "\n";
+	cout << "\n Symbolic status :" << status << "\n";
 
 	status = umfpack_di_numeric ( MSC->p, MSC->i, MSC->x, Symbolic, &Numeric, null, null );
-	//cout << "\n Numeric status :" << status << "\n";
+	cout << "\n Numeric status :" << status << "\n";
 
 	umfpack_di_free_symbolic ( &Symbolic );
 
 	status = umfpack_di_solve ( UMFPACK_A, MSC->p, MSC->i, MSC->x, rhs, b, Numeric, null, null );
-  	//cout << "\n Solve status :" << status << "\n";
+  	cout << "\n Solve status :" << status << "\n";
 
   	umfpack_di_free_numeric ( &Numeric );
-
-  	ofstream outfile("rand_sol_cpp.txt");
 /*
+  	ofstream outfile("rand_sol_cpp.txt");
+
   	if(outfile.is_open())
   	{
   		for(int k = 0; k < MSC->n; k++)
@@ -166,6 +166,9 @@ void test_MSC_solve(cs_di_sparse* MSC)
   	}
   	outfile.close();
 */
+  	for(int i = 0; i < 10; i++)
+		printf("\nprec_MSC_sol[%d] = %10.9f \t\t prec_mat_MSC_sol[%d] = %10.9f",i,rhs[i],i,rhs_mat[i]);
+
   	daxpy(&zvar, &dvar, rhs, &p, rhs_mat, &p);
 
   	//rhs_nrm = dnrm2(&(A->n),rhs,&incx); // cout << "\n norm rhs : " << rhs_nrm << "\n";
@@ -209,7 +212,7 @@ void test_matvec_multiply(cs_di_sparse* A)
 
     //converting COO to CSR
     mkl_dcsrcsc(job,&ivar,acsr,ja,ia,A->x,A->i,A->p,&info);
-    printf("\n Conversion info : %d\n",info);
+    //printf("\n Conversion info : %d\n",info);
 
 	r8vec_data_read ( test_filename, A->n, b);
 	r8vec_data_read ( solve_filename, A->n, vec_mat); // MATLAB solution
@@ -219,10 +222,10 @@ void test_matvec_multiply(cs_di_sparse* A)
 	
 
 	mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, b, vec);
-/*
+
 	for(int i = 0; i < 10; i++)
 		printf("\nvec[%d] = %10.9f \t\t vec_mat[%d] = %10.9f",i,vec[i],i,vec_mat[i]);
-*/
+
   	//vec_nrm = dnrm2(&ivar,vec,&incx); cout << "\n norm rhs : " << vec_nrm << "\n";
   	//vec_mat_nrm = dnrm2(&ivar,vec_mat,&incx); cout<< "\n norm_vec_mat : "<< vec_mat_nrm << "\n";
 
@@ -288,8 +291,8 @@ void test_prec_solve(cs_di_sparse* A, cs_di_sparse* D,cs_di_sparse* MSC,void *Nu
 		if(kk < (D->n)) prec_sol[kk] = z1[kk];
 		else prec_sol[kk] = z2[kk - (D->n)];
 	}
-
-/*	for(int i = 0; i < 10; i++)
+/*
+	for(int i = 1000; i < 1010; i++)
 		printf("\nprec_sol[%d] = %10.9f \t\t prec_mat_sol[%d] = %10.9f",i,prec_sol[i],i,prec_mat_sol[i]);
 */
 	daxpy(&ivar, &dvar, prec_sol, &p, prec_mat_sol, &p);

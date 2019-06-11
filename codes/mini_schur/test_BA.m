@@ -62,7 +62,7 @@ function test_BA
     % blocks for schur complements
     %nmsc = 3; 
    % nmsc_blocks = [3 4 5 6 7 8 9 10 15 20];
-    nmsc_blocks = [3];
+    nmsc_blocks = [20];
     %nmsc_blocks = [25 30 35 40];
     %nmsc_blocks = [13 14 15 16 17 18];
     iters = zeros(1,length(nmsc_blocks));
@@ -125,9 +125,10 @@ function test_BA
            r1 = r2 + 1; 
            r2 = r2 + sz;
            rD1 = rD2 + 1;
-           rD2 = rD2 + szD;
+           rD2 = rD2 + szD; 
+           %nnz(GS)
         end
-
+        %keyboard;
         oll = 0; % overlap size for 2nd last msc
         i = i+1;
 
@@ -184,6 +185,16 @@ function test_BA
 %          tic,UG = chol(GS);t_factor_msc = toc; LG = UG';
          fprintf('done!!!\n'); % matlab chol factorizes into upper triangular 
         %keyboard;
+        rand_rhs = rand(sizeG,1);
+        fp = fopen("~/rand_rhs_MSC_20.txt","w");
+        fprintf(fp,"%10.9f\n",rand_rhs);
+        fclose(fp);
+        
+        rand_sol = UG\(LG\rand_rhs);
+        fp = fopen("~/rand_sol_MSC_20.txt","w");
+        fprintf(fp,"%10.9f\n",rand_sol);
+        fclose(fp);
+         keyboard;
         clear GS S PD PU PL PG
  
 %         setup.type='ilutp'; 
@@ -205,13 +216,17 @@ function test_BA
 
         fprintf('done!!!\n'); clear D G ;      
 
-       prec_rhs = nssolve2(b);
+      % b_req = load("~/req_prec_solve.txt");
+       %prec_rhs = nssolve2(b);
+       %fp = fopen("~/prec_solved.txt","w");
+       %fprintf(fp,"%10.9f\n",prec_rhs);
+       %fclose(fp);
        %keyboard;
         
         
             %% Solve with PCG
             precfun=@nssolve; sol=zeros(n,1);
-            tol = 1e-4; maxit = 1;restart = 1;
+            tol = 1e-4; maxit = 1;restart = 20;
             try
                 fprintf('Enter GMRES...\n');
                 %tic, [x,flag,relres,iter] = pcg(B,b,tol,maxit,@nssolve2); t_pcg = toc;
@@ -232,6 +247,12 @@ function test_BA
                 fprintf('ERROR in GMRES aborting\n');break;
             end
             %fprintf('\nDifference in residual : %g\n',norm(xx-x));
+%             q_np = B*x_np -b;
+%             nrm_q = norm(q_np);
+%             q = B*x -b;
+%             prec_q = nssolve2(q);
+%             prec_b = nssolve2(b);
+%             keyboard;
             clear LD UD LG UG x  
             
             iters_np(z) = its_np;
@@ -249,7 +270,6 @@ function test_BA
 %             fprintf('\n\nNormal solve time : %g\n\n',normal_solve_time);
 %             fprintf('\n\nPCG solve time : %g\n\n',t_total);
     end
-    keyboard;
     clear b
     
     fprintf('tests done!!!\n');
