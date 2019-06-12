@@ -332,7 +332,7 @@ block G is available.
 */
 void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* U,cs_di* G)
 {
-	int nmsc_block = 20 ;  //no of blocks for G
+	int nmsc_block = 3 ;  //no of blocks for G
 	int r = sizeG % nmsc_block;
 	int sz = (sizeG - r)/nmsc_block ; //size of each nmsc block for G
 	int r1 = 0,r2 = sz; //C++ convention   
@@ -1037,7 +1037,7 @@ int main()
   	// Testing A solve with LU and comparing with MATLAB
 	//test_A_solve(A);
 	//test_D_solve(D);
-	test_MSC_solve(MSC);
+	//test_MSC_solve(MSC);
 	//test_matvec_multiply(A);
 	
 
@@ -1131,11 +1131,11 @@ int main()
 
 	
 	ipar[7] = 1;
-	ipar[4] = 20;  // Max Iterations
+	ipar[4] = 400;  // Max Iterations
 	ipar[10] = 1;  //Preconditioner used
 	ipar[14] = 20; //internal iterations
 	
-	dpar[0] = 1.0e-05; //Relative Tolerance
+	dpar[0] = 1.0e-04; //Relative Tolerance
 
 	/*---------------------------------------------------------------------------
 	/* Check the correctness and consistency of the newly set parameters
@@ -1194,12 +1194,6 @@ int main()
 			//relres_nrm = dvar/prec_rhs_nrm;
 			//printf("\nresidual norm non prec = %10.9f\n",dvar);
 			
-	/*		if(itercount > 0)
-			{
-				cout << "\n Iteration : " << itercount << "\n";
-				if((relres_nrm- relres_prev ) == 0) goto NOT_CONVERGE;
-			}
-	*/
 		}
 		else if(ipar[10] == 1)  //preconditioned system
 		{
@@ -1219,7 +1213,7 @@ int main()
 		//cout << "\n relres_nrm : " << relres_nrm << "\n";
 		printf("\nRelres norm = %10.9f\n",relres_nrm);
 
-		if (relres_nrm<1.0E-5) goto COMPLETE;   //taking tolerance as 1e-04
+		if (relres_nrm<1.0E-4) goto COMPLETE;   //taking tolerance as 1e-04
 
 		else goto ONE;
 		
@@ -1265,6 +1259,11 @@ int main()
 	dfgmres_get(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp, &itercount);
 	cout << "The system has been solved  in " << itercount << " iterations!\n";
 //	cout << "\n RCI_request : "<< RCI_request << "\n";
+	printf("\nThe following solution has been obtained: \n");
+	for (RCI_count=0;RCI_count<10;RCI_count++)                //PRINTING ONLY THE FIRST 10 MEMBERS
+	{
+		printf("computed_solution[%d]=%10.6f\n",RCI_count,computed_solution[RCI_count]);
+	}
 
 	MKL_Free_Buffers();
 

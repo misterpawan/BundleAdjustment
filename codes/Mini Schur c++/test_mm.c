@@ -1,6 +1,7 @@
 # include <stdlib.h>
 # include <stdio.h>
 # include <math.h>
+# include <time.h> 
 
 # include "mm_io.h"
 # include "mkl.h"
@@ -22,6 +23,9 @@ int main()
     int *I_rhs,*J_rhs;
     double *val;
     double *rhs;
+    clock_t start,end;
+    double cpu_time_taken;
+    double rhs_nrm,relres_nrm,prec_rhs_nrm,prec_relres_nrm;
 
     char* input_filename = "poisson3Db_MM/poisson3Db.mtx";
     char* rhs_filename = "poisson3Db_MM/poisson3Db_b.mtx";
@@ -95,9 +99,12 @@ int main()
     MKL_INT *ia = (MKL_INT*) malloc ((n+1)*sizeof(MKL_INT));
     MKL_INT info;
 
+    //start = clock();
     //converting COO to CSR
     mkl_dcsrcoo(job,&n,A,ja,ia,&nz,val,I,J,&info);
-    printf("\n Conversion info : %d\n",info);
+   // end = clock();
+    //printf("\n Conversion info : %d\n",info);
+   // printf("\n CPU time for conversion = %lf secs", ((double)(end-start))/CLOCKS_PER_SEC);
 
     //printf("\nia[367] = %d",ia[366]);
 /*
@@ -156,13 +163,13 @@ int main()
 	dcopy(&ivar, rhs, &i, b, &i);
 
 /*---------------------------------------------------------------------------
-/* Initialize the initial guess
+/* Initialize the initial guess (all zeros)
 /*---------------------------------------------------------------------------*/
 	for(i=0;i<n;i++)
 	{
 		computed_solution[i]=0.0;
 	}
-	computed_solution[0]=100.0;
+//	computed_solution[0]=100.0;
 
 
 /*---------------------------------------------------------------------------
@@ -195,8 +202,8 @@ int main()
 /*---------------------------------------------------------------------------*/
 
 	ipar[30]=1;
-	dpar[30]=1.E-20;
-	dpar[31]=1.E-16;
+	dpar[30]=1.E-10;
+	dpar[31]=1.E-3;
 
         dcsrilu0(&ivar, A, ia, ja, bilu0, ipar, dpar, &ierr);
         nrm2=dnrm2(&matsize, bilu0, &incx );
@@ -222,11 +229,12 @@ int main()
     /* convergence. It is user's responsibility to use a suitable preconditioner
     /* and to apply it skillfully.
     /*---------------------------------------------------------------------------*/
-	ipar[14]=20;
-	ipar[7]=0;
-	ipar[10]=1;
-	dpar[0]=1.0E-3;
-
+	ipar[14]=30;  // internal iterations
+	ipar[4] = 300; // max iterations
+	ipar[7]=1;   //check current iter vs max iter
+	ipar[10]=1;  //use preconditioner
+	dpar[0]=1.0E-3;  // relative tolerance
+	//printf("\nipar[14] = %d\n",ipar[14]);
 	/*---------------------------------------------------------------------------
 	/* Check the correctness and consistency of the newly set parameters
 	/*---------------------------------------------------------------------------*/
@@ -291,6 +299,28 @@ int main()
 		printf("thus, the user-defined test will be requested via RCI_request=4\n");
 	}
 	printf("+++\n\n");
+
+	i = 1;
+	rhs_nrm = dnrm2(&ivar,rhs,&i);
+	printf("\n Norm of the rhs is = %10.6f\n",rhs_nrm);
+
+	// computing preconditioned rhs
+	double *prec_rhs = (double*) malloc (ivar * sizeof(double));
+	double *tmp_rhs = (double*) malloc (ivar * sizeof(double));
+
+	cvar1='L';
+	cvar='N';
+	cvar2='U';
+	mkl_dcsrtrsv(&cvar1,&cvar,&cvar2,&ivar,bilu0,ia,ja,rhs,tmp_rhs);
+	cvar1='U';
+	cvar='N';
+	cvar2='N';
+	mkl_dcsrtrsv(&cvar1,&cvar,&cvar2,&ivar,bilu0,ia,ja,tmp_rhs,prec_rhs);
+	free(tmp_rhs);
+
+	prec_rhs_nrm = dnrm2(&ivar,prec_rhs,&i);
+	printf("\n Norm of the prec rhs is = %10.6f\n",prec_rhs_nrm);
+
 	/*---------------------------------------------------------------------------
 	/* Compute the solution by RCI (P)FGMRES solver with preconditioning
 	/* Reverse Communication starts here
@@ -341,8 +371,37 @@ ONE:  dfgmres(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp);  //
 		dvar=-1.0E0;
 		i=1;
 		daxpy(&ivar, &dvar, rhs, &i, residual, &i);
-		dvar=dnrm2(&ivar,residual,&i);
-		if (dvar<1.0E-3) goto COMPLETE;
+		printf("\nIteration : %d",itercount);
+		if(ipar[10] == 0)
+		{
+			dvar=dnrm2(&ivar,residual,&i);
+			relres_nrm = dvar/rhs_nrm;
+
+			printf("\n Relres norm = %10.6f",relres_nrm);
+		}
+		else if(ipar[10] == 1)
+		{
+			double *prec_residual = (double*)malloc(ivar*sizeof(double));
+			cvar1='L';
+			cvar='N';
+			cvar2='U';
+			mkl_dcsrtrsv(&cvar1,&cvar,&cvar2,&ivar,bilu0,ia,ja,residual,trvec);
+			cvar1='U';
+			cvar='N';
+			cvar2='N';
+			mkl_dcsrtrsv(&cvar1,&cvar,&cvar2,&ivar,bilu0,ia,ja,trvec,prec_residual);
+			i=1;
+			prec_relres_nrm = dnrm2(&ivar,prec_residual,&i);
+
+			relres_nrm = prec_relres_nrm / prec_rhs_nrm;
+
+			printf("\n Preconditioned relres norm = %10.9f",relres_nrm);
+
+			free(prec_residual);
+		}
+
+		printf("\n");
+		if (relres_nrm<=1.0E-3) goto COMPLETE;
 
 		else goto ONE;
 	}
@@ -403,9 +462,9 @@ COMPLETE:   ipar[12]=0;
 	printf("\nThe following solution has been obtained: \n");
 	for (i=0;i<10;i++)                //PRINTING ONLY THE FIRST 10 MEMBERS
 	{
-		printf("computed_solution[%d]=%e\n",i,computed_solution[i]);
+		printf("computed_solution[%d]=%10.6f\n",i,computed_solution[i]);
 	}
-	printf("\nThe expected solution is: \n");
+//	printf("\nThe expected solution is: \n");
 /*	for (i=0;i<n;i++)
 	{
 		printf("expected_solution[%d]=%e\n",i,expected_solution[i]);
@@ -413,7 +472,8 @@ COMPLETE:   ipar[12]=0;
 */
 	printf("\nNumber of iterations: %d\n" ,itercount);
 	printf("\n");
-
+	return 0;
+/*
 	if(itercount==ref_nit && fabs(ref_norm2-nrm2)<1.e-6)
         {
 	printf("--------------------------------------------------------\n");
@@ -432,7 +492,7 @@ COMPLETE:   ipar[12]=0;
 	printf("Unfortunately, FGMRES+ILU0 C example has FAILED\n");
 	printf("-------------------------------------------------------------------\n");
 	return 0;
-	}
+	}*/
 FAILED:
 	printf("The solver has returned the ERROR code %d \n", RCI_request);
 FAILED1:

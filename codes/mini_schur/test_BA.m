@@ -62,7 +62,7 @@ function test_BA
     % blocks for schur complements
     %nmsc = 3; 
    % nmsc_blocks = [3 4 5 6 7 8 9 10 15 20];
-    nmsc_blocks = [20];
+    nmsc_blocks = [3];
     %nmsc_blocks = [25 30 35 40];
     %nmsc_blocks = [13 14 15 16 17 18];
     iters = zeros(1,length(nmsc_blocks));
@@ -190,11 +190,11 @@ function test_BA
         fprintf(fp,"%10.9f\n",rand_rhs);
         fclose(fp);
         
-        rand_sol = UG\(LG\rand_rhs);
-        fp = fopen("~/rand_sol_MSC_20.txt","w");
-        fprintf(fp,"%10.9f\n",rand_sol);
-        fclose(fp);
-         keyboard;
+%         rand_sol = UG\(LG\rand_rhs);
+%         fp = fopen("~/rand_sol_MSC_20.txt","w");
+%         fprintf(fp,"%10.9f\n",rand_sol);
+%         fclose(fp);
+%          keyboard;
         clear GS S PD PU PL PG
  
 %         setup.type='ilutp'; 
@@ -226,7 +226,7 @@ function test_BA
         
             %% Solve with PCG
             precfun=@nssolve; sol=zeros(n,1);
-            tol = 1e-4; maxit = 1;restart = 20;
+            tol = 1e-4; maxit = 20;restart = 20;
             try
                 fprintf('Enter GMRES...\n');
                 %tic, [x,flag,relres,iter] = pcg(B,b,tol,maxit,@nssolve2); t_pcg = toc;
@@ -252,7 +252,11 @@ function test_BA
 %             q = B*x -b;
 %             prec_q = nssolve2(q);
 %             prec_b = nssolve2(b);
-%             keyboard;
+             for kk = 1: 10
+               fprintf("\nx[%d] = %10.6f\n",kk,x(kk,:));
+             end
+            
+             keyboard;
             clear LD UD LG UG x  
             
             iters_np(z) = its_np;

@@ -36,6 +36,10 @@ void test_A_solve(cs_di_sparse* A)
 
   	umfpack_di_free_numeric ( &Numeric );
 
+  	for(int i = 0; i < 20; i++)
+		printf("\nrhs[%d] = %10.9f \t\t rhs_mat[%d] = %10.9f",i,rhs[i],i,rhs_mat[i]);
+
+/*
   	ofstream outfile("rand_sol_cpp.txt");
 
   	if(outfile.is_open())
@@ -44,7 +48,7 @@ void test_A_solve(cs_di_sparse* A)
   			outfile << rhs[k] << "\n";
   	}
   	outfile.close();
-
+*/
   	daxpy(&zvar, &dvar, rhs, &p, rhs_mat, &p);
 
   	//rhs_nrm = dnrm2(&(A->n),rhs,&incx); // cout << "\n norm rhs : " << rhs_nrm << "\n";
@@ -96,6 +100,9 @@ void test_D_solve(cs_di_sparse* D)
   	//cout << "\n Solve status :" << status << "\n";
 
   	umfpack_di_free_numeric ( &Numeric );
+
+  	for(int i = 0; i < 20; i++)
+		printf("\nrhs[%d] = %10.9f \t\t rhs_mat[%d] = %10.9f",i,rhs[i],i,rhs_mat[i]);
 /*
   	ofstream outfile("rand_sol_cpp.txt");
 
@@ -145,15 +152,15 @@ void test_MSC_solve(cs_di_sparse* MSC)
 	r8vec_data_read ( solve_filename, MSC->n, rhs_mat); // MATLAB solution
 
 	status = umfpack_di_symbolic ( MSC->m, MSC->n, MSC->p, MSC->i, MSC->x, &Symbolic, null, null );
-	cout << "\n Symbolic status :" << status << "\n";
+	//cout << "\n Symbolic status :" << status << "\n";
 
 	status = umfpack_di_numeric ( MSC->p, MSC->i, MSC->x, Symbolic, &Numeric, null, null );
-	cout << "\n Numeric status :" << status << "\n";
+	//cout << "\n Numeric status :" << status << "\n";
 
 	umfpack_di_free_symbolic ( &Symbolic );
 
 	status = umfpack_di_solve ( UMFPACK_A, MSC->p, MSC->i, MSC->x, rhs, b, Numeric, null, null );
-  	cout << "\n Solve status :" << status << "\n";
+  	//cout << "\n Solve status :" << status << "\n";
 
   	umfpack_di_free_numeric ( &Numeric );
 /*
@@ -166,7 +173,7 @@ void test_MSC_solve(cs_di_sparse* MSC)
   	}
   	outfile.close();
 */
-  	for(int i = 0; i < 10; i++)
+  	for(int i = 0; i < 20; i++)
 		printf("\nprec_MSC_sol[%d] = %10.9f \t\t prec_mat_MSC_sol[%d] = %10.9f",i,rhs[i],i,rhs_mat[i]);
 
   	daxpy(&zvar, &dvar, rhs, &p, rhs_mat, &p);
@@ -179,7 +186,8 @@ void test_MSC_solve(cs_di_sparse* MSC)
   	//diff = abs(rhs_mat_nrm - rhs_nrm);
   	diff = dnrm2(&zvar,rhs_mat,&incx);
 
-  	cout << "\n The difference in norms for MSC is " << diff << "\n";
+  	//cout << "\n The difference in norms for MSC is " << diff << "\n";
+  	printf("\n The difference in norms for MSC is %g\n",diff);
 
   	delete [] b; delete [] rhs; delete [] rhs_mat;
 
@@ -223,7 +231,7 @@ void test_matvec_multiply(cs_di_sparse* A)
 
 	mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, b, vec);
 
-	for(int i = 0; i < 10; i++)
+	for(int i = 0; i < 20; i++)
 		printf("\nvec[%d] = %10.9f \t\t vec_mat[%d] = %10.9f",i,vec[i],i,vec_mat[i]);
 
   	//vec_nrm = dnrm2(&ivar,vec,&incx); cout << "\n norm rhs : " << vec_nrm << "\n";
@@ -291,10 +299,10 @@ void test_prec_solve(cs_di_sparse* A, cs_di_sparse* D,cs_di_sparse* MSC,void *Nu
 		if(kk < (D->n)) prec_sol[kk] = z1[kk];
 		else prec_sol[kk] = z2[kk - (D->n)];
 	}
-/*
-	for(int i = 1000; i < 1010; i++)
+
+	for(int i = 0; i < 20; i++)
 		printf("\nprec_sol[%d] = %10.9f \t\t prec_mat_sol[%d] = %10.9f",i,prec_sol[i],i,prec_mat_sol[i]);
-*/
+
 	daxpy(&ivar, &dvar, prec_sol, &p, prec_mat_sol, &p);
 	diff = dnrm2(&ivar,prec_mat_sol,&p);
 
