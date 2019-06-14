@@ -399,7 +399,8 @@ int main()
   mkl_dcsrcsc(job1,&ivar1,bacsr,bja,bia,B->x,B->i,B->p,&info2);
   //mkl_dcsrcsc(job,&ivar,acsr,ja,ia,A->x,A->i,A->p,&info1);
 
-  cout << "\n Conversion info B : "<< info2 << "\n";
+  cout << "\nConversion info B : "<< info2 << endl;
+
 
 /*************Matrix Conversion of B block in CSR format Complete!!!*************/
 
@@ -424,29 +425,48 @@ int main()
   // call to ILU routine for B
   dcsrilu0 (&ivar1, bacsr, bia, bja, bilu0, ipar, dpar, &ierr);
 
-  printf ("dcsrilu0 has returned the code %d\n", ierr);
+  printf ("\ndcsrilu0 has returned the code %d\n", ierr);
+  printf("\n");
+
 
   /*******Approximate LU factorization complete using ILU**********/
+  
+  cout << "Checking first few entries of D and B" << endl;
+  for (int l=0 ; l<5; l++)
+    cout << *(bacsr+l) << " -- " << D->x[l] << endl;
+    cout << endl;
 
+ /*******Initialize a initial solution vector********/
 
-  /* Two-grid Solve Function */
+  //Declare the array of size = num_cols in JTJ
+  double* x_init = new double[N];
+
+  // Initialize it to all 1's
+  std::fill_n(x_init, N, 1);  
+
+  /********* Two-grid Solve Function ***********/
   // As of now just do in main build function later 
 
   /* 1st Step : Pre-smoothing  */
 
-  printf("   Solve t = U\\(L\\x) system   \n");
+  cout << "*******Starting Pre-smoothing******" << endl;
+  cout << endl;
+  cout << "*******Solving t = U\\(L\\x) ....*******"<< endl;
+  cout << endl;
+  //printf("  Solving t = U\\(L\\x) system   \n");
 
   // Paramteres for triangular solver routine - mkl_cspblas_scsrtrsv
 
   double *t_0 = new double[num_cols];
   double *t_1 = new double[num_cols];
 
-  uplo = 'l';        // lower triangular
-  nonunit = 'n';     // diagonal is not unit triangular
-  transa = 'n';      // not tranpose
+  char uplo = 'l';        // lower triangular
+  char nonunit = 'n';     // diagonal is not unit triangular
+  char transa = 'n';      // not tranpose
 
-  mkl_dcsrtrsv(&uplo,&transa,&nonunit,&ivar1,bilu0,bia,bja,&tmp[ipar[21]-1],t_0);
+  mkl_dcsrtrsv(&uplo,&transa,&nonunit,&ivar1,bilu0,bia,bja,x_init,t_0);
   /* Computation of L\X complete: L\x = t_0  */
+
 
   uplo = 'u';        // upper triangular
   nonunit = 'n';     // diagonal is not unit triangular
@@ -456,83 +476,222 @@ int main()
   mkl_dcsrtrsv(&uplo,&transa,&nonunit,&ivar1,bilu0,bia,bja,t_0,t_1);
   /*  Solution obtained in t_1  */
 
-  printf(" Pre-smoothing Complete!!!");
+  printf("*******Pre-smoothing Complete!!!********\n\n");
 
+  cout << "Checking first few entries of Pre-smoothing solution" << endl;
+  for(int l = 0; l<5; l++)
+    cout << t_1[l] << endl;
+
+  printf("\n");
 
   /* 2nd Step: Coarse Grid Solve:  g = P* (Ac \ (P'*x))  */
 
+
+  cout << "*******Starting Coarse Grid-Solve*********\n"<<endl;
+
   //1st perform the innermost matrix vector multiplication i.e P'*x
 
-  double *x_0 = new double[k];  // size = number of eigenvalues
+  // Initialize the parameters for Matrix Vector Multiplication Routine : dgemv
 
-  MKL_INT ldy  = k;     /* Leading dimension for destination array in GEMM */
-  MKL_INT ldx  = N;    /* Leading dimension for source arrays in GEMM */
-  MKL_INT Cols = 1;
+  double *x_0 = new double[kk];  // size = number of eigenvalues
+
+//MKL_INT ldy  = k;     /* Leading dimension for destination array in GEMM */
+  MKL_INT ldx  = N;     /* Leading dimension for source arrays in GEMM */
+  char trans = 'T';     /* Transpose of the matrix */
   double one   = 1.0;   /* alpha parameter for GEMM */
   double zero  = 0.0;   /* alpha parameter for GEMM */
-  dgemm(
-        &DGEMMC,          /* IN: 'T', transposed case*/
-        &DGEMMN,          /* IN: 'N', non-transposed case*/
-        &k,               /* IN: Number of rows in matrix Y */
-        &Cols,            /* IN: Number of columns in matrix Y */
-        &N,               /* IN: Number of rows in matrix X */
+  MKL_INT incx = 1;     /* Specifies the increment for the elements of x */
+  MKL_INT incy = 1;     /* Specifies the increment for the elements of y */
+
+  
+
+  // Call dgemv routine 
+  dgemv(
+        &trans,            /* IN: 'T', transposed case*/
+        &N,               /* IN: Number of rows in matrix P */
+        &kk,               /* IN: Number of columns in matrix P = Number of Eigenvalues*/
         &one,             /* IN: alpha = 1.0 */
-        X,                /* IN: Source #1 for GEMM, will be transposed */
-        &ldx,             /* IN: Leading dimension of Source 1 */
-        &tmp[ipar[21]-1], /* IN: Source #2 for GEMM */
-        &ldx,             /* IN: Leading dimension of Source 2 */
+        X,                /* IN: Source matrix for GEMV, will be transposed */
+        &ldx,             /* IN: Leading dimension of Matrix */
+        x_init,          /* IN: Vector for GEMV */
+        &incx,            /* IN: Specifies the increment for the elements of x*/
         &zero,            /* IN: beta = 0.0 */
-        x_0,                /* OUT: Destination */
-        &ldy              /* IN: Leading dimension of Destination */
+        x_0,              /* OUT: Destination */
+        &incy             /* IN: Specifies the increment for the elements of y*/
         );
+
+  cout << "*****Innermost P'*x Multiplication Complete !!! *****\n" <<endl;
+
+  cout << "Result of Matrix-Vector Multiplication is 5X1 vector" << endl;
+  
+  for (int l =0; l < kk; l++)
+    cout << *(x_0+l) << endl;
+  printf("\n");
+
 
   // Performs pointwise element by element division of vector x_0 by vector Ac
   //vsDiv( n, a, b, y );
-  double *x_1 = new double[k];
-  vsDiv(k, x_0, E, x_1);  // number of elements = k (number of eigenvalues) 
+   cout <<"\n*******Solving x_1 = Ac\\(P'*x) ....*******\n"<< endl;
 
-  // Computed x_1 = (Ac \ (P'*x)); x_0 = P'*x
+  double *x_1 = new double[kk];
+  vdDiv(kk, x_0, E, x_1);  // number of elements = k (number of eigenvalues) 
+
+  cout <<"******Solution x_1 = Ac\\x_0 is 5X1 vector ...******\n" <<endl;
+
+  for (int l =0; l < kk; l++)
+    cout << *(x_1+l) << endl;
+
+  printf("\n");
 
   /*   
     Now compute matrix -vector multiplication :g = P * x_1 ; x1 = (Ac \ (P'*x));
   */
 
-  double *x_2  = new double[num_cols]; 
-  MKL_INT ldy1 = N;     /* Leading dimension for destination array in GEMM */
-  MKL_INT ldx1 = k;    /* Leading dimension for source arrays in GEMM */
+  // Initialize the parameters for Matrix Vector Multiplication Routine : dgemv
 
-  dgemm(
-        &DGEMMN,          /* IN: 'N', non-transposed case*/
-        &DGEMMN,          /* IN: 'N', non-transposed case*/
-        &N,               /* IN: Number of rows in matrix Y */
-        &Cols,            /* IN: Number of columns in matrix Y */
-        &N,               /* IN: Number of rows in matrix X */
-        &one,             /* IN: alpha = 1.0 */
-        X,                /* IN: Source #1 for GEMM, will be transposed */
-        &ldx,             /* IN: Leading dimension of Source 1 */
-        &x_1, /* IN: Source #2 for GEMM */
-        &ldx1,             /* IN: Leading dimension of Source 2 */
-        &zero,            /* IN: beta = 0.0 */
-        x_2,                /* OUT: Destination */
-        &ldy1              /* IN: Leading dimension of Destination */
-        );
+  double *x_2 = new double[N];  // size = number of eigenvalues
 
-  // Compute : q(x_3) = A*(x_2); 
-
-  // paramters initialization
-  char  matdescra[6];
-    
-  transa = 'n';           // not-transpose
-  matdescra[1] = 's';    // Symmetric Matrix
-  matdescra[3] = 'c';    // zero-based indexing
-  double  alpha = 1.0, beta = 0.0;
-
-  double *x_3  = new double[num_cols]; 
-  mkl_dcsrmv(&transa, num_rows, num_cols, &alpha, matdescra, acsr, ja, ia, ia+1, &x_2, &beta, x_3);
-
-  // Computation : q(x_3) = A*g; where g = (x_2) Complete;
+//MKL_INT ldy  = k;     /* Leading dimension for destination array in GEMM */
+  MKL_INT ldx1  = N;     /* Leading dimension for source arrays in GEMM */
+  char trans1 = 'N';     /* Transpose of the matrix */
+  double one1   = 1.0;   /* alpha parameter for GEMM */
+  double zero1  = 0.0;   /* alpha parameter for GEMM */
+  MKL_INT incx1 = 1;     /* Specifies the increment for the elements of x */
+  MKL_INT incy1 = 1;     /* Specifies the increment for the elements of y */
 
   
+
+  // Call dgemv routine 
+  dgemv(
+        &trans1,            /* IN: 'N',not transposed case*/
+        &N,               /* IN: Number of rows in matrix P */
+        &kk,               /* IN: Number of columns in matrix P = Number of Eigenvalues*/
+        &one1,             /* IN: alpha = 1.0 */
+        X,                /* IN: Source matrix for GEMV, will NOT be transposed */
+        &ldx1,             /* IN: Leading dimension of Matrix */
+        x_1,              /* IN: Vector for GEMV */
+        &incx1,            /* IN: Specifies the increment for the elements of x*/
+        &zero1,            /* IN: beta = 0.0 */
+        x_2,              /* OUT: Destination */
+        &incy1             /* IN: Specifies the increment for the elements of y*/
+        );
+
+  cout << "\nResult of Mat-Vec Multiplication: P*x_1 is num_cols X 1 first few entries are....\n" << endl;
+  
+  for (int l =0; l < 10; l++)
+    cout << *(x_2+l) << endl;
+  printf("\n");
+
+  // Compute : q(x_3) = A*(x_2); 
+  cout << "\n******Computing x_3 = A*x_2********\n" << endl;
+
+  // paramters initialization for CSR matrix * vector multiplication
+  char  matdescra1[4];
+    
+  char transa1  = 'n';           // not-transpose
+  matdescra1[0] = 'S';    // Symmetric Matrix
+  matdescra1[1] = 'L';
+  matdescra1[2] = 'N';    // 
+  matdescra1[3] = 'F';  
+  double  alpha = 1.0, beta = 0.0;
+  
+  double *x_3  = new double[N];
+
+  // Call to Routine CSR Mat-Vec Multiplication 
+  mkl_dcsrmv(&transa1, &N, &N, &alpha, matdescra1, acsr, ja, ia, ia+1, x_2, &beta, x_3);
+
+  // Computation : q(x_3) = A*g; where g = (x_2) Complete;
+   cout << "\nResult of Mat-Vec Multiplication: A*x_2 is num_cols X 1 first few entries are....\n" << endl;
+  
+  for (int l =0; l < 10; l++)
+    cout << *(x_3+l) << endl;
+  printf("\n");
+
+
+
+  // *********Last Step : t + g - U\(L\q)***********
+  // q_0 = L\q where q = x_3
+  // q_1 = U\q_0
+
+  cout << "*******Solving q_0 = U\\(L\\x_3) ....*******\n"<< endl;
+
+  // allocate memory for solution vectors
+  double *q_0 = new double[N];   
+  double *q_1 = new double[N];   // N = num_cols in JTJ matrix
+
+  //Initializing Parameters for Triangular Solve Routine
+  char uplo2 = 'l';        // lower triangular
+  char nonunit2 = 'n';     // diagonal is not unit triangular
+  char transa2 = 'n';      // not tranpose
+
+  mkl_dcsrtrsv(&uplo2,&transa2,&nonunit2,&ivar1,bilu0,bia,bja,x_3,q_0);
+  /* Computation of L\X complete: L\x_3 = q_0  */
+
+
+  uplo2 = 'u';        // upper triangular
+  nonunit2 = 'n';     // diagonal is not unit triangular
+  transa2 = 'n';      // not tranpose
+
+  /* Compute U\(q_0); t_0 = L\x */
+  mkl_dcsrtrsv(&uplo2,&transa2,&nonunit2,&ivar1,bilu0,bia,bja,q_0,q_1);
+  /*  Solution obtained in q_1  */
+
+  printf("*******Solution Complete!!!********\n\n");
+
+  cout << "Checking first few entries of q_1 = U\\(L\\x_3) solution ..." << endl;
+  for(int l = 0; l<5; l++)
+    cout << q_1[l] << endl;
+
+  printf("\n");
+
+
+  cout << "*******Addition of vector: t_1 + x_2********\n"<<endl;
+  // Initializing parameters for sparse vector-vector addition 
+  double alpha2  = 1.0;
+  int incx2      = 1; 
+  int incy2      = 1;
+
+  // t + g; where g = x_2; t= t_1
+
+  //Computes a vector-scalar prodct and adds the result to a vector
+  daxpy(&N, &alpha2, t_1, &incx2, x_2, &incy2);
+  // addition of t+g complete, x_2 = x_2 + t_1
+  cout << "Checking first few entries of Addition ...." << endl;
+  for(int l = 0; l<5; l++)
+    cout << x_2[l] << endl;
+
+  printf("\n");
+
+
+  /* Initializing parameters for sparse vector-vector subtraction 
+       x_2 - q_1 
+       where x_2 = t+g
+       and q_1 = U\(L\q)
+
+  */
+  cout << "*******Subtraction of vector: x_2 - q_1********\n"<<endl;
+  double   alpha3 = -1;      // for subtraction
+  int incx3 = 1, incy3 = 1;
+
+  daxpy(&N, &alpha3, q_1, &incx3, x_2, &incy3);      // x_2 - q_1 written in form -q_1 + x_2
+    // Subtraction Complete: x_2 = x_2 - q_1
+
+  cout << "Checking first few entries of Subtraction ...." << endl;
+  for(int l = 0; l<5; l++)
+    cout << x_2[l] << endl;
+
+  printf("\n");
+
+  /*
+      Two - Grid Solve Complete 
+      Solution obtained in x_2
+
+      Now pass this preconditioned solution to GMRES
+
+  */
+
+
+
 
   return 0;
 
