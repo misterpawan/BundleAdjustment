@@ -1,10 +1,13 @@
 #include "Math/v3d_nonlinlsq.h"
-
+#include "Math/mini_schur_solve.h"
 #include <map>
+
 
 #if defined(V3DLIB_ENABLE_SUITESPARSE)
 # include "colamd.h"
 # include "Math/v3d_ldl_private.h"
+
+
 
 using namespace std;
 using namespace V3D;
@@ -514,6 +517,35 @@ namespace V3D
       } // end for (obj)
    } // end NLSQ_LM_Optimizer::evalJt_e()
 
+   //call to mini schur solve
+   void
+   NLSQ_LM_Optimizer::MSC_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta)
+   {
+      int  nCols = A.num_cols();
+      int  nnz = A.getNonzeroCount();
+      int  const *colStarts = A.getColumnStarts();
+      int  const *rowIdxs   = A.getRowIndices();
+      double  const *values = A.getValues();
+      double *Jte = new double[nCols];
+      double *del = new double[nCols];
+      int i;
+
+      for(i = 0; i < nCols; i++)
+      {
+         Jte[i] = Jt_e[i];
+         del[i] = delta[i];
+      }
+
+
+      mini_schur_solve(nCols,nnz,(int*)colStarts,(int*)rowIdxs,(double*)values,Jte,del);
+
+      delete [] Jte; delete [] del;
+
+      return;
+   }
+
+
+
    void
    NLSQ_LM_Optimizer::minimize()
    {
@@ -539,7 +571,7 @@ namespace V3D
       int const nObjs = _costFunctions.size();
 
       //for (currentIteration = 0; currentIteration < maxIterations; ++currentIteration)
-      for (currentIteration = 0; currentIteration < 1; ++currentIteration)
+      for (currentIteration = 0; currentIteration < 2; ++currentIteration)
       {
          if (optimizerVerbosenessLevel >= 2)
             cout << "NLSQ_LM_Optimizer: currentIteration: " << currentIteration << endl;
@@ -657,15 +689,20 @@ namespace V3D
 
          
          //auto hess = getJtJ();
-         showSparseMatrixInfo(currentIteration,_JtJ);
+         //showSparseMatrixInfo(currentIteration,_JtJ);
          //displaySparseMatrix(_JtJ);
          //writeJtetofile(currentIteration,Jt_e);
 
+         //MSC solve
          
 
+         MSC_solve(_JtJ, Jt_e, delta);
+         
+         
          bool success_LDL = true;
-
          double rho = 0.0;
+         /* Comment starts for using MSC solve*/
+   /*      double rho = 0.0;
          {
             int const nCols = _JtJ_Parent.size();
             //int const nnz   = _JtJ.getNonzeroCount();
@@ -699,7 +736,8 @@ namespace V3D
                   cout << "NLSQ_LM_Optimizer: LDL decomposition failed with d = " << d << ". Increasing lambda." << endl;
                success_LDL = false;
             }
-         }
+         } */
+         /* Comment ends for MSC solve */
 
          double deltaError = 0;
 

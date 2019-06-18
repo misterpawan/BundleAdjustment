@@ -2,24 +2,27 @@
 function test_BA
     clc;
     warning('off','all');
-    filepath = '../../../Test/49'
+    filepath = '~/Test/49/';
     addpath(filepath);
     addpath('../ddm');
-    lhs_filename = 'JTJ49_1.mat';
-    rhs_filename = 'JTe49_1.mat';
+    lhs_filename = 'JTJ49_2.mat';
+    rhs_filename = 'JTe49_2.mat';
 
     %P = load(strcat(filepath,lhs_filename),'-mat')
     P = load(lhs_filename,'-mat')
     %size(P.A)
     B = P.lhs; %condest(B)
     [m,n] = size(B);
-%     rand_vec = rand(m,1);
-%     fp = fopen("~/rand_vec.txt","w");
-%     fprintf(fp,"%10.9f\n",rand_vec);
+%     
+%     rand_rhs = ones(m,1);
+%     fp = fopen("~/rand_rhs_A.txt","w");
+%     fprintf(fp,"%12.12f\n",rand_rhs);
 %     fclose(fp);
-%     rand_product = B * rand_vec;
-%     fp = fopen("~/rand_product.txt","w");
-%     fprintf(fp,"%10.9f\n",rand_product);
+%     
+%     [LB,UB] = lu(B);
+%     rand_sol = UB\(LB\rand_rhs);
+%     fp = fopen("~/rand_sol_A.txt","w");
+%     fprintf(fp,"%12.12f\n",rand_sol);
 %     fclose(fp);
 %     keyboard;
     
@@ -27,7 +30,11 @@ function test_BA
     b = load(rhs_filename);
     b = b.rhs;
     %b = rand(m,1);
-
+     %C = full(B(1:10,1));
+%      for  i = 1:10
+%          fprintf("\nb[%d] = %15.15f\n",i,b(i,1));
+%      end
+%         keyboard;
 
     fprintf('\nFile read complete...\n');
     
@@ -185,10 +192,10 @@ function test_BA
 %          tic,UG = chol(GS);t_factor_msc = toc; LG = UG';
          fprintf('done!!!\n'); % matlab chol factorizes into upper triangular 
         %keyboard;
-        rand_rhs = rand(sizeG,1);
-        fp = fopen("~/rand_rhs_MSC_20.txt","w");
-        fprintf(fp,"%10.9f\n",rand_rhs);
-        fclose(fp);
+%         rand_rhs = rand(sizeG,1);
+%         fp = fopen("~/rand_rhs_MSC_20.txt","w");
+%         fprintf(fp,"%10.9f\n",rand_rhs);
+%         fclose(fp);
         
 %         rand_sol = UG\(LG\rand_rhs);
 %         fp = fopen("~/rand_sol_MSC_20.txt","w");
@@ -222,7 +229,39 @@ function test_BA
        %fprintf(fp,"%10.9f\n",prec_rhs);
        %fclose(fp);
        %keyboard;
+%         rand_vec = rand(m,1);
+%         fp = fopen("~/rand_vec.txt","w"); % common
+%         fprintf(fp,"%10.9f\n",rand_vec);
+%         fclose(fp);
         
+%         rand_prec = nssolve2(rand_vec);
+%         fp = fopen("~/rand_sol_prec.txt","w"); %for checking pure preconditioner solve
+%         fprintf(fp,"%10.9f\n",rand_prec);
+%         fclose(fp);
+%         
+%         product = B * rand_vec;
+%         rand_sol_prec = nssolve2(product);
+%         fp = fopen("~/rand_product.txt","w"); % for checking pure matvec
+%         fprintf(fp,"%10.9f\n",product);
+%         fclose(fp);
+%         fp = fopen("~/rand_sol_mv_prec.txt","w");
+%         fprintf(fp,"%10.9f\n",rand_sol_prec); %for checking prec after matvec
+%         fclose(fp);
+%          keyboard;
+        
+%           vec = load("~/mini_schur/RCI_1_matvec_cpp.txt");
+%           mv = B * vec;
+%           fp = fopen("~/mini_schur/matvec.txt","w");
+%           fprintf(fp,"%f\n",mv);
+%           fclose(fp);
+%           keyboard;
+%            
+%           pvec = load("~/mini_schur/RCI_3_prec_solve_cpp.txt");
+%           prec_vec = nssolve2(pvec);
+%           fp = fopen("~/mini_schur/prec_solve.txt","w");
+%           fprintf(fp,"%f\n",prec_vec);
+%           fclose(fp);
+%           keyboard;
         
             %% Solve with PCG
             precfun=@nssolve; sol=zeros(n,1);
@@ -251,11 +290,11 @@ function test_BA
 %             nrm_q = norm(q_np);
 %             q = B*x -b;
 %             prec_q = nssolve2(q);
-%             prec_b = nssolve2(b);
+%              prec_b = nssolve2(b);
              for kk = 1: 10
                fprintf("\nx[%d] = %10.6f\n",kk,x(kk,:));
              end
-            
+% %             
              keyboard;
             clear LD UD LG UG x  
             

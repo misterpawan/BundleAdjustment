@@ -7,6 +7,7 @@
 #include "Math/v3d_mathutilities.h"
 #include "Math/v3d_optimization.h"
 
+
 #include <vector>
 #include <iostream>
 
@@ -215,6 +216,33 @@ namespace V3D
 
          int _paramTypeRowStart[NLSQ_MAX_PARAM_TYPES + 1];
          CCS_Matrix<double> _JtJ;
+
+         //call to mini schur solve
+         void MSC_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta);
+       /*  {
+            int  nCols = A.num_cols();
+            int  nnz = A.getNonzeroCount();
+            int  const *colStarts = A.getColumnStarts();
+            int  const *rowIdxs   = A.getRowIndices();
+            double  const *values = A.getValues();
+            double *Jte = new double[nCols];
+            double *del = new double[nCols];
+            int i;
+
+            for(i = 0; i < nCols; i++)
+            {
+               Jte[i] = Jt_e[i];
+               del[i] = delta[i];
+            }
+
+
+            mini_schur_solve(nCols,nnz,(int*)colStarts,(int*)rowIdxs,(double*)values,Jte,del);
+
+            delete [] Jte; delete [] del;
+
+            return;
+         }*/
+
    }; // end struct NLSQ_LM_Optimizer
 
 #endif // defined(V3DLIB_ENABLE_SUITESPARSE)
