@@ -16,13 +16,13 @@
 #include "mkl.h"
 
 using namespace std;
-//using namespace V3D;
+using namespace V3D;
 
 
 
-//namespace V3D
-//{
-	#define sizeG 441 //hardcoding it for the time being
+namespace V3D
+{
+	#define sizeG 3204 //hardcoding it for the time being
 	#define size_MKL_IPAR 128
 
 	/* This function densifies the jth column of input matrix A
@@ -353,7 +353,7 @@ using namespace std;
 		int oll = 0; //overlap for 2nd last msc
 
 
-		cout<< "\nComputing Mini Schur Complement...\n";
+		//cout<< "\nComputing Mini Schur Complement...\n";
 		for(i ; i < nmsc_block - 2;i++ )
 		{
 			//cout << "\n i : " << i << "\n";
@@ -732,7 +732,7 @@ using namespace std;
 			delete PD;delete PL;delete PU;delete PG;
 		}
 
-		cout << "\n Mini Schur Complement computation done! \n";
+		//cout << "\n Mini Schur Complement computation done! \n";
 
 		return;
 	}
@@ -801,6 +801,7 @@ using namespace std;
 		int j,k;
 		int nzD = 0 ,nzG = 0 ,nzL = 0; 
 		int iterD = 0, iterL = 0 ,iterG = 0;
+		int count = 1;
 
 		//int const num_cols = H.num_cols();
 		//int const ncc = H.getNonzeroCount();
@@ -810,8 +811,8 @@ using namespace std;
 		cs_di* L = new cs_di;cs_di* G = new cs_di;cs_di* U = new cs_di;
 
 		//num_cols = num_cols+1;         
-		cout << "\nNo of non zeros = "<< ncc << "\n";
-		cout << "\nNo of columns = "<< num_cols << "\n";
+		//cout << "\nNo of non zeros = "<< ncc << "\n";
+		//cout << "\nNo of columns = "<< num_cols << "\n";
 
 		//size of the D matrix
 		sizeD = num_cols - sizeG; 
@@ -822,10 +823,18 @@ using namespace std;
 		//Allocate space for the coefficient matrix
 		A->x = new double[ncc]; A->p = new int[num_cols+1]; A->i = new int[ncc];
 
-		A->p = colStarts;
-		A->i = rowIdxs;
-		A->x = values;
+		//A->p = colStarts;
+		//A->i = rowIdxs;
+		//A->x = values;
+
+		for(int q = 0; q < num_cols; q++) A->p[q] = colStarts[q];
+		for(int q = 0; q < ncc; q++) A->i[q] = rowIdxs[q];
+		for(int q = 0; q < ncc; q++) A->x[q] = values[q];
+		//dcopy(&num_cols, values, &count, A->x, &count); 
 		A->p[num_cols] = ncc;
+
+		//cout << "\n values[ncc-1] = "<< values[ncc-1] << "\t\t A->x[ncc-1] = "<<A->x[ncc-1]<<"\n";
+
 
 		/***Domain Decomposition***/
 
@@ -867,7 +876,7 @@ using namespace std;
 		D->nzmax = nzD; L->nzmax = nzL; U->nzmax = nzL; G->nzmax = nzG;MSC->nzmax = sizeG*sizeG;
 
 		
-		cout << "\nFilling non zeros ...\n";
+		//cout << "\nFilling non zeros ...\n";
 		for(j=0;j<sizeD;j++)
 		{
 			D->p[j] = iterD;
@@ -937,7 +946,7 @@ using namespace std;
 
 		G->p[sizeG] = iterG;
 
-		cout << "\nFilling non zeros complete!!\n";
+		//cout << "\nFilling non zeros complete!!\n";
 		
 		
 		//compute the mini schur complement in the Ccs_di format.
@@ -1000,7 +1009,7 @@ using namespace std;
 		MKL_INT RCI_request, RCI_count, ivar;
 		char cvar;
 
-		cout << "\nMKL var init done !\n";
+		//cout << "\nMKL var init done !\n";
 
 
 
@@ -1064,7 +1073,8 @@ using namespace std;
 		//cout << "\n rhs_nrm : " << rhs_nrm << "\n";
 		// Jt_e vector is not altered
 		//rhs is used for residual calculations
-		dcopy(&ivar, Jt_e, &RCI_count, rhs, &RCI_count);   
+		//dcopy(&ivar, Jt_e, &RCI_count, rhs, &RCI_count);   
+		for(int q = 0; q < num_cols; q++) rhs[q] = Jt_e[q];
 
 		// PRECONDITIONED RHS
 		prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,Jt_e,prec_rhs);
@@ -1258,7 +1268,7 @@ using namespace std;
 		/*---------------------------------------------------------------------------*/
 		COMPLETE:   ipar[12]=0;
 		dfgmres_get(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp, &itercount);
-		cout << "The system has been solved  in " << itercount << " iterations!\n";
+		//cout << "The system has been solved  in " << itercount << " iterations!\n";
 	//	cout << "\n RCI_request : "<< RCI_request << "\n";
 	/*
 		printf("\nThe following solution has been obtained: \n");
@@ -1270,7 +1280,13 @@ using namespace std;
 
 		//store the solution into delta 
 		RCI_count = 1;
-		dcopy(&ivar, computed_solution, &RCI_count, delta, &RCI_count); 
+		//dcopy(&ivar, computed_solution, &RCI_count, delta, &RCI_count); 
+		for(int q = 0; q < num_cols; q++) delta[q] = computed_solution[q];
+	/*	for (RCI_count=0;RCI_count<10;RCI_count++)                //PRINTING ONLY THE FIRST 10 MEMBERS
+		{
+			printf("delta[%d]=%f\n",RCI_count,delta[RCI_count]);
+		}
+	*/
 		MKL_Free_Buffers();
 
 
@@ -1278,7 +1294,7 @@ using namespace std;
 	  	umfpack_di_free_numeric ( &Numeric_D );
 	  	umfpack_di_free_numeric ( &Numeric_MSC );
 
-		delete [] Jt_e; 
+		//delete [] Jt_e; 
 		delete [] A->p; delete [] A->i; delete [] A->x; 
 		delete [] MSC->p; delete [] MSC->i;delete [] MSC->x;
 		delete [] D->p;  delete [] D->i;delete [] D->x; 
@@ -1302,5 +1318,5 @@ using namespace std;
 
 	    return ;
 	 }
-//}
+}
 #endif

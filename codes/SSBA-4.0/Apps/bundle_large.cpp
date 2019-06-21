@@ -293,7 +293,7 @@ namespace
                _cachedParamLength += sqrNorm_L2(_cams[i].getTranslation());
                _cachedParamLength += 3.0; // Assume eye(3) for R.
             }
-
+            //cout << "\n Mode : " << mode << "\n";
             if (mode >= FULL_BUNDLE_FOCAL_LENGTH)
                for (int i = 0; i < _cams.size(); ++i)
                {
@@ -303,11 +303,12 @@ namespace
 
             for (int j = 0; j < _Xs.size(); ++j) _cachedParamLength += sqrNorm_L2(_Xs[j]);
 
-            _cachedParamLength = sqrt(_cachedParamLength);
+            _cachedParamLength = sqrt(_cachedParamLength); cout << "\n _cachedParamLength : "<<_cachedParamLength << "\n";
          }
 
          virtual double getParameterLength() const
          {
+            //cout << "\n In bundle large \n";
             return _cachedParamLength;
          }
 

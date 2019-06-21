@@ -539,6 +539,11 @@ namespace V3D
 
       mini_schur_solve(nCols,nnz,(int*)colStarts,(int*)rowIdxs,(double*)values,Jte,del);
 
+      for(i = 0; i < nCols; i++)
+      {
+         delta[i] = del[i];
+      }
+
       delete [] Jte; delete [] del;
 
       return;
@@ -570,11 +575,12 @@ namespace V3D
 
       int const nObjs = _costFunctions.size();
 
-      //for (currentIteration = 0; currentIteration < maxIterations; ++currentIteration)
-      for (currentIteration = 0; currentIteration < 2; ++currentIteration)
+      for (currentIteration = 0; currentIteration < maxIterations; ++currentIteration)
+      //for (currentIteration = 0; currentIteration < 2; ++currentIteration)
       {
          if (optimizerVerbosenessLevel >= 2)
             cout << "NLSQ_LM_Optimizer: currentIteration: " << currentIteration << endl;
+         
          if (computeDerivatives)
          {
             vector<double> errors(nObjs);
@@ -593,15 +599,18 @@ namespace V3D
                for (int k = 0; k < costFun._nMeasurements; ++k)
                   scaleVectorIP(residuals._weights[k], residuals._residuals[k]);
             } // end for (obj)
-
+            
+            
+            
             if (optimizerVerbosenessLevel >= 1)
             {
                cout << "NLSQ_LM_Optimizer: iteration: " << currentIteration << ", |residual|^2 = " << err
                     << ", lambda = " << lambda << ", residuals itemized: "; displayVector(errors);
             }
+            
             //if (optimizerVerbosenessLevel >= 2) cout << "NLSQ_LM_Optimizer: lambda = " << lambda << endl;
 
-            this->fillJacobians();
+            this->fillJacobians(); 
             this->evalJt_e(Jt_e);
             scaleVectorIP(-1.0, Jt_e);
             double const norm_Linf_Jt_e = norm_Linf(Jt_e);
@@ -686,7 +695,6 @@ namespace V3D
          } // end for (paramType)
 
          this->fillJtJ();
-
          
          //auto hess = getJtJ();
          //showSparseMatrixInfo(currentIteration,_JtJ);
@@ -694,16 +702,17 @@ namespace V3D
          //writeJtetofile(currentIteration,Jt_e);
 
          //MSC solve
-         
-
-         MSC_solve(_JtJ, Jt_e, delta);
-         
+         this->MSC_solve(_JtJ, Jt_e, delta);
+         /*
+         for(int k = 0; k < 10; k++)
+            cout << "\ndelta["<<k<<"] = "<<delta[k];
+         cout << "\n";
+         */
          
          bool success_LDL = true;
          double rho = 0.0;
          /* Comment starts for using MSC solve*/
-   /*      double rho = 0.0;
-         {
+      /*   {
             int const nCols = _JtJ_Parent.size();
             //int const nnz   = _JtJ.getNonzeroCount();
             int const lnz   = _JtJ_Lp.back();
@@ -736,15 +745,21 @@ namespace V3D
                   cout << "NLSQ_LM_Optimizer: LDL decomposition failed with d = " << d << ". Increasing lambda." << endl;
                success_LDL = false;
             }
-         } */
+         } 
          /* Comment ends for MSC solve */
 
+         /*
+         for(int k = 0; k < 10; k++)
+            cout << "\ndelta["<<k<<"] = "<<delta[k];
+         cout << "\n";
+         */
          double deltaError = 0;
 
          if (success_LDL)
          {
-            double const deltaSqrLength = sqrNorm_L2(delta);
+            double const deltaSqrLength = sqrNorm_L2(delta);  //cout << "\ndeltaSqrLength : "<< deltaSqrLength << "\n";
             double const paramLength = this->getParameterLength();
+            
 
             if (optimizerVerbosenessLevel >= 2)
                cout << "NLSQ_LM_Optimizer: ||delta|| = " << sqrt(deltaSqrLength) << " ||paramLength|| = " << paramLength << endl;
@@ -856,11 +871,15 @@ namespace V3D
 
             increaseLambda();
             if (optimizerVerbosenessLevel >= 2) cout << "NLSQ_LM_Optimizer: new lambda = " << lambda << endl;
-            computeDerivatives = false;
+            computeDerivatives = false; 
             for (int obj = 0; obj < nObjs; ++obj)
             {
                NLSQ_CostFunction& costFun = *_costFunctions[obj];
-               if (costFun.forbid_derivative_caching()) { computeDerivatives = true; break; }
+               if (costFun.forbid_derivative_caching())
+                { 
+                  cout << "\n costFun.forbid_derivative_caching() : " <<  costFun.forbid_derivative_caching() << "\n";
+                  computeDerivatives = true; break; 
+                }
             }
          } // end if
 

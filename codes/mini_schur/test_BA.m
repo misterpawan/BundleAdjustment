@@ -5,8 +5,8 @@ function test_BA
     filepath = '~/Test/49/';
     addpath(filepath);
     addpath('../ddm');
-    lhs_filename = 'JTJ49_2.mat';
-    rhs_filename = 'JTe49_2.mat';
+    lhs_filename = 'JTJ49_1.mat';
+    rhs_filename = 'JTe49_1.mat';
 
     %P = load(strcat(filepath,lhs_filename),'-mat')
     P = load(lhs_filename,'-mat')
@@ -262,15 +262,19 @@ function test_BA
 %           fprintf(fp,"%f\n",prec_vec);
 %           fclose(fp);
 %           keyboard;
-        
+  J = blkdiag(B(1:sizeD, 1:sizeD),  B(sizeD+1 : n, sizeD+1: n));
+  %keyboard;
+  [LJ,UJ] = lu(J);
+  clear J;
             %% Solve with PCG
             precfun=@nssolve; sol=zeros(n,1);
-            tol = 1e-4; maxit = 20;restart = 20;
+            tol = 1e-8; maxit = 20;restart = 30;
             try
                 fprintf('Enter GMRES...\n');
                 %tic, [x,flag,relres,iter] = pcg(B,b,tol,maxit,@nssolve2); t_pcg = toc;
                 tic, [x_np,flag_np,relres_np,iter_np,resvec_np] = gmres(B,b,restart,tol,maxit); t_gmres_np = toc;
-                tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@nssolve2); t_gmres = toc;
+                %tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@nssolve2); t_gmres = toc;
+                tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@jacobi_solve); t_gmres = toc;
                 %tic, [x,flag,relres,iter] = gmres(B,b,restart,tol,maxit); t_gmres = toc;
                 %% Display output
                 its_np = (iter_np(1)-1)*restart+iter_np(2);
@@ -343,5 +347,8 @@ function test_BA
       xx = [z1; z2];
       %sum(isnan(x))
     end
-        
+
+    function xx = jacobi_solve(y)
+        xx = UJ\(LJ\y);
+    end
 end
