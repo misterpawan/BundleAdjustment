@@ -29,6 +29,7 @@ set (MATH_SRC
     Math/v3d_mathutilities.h
     Math/sort.h
     Math/mini_schur_solve.h
+    Math/block_jacobi_solve.h
     Math/v3d_nonlinlsq.h
     Math/v3d_nonlinlsq.cpp
     Math/v3d_optimization.h

@@ -221,6 +221,9 @@ namespace V3D
 
          //call to mini schur solve
          void MSC_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta);
+
+         //call to block jacobi solve
+         void blockjacobi_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta);
         
 
    }; // end struct NLSQ_LM_Optimizer

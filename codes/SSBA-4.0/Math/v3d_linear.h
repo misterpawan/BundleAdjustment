@@ -714,33 +714,33 @@ namespace V3D
       Elem const * values = A.getValues();
       //string filename = "JTJ49_1";
       int j, k;
-      FILE *fp_col;
-      FILE *fp_row;
-      FILE *fp_val;
-      
+      //FILE *fp_col;
+      //FILE *fp_row;
+      //FILE *fp_val;
+      /*
       if(iteration == 0)
       {
-         fp_col = fopen("JTJ49_1_col.txt","w");
-         fp_row = fopen("JTJ49_1_row.txt","w");
-         fp_val = fopen("JTJ49_1_val.txt","w");
-      }
-      else if (iteration == 1)
+         fp_col = fopen("JTJ138_1_col.txt","w");
+         fp_row = fopen("JTJ138_1_row.txt","w");
+         fp_val = fopen("JTJ138_1_val.txt","w");
+      }*/
+     /* else if (iteration == 1)
       {
          fp_col = fopen("JTJ49_2_col.txt","w");
          fp_row = fopen("JTJ49_2_row.txt","w");
          fp_val = fopen("JTJ49_2_val.txt","w");
-      }  
-     /* 
+      }*/  
+      
       FILE* fp;
       switch(iteration)
       {
-      	case 0: fp = fopen("JTJ49_1.txt","w"); break;
-      	case 1: fp = fopen("JTJ49_2.txt","w"); break;
-      	case 2: fp = fopen("JTJ49_3.txt","w"); break;
-      	case 3: fp = fopen("JTJ49_4.txt","w"); break;
-      	case 4: fp = fopen("JTJ49_5.txt","w"); break;
+      	case 0: fp = fopen("JTJ138_1.txt","w"); break;
+      	//case 1: fp = fopen("JTJ49_2.txt","w"); break;
+      	//case 2: fp = fopen("JTJ49_3.txt","w"); break;
+      	//case 3: fp = fopen("JTJ49_4.txt","w"); break;
+      	//case 4: fp = fopen("JTJ49_5.txt","w"); break;
       }
-      */
+      
       //FILE* fp = fopen(filename,"w");
       
       // Dump Matrix in Matlab Matrix Format - indexing with 1
@@ -750,7 +750,7 @@ namespace V3D
       //freopen("test9.txt","w",stdout);
 
       /***** writes the matrix in COO format ***/
-    /*  
+      
       for (j = 0; j < nCols; j++)
       {
          const int start = colStarts[j];
@@ -760,10 +760,11 @@ namespace V3D
             //cout << rowIdxs[k] + 1 << " " << j+1 << " " << values[k] << "\n";
             fprintf(fp, "%d %d %lf\n", rowIdxs[k] + 1,j+1,values[k]);
       }
-    */  
+    
 
-      /*****Dump matrix to file in CSR format****/
-      for(j = 0;j<nCols;j++)
+      fclose(fp);
+      /*****Dump matrix to file in CSC format****/
+    /*  for(j = 0;j<nCols;j++)
       {
          fprintf(fp_col, "%d\n", colStarts[j]);
       }
@@ -772,13 +773,13 @@ namespace V3D
       for(k = 0; k < nnz; k++)
       {
          fprintf(fp_row, "%d\n", rowIdxs[k]);
-         fprintf(fp_val, "%12.12lf\n", values[k]);
+         fprintf(fp_val, "%lf\n", values[k]);
       }
       fclose(fp_row);
       fclose(fp_val);
-
+   */
       //fclose(stdout);
-      //fclose(fp);
+      
 
 
       /*cout << "values = ";
@@ -797,11 +798,11 @@ namespace V3D
       FILE* fp;
       switch(iteration)
       {
-      	case 0: fp = fopen("JTe49_1.txt","w"); break;
-      	case 1: fp = fopen("JTe49_2.txt","w"); break;
-      	case 2: fp = fopen("JTe49_3.txt","w"); break;
-      	case 3: fp = fopen("JTe49_4.txt","w"); break;
-      	case 4: fp = fopen("JTe49_5.txt","w"); break;
+      	case 0: fp = fopen("JTe138_1.txt","w"); break;
+      	//case 1: fp = fopen("JTe49_2.txt","w"); break;
+      	//case 2: fp = fopen("JTe49_3.txt","w"); break;
+      	//case 3: fp = fopen("JTe49_4.txt","w"); break;
+      	//case 4: fp = fopen("JTe49_5.txt","w"); break;
       }
       
       //FILE* fp = fopen(filename,"w");

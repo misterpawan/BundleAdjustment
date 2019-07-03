@@ -11,8 +11,10 @@ void merge(int arr[], double val[],int l, int m, int r)
 	int n2 = r - m; 
 
 	/* create temp arrays */
-	int L[n1], R[n2]; 
-	double Lval[n1], Rval[n2];
+	int *L = new int[n1];
+	int *R = new int[n2]; 
+	double *Lval = new double[n1];
+	double *Rval = new double[n2];
 
 	/* Copy data to temp arrays L[] and R[] */
 	for (i = 0; i < n1; i++) 
@@ -65,6 +67,9 @@ void merge(int arr[], double val[],int l, int m, int r)
 		j++; 
 		k++; 
 	} 
+
+	delete [] L; delete [] R; delete [] Lval; delete [] Rval;
+
 } 
 
 /* l is for left index and r is right index of the 

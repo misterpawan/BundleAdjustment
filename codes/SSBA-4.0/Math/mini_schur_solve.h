@@ -22,7 +22,7 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 3204 //hardcoding it for the time being
+	#define sizeG 3348 //hardcoding it for the time being
 	#define size_MKL_IPAR 128
 
 	/* This function densifies the jth column of input matrix A
@@ -328,7 +328,7 @@ namespace V3D
 	*/
 	void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* U,cs_di* G)
 	{
-		int nmsc_block = 3 ;  //no of blocks for G
+		int nmsc_block = 20 ;  //no of blocks for G
 		int r = sizeG % nmsc_block;
 		int sz = (sizeG - r)/nmsc_block ; //size of each nmsc block for G
 		int r1 = 0,r2 = sz; //C++ convention   
@@ -834,8 +834,19 @@ namespace V3D
 		A->p[num_cols] = ncc;
 
 		//cout << "\n values[ncc-1] = "<< values[ncc-1] << "\t\t A->x[ncc-1] = "<<A->x[ncc-1]<<"\n";
+	/******
+		//LU solve of Ax=b
+		sym_status = umfpack_di_symbolic ( A->m, A->n, A->p, A->i, A->x, &Symbolic, solve_null, solve_null );
+		//cout << "\n Symbolic status :" << sym_status << "\n";
 
+		num_status = umfpack_di_numeric ( A->p, A->i, A->x, Symbolic, &Numeric, solve_null, solve_null );
+		//cout << "\n Numeric status :" << num_status << "\n";
 
+  		solve_status = umfpack_di_solve ( UMFPACK_A, A->p, A->i, A->x, delta, Jt_e, Numeric, solve_null, solve_null );
+  		//cout << "\n Solve status :" << solve_status << "\n";
+
+  		return;
+	*/
 		/***Domain Decomposition***/
 
 		//Allocating memory for blocks
@@ -996,7 +1007,7 @@ namespace V3D
 
 		double* dpar = new double[size_MKL_IPAR]; 
 		
-		double* tmp = new double[num_cols*(2*num_cols+1)+(num_cols*(num_cols+9))/2+1];
+		double* tmp = new double[num_cols*(2*20+1)+(20*(20+9))/2+1];
 		//double expected_solution[num_cols];
 		double* rhs = new double[num_cols];
 		double* computed_solution = new double[num_cols];
@@ -1096,7 +1107,7 @@ namespace V3D
 		ipar[10] = 1;  //Preconditioner used
 		ipar[14] = 20; //internal iterations
 		
-		dpar[0] = 1.0e-04; //Relative Tolerance
+		dpar[0] = 1.0e-02; //Relative Tolerance
 
 		/*---------------------------------------------------------------------------
 		/* Initialize the initial guess
@@ -1205,7 +1216,7 @@ namespace V3D
 			//cout << "\n relres_nrm : " << relres_nrm << "\n";
 			//printf("\nRelres norm = %10.9f\n",relres_nrm);
 
-			if (relres_nrm<1.0E-4) goto COMPLETE;   //taking tolerance as 1e-04
+			if (relres_nrm<1.0E-2) goto COMPLETE;   //taking tolerance as 1e-04
 
 			else goto ONE;
 			

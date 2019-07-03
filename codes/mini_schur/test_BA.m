@@ -2,7 +2,7 @@
 function test_BA
     clc;
     warning('off','all');
-    filepath = '~/Test/49/';
+    filepath = '~/Test/49';
     addpath(filepath);
     addpath('../ddm');
     lhs_filename = 'JTJ49_1.mat';
@@ -38,28 +38,21 @@ function test_BA
 
     fprintf('\nFile read complete...\n');
     
-%     eig_B = (sort(eigs(B,50,'largestabs')));
-%     plot(real(eig_B),imag(eig_B),'bx');
-%     xlabel('Real component of Eigenvalues');
-%     ylabel('Imaginary component of Eigenvalues');
-%     title('Spectrum Plot of A(largest 50 eigenvalues)');
-%     saveas(gcf,'../../../spectrum_plot_A_large50.png');
-% 
-%     histogram(real(eig_B));
-%     xlabel('Realcomponent of eigenvalues');
-%     ylabel('Count');
-%     title('Histogram for eigenvalues of A');
-% 	saveas(gcf,'../../../hist_specplot_A_large50.png');
 
     tic;
     xx = normal_solve(B, b);
     normal_solve_time = toc;
+    xx = full(xx);
+    for i = 1 : 10
+        fprintf("\nxx[%d] = %f\n",i,xx(i));
+    end
+    keyboard;
     
     nparts = 5;
     [sizes_parts, A, p] = domain_decomposition(B, nparts);
     sizeG = m - sum(sizes_parts(1:nparts))
     sizeD = m - sizeG; 
-
+    %keyboard;
 %     D = A(1 : sizeD, 1 : sizeD);
 %     L = A(sizeD + 1: m, 1 : sizeD);
 %     U = L';
@@ -90,7 +83,8 @@ function test_BA
         D = A(1 : sizeD, 1 : sizeD);
         L = A(sizeD + 1: m, 1 : sizeD);
         U = L';
-        G = A(sizeD + 1:m, sizeD + 1:m);%%change
+        G = A(sizeD + 1:m, sizeD + 1:m);%%change  
+%         [L_block_G,U_block_G] = lu(G);
         %keyboard;
         r = rem(sizeG, nmsc_blocks(z)); sz = (sizeG - r)/nmsc_blocks(z); r1 = 1; r2 = sz;
         GS = []; %ol = 0;
@@ -212,7 +206,7 @@ function test_BA
 
         tic; 
         %[LD,UD] = ilu(D,setup); 
-        %[LD,UD] = lu(D);
+%         [LD,UD] = lu(D);
         [UD,pos_def] = chol(D);
         if(pos_def == 0)
             LD = UD';
@@ -229,7 +223,7 @@ function test_BA
        %fprintf(fp,"%10.9f\n",prec_rhs);
        %fclose(fp);
        %keyboard;
-%         rand_vec = rand(m,1);
+         
 %         fp = fopen("~/rand_vec.txt","w"); % common
 %         fprintf(fp,"%10.9f\n",rand_vec);
 %         fclose(fp);
@@ -262,27 +256,33 @@ function test_BA
 %           fprintf(fp,"%f\n",prec_vec);
 %           fclose(fp);
 %           keyboard;
-  J = blkdiag(B(1:sizeD, 1:sizeD),  B(sizeD+1 : n, sizeD+1: n));
+  J = blkdiag(A(1:sizeD, 1:sizeD),  A(sizeD+1 : n, sizeD+1: n));
   %keyboard;
   [LJ,UJ] = lu(J);
   clear J;
+  
+%   rand_vec = rand(m,1);
+%   norm_r = norm(jacobi_solve(rand_vec) - jacobi_split_solve(rand_vec))
             %% Solve with PCG
             precfun=@nssolve; sol=zeros(n,1);
-            tol = 1e-8; maxit = 20;restart = 30;
+            tol = 1e-4; maxit = 20;restart = 20;
+            max_pcg = 400;
             try
                 fprintf('Enter GMRES...\n');
                 %tic, [x,flag,relres,iter] = pcg(B,b,tol,maxit,@nssolve2); t_pcg = toc;
-                tic, [x_np,flag_np,relres_np,iter_np,resvec_np] = gmres(B,b,restart,tol,maxit); t_gmres_np = toc;
+                %[x,flag,relres,iter,resvec] = pcg(B,b,tol,max_pcg,@jacobi_solve);t_gmres = toc;
+                %tic, [x_np,flag_np,relres_np,iter_np,resvec_np] = gmres(B,b,restart,tol,maxit); t_gmres_np = toc;
                 %tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@nssolve2); t_gmres = toc;
                 tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@jacobi_solve); t_gmres = toc;
                 %tic, [x,flag,relres,iter] = gmres(B,b,restart,tol,maxit); t_gmres = toc;
                 %% Display output
-                its_np = (iter_np(1)-1)*restart+iter_np(2);
+                %its_np = (iter_np(1)-1)*restart+iter_np(2);
                 its = (iter(1)-1)*restart+iter(2);
-                fprintf('flag_np: %d\nits_np: %d\nrelres_np: %d\n', flag_np, its_np, relres_np);
+                %its = iter;
+                %fprintf('flag_np: %d\nits_np: %d\nrelres_np: %d\n', flag_np, its_np, relres_np);
                 fprintf('flag: %d\nits: %d\nrelres: %d\n', flag, its, relres);
                 %fprintf('time lu MSC: %g\ntime ilu D: %g\ntime PCG: %g\n', t_factor_msc, t_factor_d, t_pcg);
-                t_total_np = t_factor_msc + t_factor_d + t_gmres_np;
+                %t_total_np = t_factor_msc + t_factor_d + t_gmres_np;
                 t_total = t_factor_msc + t_factor_d + t_gmres;
                 fprintf('total time: %g\n', t_total);
                 fprintf('time lu MSC: %g\ntime ilu D: %g\ntime GMRES: %g\n', t_factor_msc, t_factor_d, t_gmres);
@@ -298,15 +298,15 @@ function test_BA
              for kk = 1: 10
                fprintf("\nx[%d] = %10.6f\n",kk,x(kk,:));
              end
-% %             
-             keyboard;
+% % %             
+%              keyboard;
             clear LD UD LG UG x  
             
-            iters_np(z) = its_np;
-            gmres_time_np(z) = t_gmres_np;
-            rel_res_np(z) = relres_np;
-            total_time_np(z) = t_total_np;
-            conv_flag_np(z) = flag_np;
+%             iters_np(z) = its_np;
+%             gmres_time_np(z) = t_gmres_np;
+%             rel_res_np(z) = relres_np;
+%             total_time_np(z) = t_total_np;
+%             conv_flag_np(z) = flag_np;
             
             iters(z) = its;
             gmres_time(z) = t_gmres;
@@ -321,13 +321,13 @@ function test_BA
     
     fprintf('tests done!!!\n');
     
-    fprintf('\n===========================================GMRES NO PRECONDITIONING==============================================\n');
-    fprintf('\nMSC block size | Restarts | Iter | normal_solve_time(s) | gmres_time(s) | Rel Res(gmres) | Total Time(s)  |  Flag \n');
-    fprintf('\n=================================================================================================================\n');
-    for i = 1 : length(nmsc_blocks)
-        fprintf('      %d        |    %d   |   %d  |      %g         |  %g   |     %g   |     %g  |     %d \n',nmsc_blocks(i),restart,iters_np(i),normal_solve_time,...
-                                                            gmres_time_np(i),rel_res_np(i),total_time_np(i),conv_flag_np(i));
-    end
+%     fprintf('\n===========================================GMRES NO PRECONDITIONING==============================================\n');
+%     fprintf('\nMSC block size | Restarts | Iter | normal_solve_time(s) | gmres_time(s) | Rel Res(gmres) | Total Time(s)  |  Flag \n');
+%     fprintf('\n=================================================================================================================\n');
+%     for i = 1 : length(nmsc_blocks)
+%         fprintf('      %d        |    %d   |   %d  |      %g         |  %g   |     %g   |     %g  |     %d \n',nmsc_blocks(i),restart,iters_np(i),normal_solve_time,...
+%                                                             gmres_time_np(i),rel_res_np(i),total_time_np(i),conv_flag_np(i));
+%     end
     
 
     fprintf('\n===========================================GMRES MINI SCHUR PRECONDITIONING======================================\n');
@@ -350,5 +350,12 @@ function test_BA
 
     function xx = jacobi_solve(y)
         xx = UJ\(LJ\y);
+    end
+
+    function xx = jacobi_split_solve(y)
+         y1 = y(1:sizeD); y2 = y(sizeD+1:sizeD+sizeG);
+         z1 = UD\(LD\y1);
+         z2 = U_block_G\(L_block_G\y2);
+         xx = [z1;z2];
     end
 end

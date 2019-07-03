@@ -1,5 +1,6 @@
 #include "Math/v3d_nonlinlsq.h"
 #include "Math/mini_schur_solve.h"
+#include "Math/block_jacobi_solve.h"
 #include <map>
 
 
@@ -550,6 +551,39 @@ namespace V3D
    }
 
 
+   //call to block jacobi solve
+   void
+   NLSQ_LM_Optimizer::blockjacobi_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta)
+   {
+      int  nCols = A.num_cols();
+      int  nnz = A.getNonzeroCount();
+      int  const *colStarts = A.getColumnStarts();
+      int  const *rowIdxs   = A.getRowIndices();
+      double  const *values = A.getValues();
+      double *Jte = new double[nCols];
+      double *del = new double[nCols];
+      int i;
+
+      for(i = 0; i < nCols; i++)
+      {
+         Jte[i] = Jt_e[i];
+         del[i] = delta[i];
+      }
+
+
+      block_jacobi_solve(nCols,nnz,(int*)colStarts,(int*)rowIdxs,(double*)values,Jte,del);
+
+      for(i = 0; i < nCols; i++)
+      {
+         delta[i] = del[i];
+      }
+
+      delete [] Jte; delete [] del;
+
+      return;
+   }
+
+
 
    void
    NLSQ_LM_Optimizer::minimize()
@@ -576,11 +610,12 @@ namespace V3D
       int const nObjs = _costFunctions.size();
 
       for (currentIteration = 0; currentIteration < maxIterations; ++currentIteration)
-      //for (currentIteration = 0; currentIteration < 2; ++currentIteration)
+      //for (currentIteration = 0; currentIteration < 1; ++currentIteration)
       {
          if (optimizerVerbosenessLevel >= 2)
             cout << "NLSQ_LM_Optimizer: currentIteration: " << currentIteration << endl;
          
+        // cout << "\n computeDerivatives : "<< computeDerivatives << endl;
          if (computeDerivatives)
          {
             vector<double> errors(nObjs);
@@ -601,7 +636,7 @@ namespace V3D
             } // end for (obj)
             
             
-            
+            //cout << "\n currentIteration : "<< currentIteration << endl;
             if (optimizerVerbosenessLevel >= 1)
             {
                cout << "NLSQ_LM_Optimizer: iteration: " << currentIteration << ", |residual|^2 = " << err
@@ -701,18 +736,29 @@ namespace V3D
          //displaySparseMatrix(_JtJ);
          //writeJtetofile(currentIteration,Jt_e);
 
+         //Block Jacobi Solve
+         //this->blockjacobi_solve(_JtJ, Jt_e, delta);
+         LDL_perm(_JtJ_Parent.size(), &delta[0], &Jt_e[0], &_perm_JtJ[0]);
          //MSC solve
-         this->MSC_solve(_JtJ, Jt_e, delta);
+         //this->MSC_solve(_JtJ, Jt_e, delta);
+         this->MSC_solve(_JtJ, delta, deltaPerm);
+
+         //Block Jacobi Solve
+         //this->blockjacobi_solve(_JtJ, delta, deltaPerm);
+
+         LDL_permt(_JtJ_Parent.size(), &delta[0], &deltaPerm[0], &_perm_JtJ[0]);
          /*
          for(int k = 0; k < 10; k++)
             cout << "\ndelta["<<k<<"] = "<<delta[k];
          cout << "\n";
-         */
          
+         double const deltaSqrLength = sqrNorm_L2(delta);  cout << "\ndeltaSqrLength : "<< deltaSqrLength << "\n";
+         */
+         //cout << "\n at line : 749" << endl;
          bool success_LDL = true;
          double rho = 0.0;
          /* Comment starts for using MSC solve*/
-      /*   {
+       /*  {
             int const nCols = _JtJ_Parent.size();
             //int const nnz   = _JtJ.getNonzeroCount();
             int const lnz   = _JtJ_Lp.back();
@@ -841,6 +887,7 @@ namespace V3D
             }
          }
 
+         //cout << "\n Iteration : " << currentIteration << "  rho : " << rho <<endl;
          if (success_LDL && rho > 0)
          {
             if (optimizerVerbosenessLevel >= 2)
@@ -877,7 +924,7 @@ namespace V3D
                NLSQ_CostFunction& costFun = *_costFunctions[obj];
                if (costFun.forbid_derivative_caching())
                 { 
-                  cout << "\n costFun.forbid_derivative_caching() : " <<  costFun.forbid_derivative_caching() << "\n";
+                  //cout << "\n costFun.forbid_derivative_caching() : " <<  costFun.forbid_derivative_caching() << "\n";
                   computeDerivatives = true; break; 
                 }
             }
