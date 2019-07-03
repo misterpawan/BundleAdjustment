@@ -1,0 +1,11 @@
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build/CMakeFiles/edit_cache.dir
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build/CMakeFiles/V3D.dir
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build/CMakeFiles/rebuild_cache.dir
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build/Apps/CMakeFiles/edit_cache.dir
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build/Apps/CMakeFiles/bundle_varying.dir
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build/Apps/CMakeFiles/bundle_large.dir
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build/Apps/CMakeFiles/bundle_common.dir
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build/Apps/CMakeFiles/bundle_large_triggs.dir
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build/Apps/CMakeFiles/rebuild_cache.dir
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build/Apps/CMakeFiles/bundle_varying_nonlinlsq.dir
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build/Apps/CMakeFiles/bundle_large_lifted_schur.dir
