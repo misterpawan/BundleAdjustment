@@ -22,7 +22,7 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 3348 //hardcoding it for the time being
+	#define sizeG 7965 //hardcoding it for the time being
 	#define size_MKL_IPAR 128
 
 	/* This function densifies the jth column of input matrix A
@@ -1007,7 +1007,7 @@ namespace V3D
 
 		double* dpar = new double[size_MKL_IPAR]; 
 		
-		double* tmp = new double[num_cols*(2*20+1)+(20*(20+9))/2+1];
+		double* tmp = new double[num_cols*(2*40+1)+(40*(40+9))/2+1];
 		//double expected_solution[num_cols];
 		double* rhs = new double[num_cols];
 		double* computed_solution = new double[num_cols];
@@ -1020,7 +1020,7 @@ namespace V3D
 		MKL_INT RCI_request, RCI_count, ivar;
 		char cvar;
 
-		//cout << "\nMKL var init done !\n";
+		cout << "\nMKL var init done !\n";
 
 
 
@@ -1042,11 +1042,11 @@ namespace V3D
 	    mkl_dcsrcsc(job,&ivar,acsr,ja,ia,A->x,A->i,A->p,&info);
 	    //cout << "\n Conversion info A : "<< info << "\n";
 
-	    
-
 
 	    mkl_dcsrcsc(job,&lvar,lcsr,jl,il,L->x,L->i,L->p,&info);
 	    //cout << "\n Conversion info L : "<< info << "\n";
+
+		
 
 	    // Testing A solve with LU and comparing with MATLAB
 		//test_A_solve(A);
@@ -1086,7 +1086,7 @@ namespace V3D
 		//rhs is used for residual calculations
 		//dcopy(&ivar, Jt_e, &RCI_count, rhs, &RCI_count);   
 		for(int q = 0; q < num_cols; q++) rhs[q] = Jt_e[q];
-
+		//cout << "\n line 1089" << endl;
 		// PRECONDITIONED RHS
 		prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,Jt_e,prec_rhs);
 		//norm of the preconditioned rhs
@@ -1105,9 +1105,9 @@ namespace V3D
 		ipar[7] = 1;
 		ipar[4] = 400;  // Max Iterations
 		ipar[10] = 1;  //Preconditioner used
-		ipar[14] = 20; //internal iterations
+		ipar[14] = 40; //internal iterations
 		
-		dpar[0] = 1.0e-02; //Relative Tolerance
+		dpar[0] = 1.0e-01; //Relative Tolerance
 
 		/*---------------------------------------------------------------------------
 		/* Initialize the initial guess
@@ -1116,7 +1116,7 @@ namespace V3D
 		{
 			computed_solution[RCI_count]=0.0;
 		}
-		if(ipar[10] == 1) computed_solution[0]=1000.0;
+		//if(ipar[10] == 1) computed_solution[0]=1000.0;
 
 		/*---------------------------------------------------------------------------
 		/* Check the correctness and consistency of the newly set parameters
@@ -1216,7 +1216,7 @@ namespace V3D
 			//cout << "\n relres_nrm : " << relres_nrm << "\n";
 			//printf("\nRelres norm = %10.9f\n",relres_nrm);
 
-			if (relres_nrm<1.0E-2) goto COMPLETE;   //taking tolerance as 1e-04
+			if (relres_nrm<1.0E-1) goto COMPLETE;   //taking tolerance as 1e-04
 
 			else goto ONE;
 			
@@ -1279,7 +1279,7 @@ namespace V3D
 		/*---------------------------------------------------------------------------*/
 		COMPLETE:   ipar[12]=0;
 		dfgmres_get(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp, &itercount);
-		//cout << "The system has been solved  in " << itercount << " iterations!\n";
+		cout << "The system has been solved  in " << itercount << " iterations!\n";
 	//	cout << "\n RCI_request : "<< RCI_request << "\n";
 	/*
 		printf("\nThe following solution has been obtained: \n");
@@ -1306,11 +1306,12 @@ namespace V3D
 	  	umfpack_di_free_numeric ( &Numeric_MSC );
 
 		//delete [] Jt_e; 
-		delete [] A->p; delete [] A->i; delete [] A->x; 
+		
 		delete [] MSC->p; delete [] MSC->i;delete [] MSC->x;
 		delete [] D->p;  delete [] D->i;delete [] D->x; 
-		delete [] L->p; delete [] L->i; delete [] L->x;
-		delete MSC; delete D; delete A;  delete L; 
+		delete [] A->p; delete [] A->i; delete [] A->x; 
+		delete [] L->p; delete [] L->i; delete [] L->x; 
+		delete L; delete A;delete MSC; delete D;  
 
 		delete [] tmp; delete [] ipar; delete [] dpar;
 		delete [] rhs; delete [] computed_solution; delete [] residual;

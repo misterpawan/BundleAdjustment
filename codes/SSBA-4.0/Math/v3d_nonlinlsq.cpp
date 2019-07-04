@@ -754,7 +754,7 @@ namespace V3D
          
          double const deltaSqrLength = sqrNorm_L2(delta);  cout << "\ndeltaSqrLength : "<< deltaSqrLength << "\n";
          */
-         //cout << "\n at line : 749" << endl;
+         cout << "\n at line : 757" << endl;
          bool success_LDL = true;
          double rho = 0.0;
          /* Comment starts for using MSC solve*/
