@@ -21,7 +21,7 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 7965 //hardcoding it for the time being
+	#define sizeG 441 //hardcoding it for the time being
 	#define size_MKL_IPAR 128
 
 	/* This function computes the preconditioner solve for the input array y_in
@@ -247,13 +247,14 @@ namespace V3D
 
 		double* dpar = new double[size_MKL_IPAR]; 
 		
-		double* tmp = new double[num_cols*(2*150+1)+(150*(150+9))/2+1];
+		double* tmp = new double[num_cols*(2*40+1)+(40*(40+9))/2+1];
 		//double expected_solution[num_cols];
 		double* rhs = new double[num_cols];
 		double* computed_solution = new double[num_cols];
 		double* residual = new double[num_cols];   
 		double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev,prec_rhs_nrm,prec_relres_nrm;
 		double *prec_rhs = new double[num_cols];
+		double tol = 1.0e-02;
 		
 
 		MKL_INT itercount,ierr=0;
@@ -339,7 +340,7 @@ namespace V3D
 		ipar[10] = 1;  //Preconditioner used
 		ipar[14] = 40; //internal iterations
 		
-		dpar[0] = 1.0e-02; //Relative Tolerance
+		dpar[0] = tol; //Relative Tolerance
 
 		/*---------------------------------------------------------------------------
 		/* Initialize the initial guess
@@ -348,7 +349,7 @@ namespace V3D
 		{
 			computed_solution[RCI_count]=0.0;
 		}
-		if(ipar[10] == 1) computed_solution[0]=1000.0;
+		//if(ipar[10] == 1) computed_solution[0]=1000.0;
 
 		/*---------------------------------------------------------------------------
 		/* Check the correctness and consistency of the newly set parameters
@@ -448,7 +449,7 @@ namespace V3D
 			//cout << "\n relres_nrm : " << relres_nrm << "\n";
 			//printf("\nRelres norm = %10.9f\n",relres_nrm);
 
-			if (relres_nrm<1.0E-2) goto COMPLETE;   //taking tolerance as 1e-04
+			if (relres_nrm<tol) goto COMPLETE;   //taking tolerance as 1e-04
 
 			else goto ONE;
 			

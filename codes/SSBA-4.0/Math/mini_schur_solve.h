@@ -22,7 +22,7 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 7965 //hardcoding it for the time being
+	#define sizeG 441 //hardcoding it for the time being
 	#define size_MKL_IPAR 128
 
 	/* This function densifies the jth column of input matrix A
@@ -328,7 +328,7 @@ namespace V3D
 	*/
 	void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* U,cs_di* G)
 	{
-		int nmsc_block = 20 ;  //no of blocks for G
+		int nmsc_block = 3 ;  //no of blocks for G
 		int r = sizeG % nmsc_block;
 		int sz = (sizeG - r)/nmsc_block ; //size of each nmsc block for G
 		int r1 = 0,r2 = sz; //C++ convention   
@@ -732,8 +732,6 @@ namespace V3D
 			delete PD;delete PL;delete PU;delete PG;
 		}
 
-		//cout << "\n Mini Schur Complement computation done! \n";
-
 		return;
 	}
 
@@ -834,7 +832,7 @@ namespace V3D
 		A->p[num_cols] = ncc;
 
 		//cout << "\n values[ncc-1] = "<< values[ncc-1] << "\t\t A->x[ncc-1] = "<<A->x[ncc-1]<<"\n";
-	/******
+		/***
 		//LU solve of Ax=b
 		sym_status = umfpack_di_symbolic ( A->m, A->n, A->p, A->i, A->x, &Symbolic, solve_null, solve_null );
 		//cout << "\n Symbolic status :" << sym_status << "\n";
@@ -846,7 +844,7 @@ namespace V3D
   		//cout << "\n Solve status :" << solve_status << "\n";
 
   		return;
-	*/
+		****/
 		/***Domain Decomposition***/
 
 		//Allocating memory for blocks
@@ -962,7 +960,7 @@ namespace V3D
 		
 		//compute the mini schur complement in the Ccs_di format.
 		compute_mini_schur_complement(A,MSC,D,L,U,G);
-
+		cout << "\n Mini Schur Complement computation done! \n";
 
 		// Since L is not used anymore
 		delete [] U->p;delete [] U->i;delete [] U->x;delete U;
@@ -996,6 +994,7 @@ namespace V3D
 	  	
 	  	delete [] G->p; delete [] G->i; delete [] G->x; delete G;
 
+	  	cout <<  "\n Starting MKL routines ... " << endl;
 		/**********************GMRES CALL******************************/
 
 		//initializing variables and data structures for DFGMRES call
@@ -1014,6 +1013,7 @@ namespace V3D
 		double* residual = new double[num_cols];   
 		double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev,prec_rhs_nrm,prec_relres_nrm;
 		double *prec_rhs = new double[num_cols];
+		double tol = 1.0E-04;
 		
 
 		MKL_INT itercount,ierr=0;
@@ -1107,7 +1107,7 @@ namespace V3D
 		ipar[10] = 1;  //Preconditioner used
 		ipar[14] = 40; //internal iterations
 		
-		dpar[0] = 1.0e-01; //Relative Tolerance
+		dpar[0] = tol; //Relative Tolerance
 
 		/*---------------------------------------------------------------------------
 		/* Initialize the initial guess
@@ -1216,7 +1216,7 @@ namespace V3D
 			//cout << "\n relres_nrm : " << relres_nrm << "\n";
 			//printf("\nRelres norm = %10.9f\n",relres_nrm);
 
-			if (relres_nrm<1.0E-1) goto COMPLETE;   //taking tolerance as 1e-04
+			if (relres_nrm<tol) goto COMPLETE;   //taking tolerance as 1e-04
 
 			else goto ONE;
 			

@@ -35,18 +35,18 @@ function test_BA
 %          fprintf("\nb[%d] = %15.15f\n",i,b(i,1));
 %      end
 %         keyboard;
-
+     LDL_sol = load('~/Test/49/JTe49_1_Perm.txt');
     fprintf('\nFile read complete...\n');
     
 
     tic;
     xx = normal_solve(B, b);
     normal_solve_time = toc;
-    xx = full(xx);
-    for i = 1 : 10
-        fprintf("\nxx[%d] = %f\n",i,xx(i));
-    end
-    keyboard;
+%     xx = full(xx);
+%     for i = 1 : 10
+%         fprintf("\nxx[%d] = %f\n",i,xx(i));
+%     end
+%     keyboard;
     
     nparts = 5;
     [sizes_parts, A, p] = domain_decomposition(B, nparts);
@@ -265,15 +265,15 @@ function test_BA
 %   norm_r = norm(jacobi_solve(rand_vec) - jacobi_split_solve(rand_vec))
             %% Solve with PCG
             precfun=@nssolve; sol=zeros(n,1);
-            tol = 1e-4; maxit = 20;restart = 20;
+            tol = 1e-4; maxit = 10;restart = 40;
             max_pcg = 400;
             try
                 fprintf('Enter GMRES...\n');
                 %tic, [x,flag,relres,iter] = pcg(B,b,tol,maxit,@nssolve2); t_pcg = toc;
                 %[x,flag,relres,iter,resvec] = pcg(B,b,tol,max_pcg,@jacobi_solve);t_gmres = toc;
                 %tic, [x_np,flag_np,relres_np,iter_np,resvec_np] = gmres(B,b,restart,tol,maxit); t_gmres_np = toc;
-                %tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@nssolve2); t_gmres = toc;
-                tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@jacobi_solve); t_gmres = toc;
+                tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@nssolve2); t_gmres = toc;
+                %tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@jacobi_solve); t_gmres = toc;
                 %tic, [x,flag,relres,iter] = gmres(B,b,restart,tol,maxit); t_gmres = toc;
                 %% Display output
                 %its_np = (iter_np(1)-1)*restart+iter_np(2);
@@ -299,7 +299,7 @@ function test_BA
                fprintf("\nx[%d] = %10.6f\n",kk,x(kk,:));
              end
 % % %             
-%              keyboard;
+              keyboard;
             clear LD UD LG UG x  
             
 %             iters_np(z) = its_np;

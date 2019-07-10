@@ -111,34 +111,19 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
-Apps/CMakeFiles/bundle_varying.dir/rule:
-	cd /home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build && $(MAKE) -f CMakeFiles/Makefile2 Apps/CMakeFiles/bundle_varying.dir/rule
-.PHONY : Apps/CMakeFiles/bundle_varying.dir/rule
+Apps/CMakeFiles/bundle_large_lifted_schur.dir/rule:
+	cd /home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build && $(MAKE) -f CMakeFiles/Makefile2 Apps/CMakeFiles/bundle_large_lifted_schur.dir/rule
+.PHONY : Apps/CMakeFiles/bundle_large_lifted_schur.dir/rule
 
 # Convenience name for target.
-bundle_varying: Apps/CMakeFiles/bundle_varying.dir/rule
+bundle_large_lifted_schur: Apps/CMakeFiles/bundle_large_lifted_schur.dir/rule
 
-.PHONY : bundle_varying
+.PHONY : bundle_large_lifted_schur
 
 # fast build rule for target.
-bundle_varying/fast:
-	cd /home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build && $(MAKE) -f Apps/CMakeFiles/bundle_varying.dir/build.make Apps/CMakeFiles/bundle_varying.dir/build
-.PHONY : bundle_varying/fast
-
-# Convenience name for target.
-Apps/CMakeFiles/bundle_large.dir/rule:
-	cd /home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build && $(MAKE) -f CMakeFiles/Makefile2 Apps/CMakeFiles/bundle_large.dir/rule
-.PHONY : Apps/CMakeFiles/bundle_large.dir/rule
-
-# Convenience name for target.
-bundle_large: Apps/CMakeFiles/bundle_large.dir/rule
-
-.PHONY : bundle_large
-
-# fast build rule for target.
-bundle_large/fast:
-	cd /home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build && $(MAKE) -f Apps/CMakeFiles/bundle_large.dir/build.make Apps/CMakeFiles/bundle_large.dir/build
-.PHONY : bundle_large/fast
+bundle_large_lifted_schur/fast:
+	cd /home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build && $(MAKE) -f Apps/CMakeFiles/bundle_large_lifted_schur.dir/build.make Apps/CMakeFiles/bundle_large_lifted_schur.dir/build
+.PHONY : bundle_large_lifted_schur/fast
 
 # Convenience name for target.
 Apps/CMakeFiles/bundle_common.dir/rule:
@@ -154,6 +139,21 @@ bundle_common: Apps/CMakeFiles/bundle_common.dir/rule
 bundle_common/fast:
 	cd /home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build && $(MAKE) -f Apps/CMakeFiles/bundle_common.dir/build.make Apps/CMakeFiles/bundle_common.dir/build
 .PHONY : bundle_common/fast
+
+# Convenience name for target.
+Apps/CMakeFiles/bundle_varying.dir/rule:
+	cd /home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build && $(MAKE) -f CMakeFiles/Makefile2 Apps/CMakeFiles/bundle_varying.dir/rule
+.PHONY : Apps/CMakeFiles/bundle_varying.dir/rule
+
+# Convenience name for target.
+bundle_varying: Apps/CMakeFiles/bundle_varying.dir/rule
+
+.PHONY : bundle_varying
+
+# fast build rule for target.
+bundle_varying/fast:
+	cd /home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build && $(MAKE) -f Apps/CMakeFiles/bundle_varying.dir/build.make Apps/CMakeFiles/bundle_varying.dir/build
+.PHONY : bundle_varying/fast
 
 # Convenience name for target.
 Apps/CMakeFiles/bundle_large_triggs.dir/rule:
@@ -186,19 +186,19 @@ bundle_varying_nonlinlsq/fast:
 .PHONY : bundle_varying_nonlinlsq/fast
 
 # Convenience name for target.
-Apps/CMakeFiles/bundle_large_lifted_schur.dir/rule:
-	cd /home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build && $(MAKE) -f CMakeFiles/Makefile2 Apps/CMakeFiles/bundle_large_lifted_schur.dir/rule
-.PHONY : Apps/CMakeFiles/bundle_large_lifted_schur.dir/rule
+Apps/CMakeFiles/bundle_large.dir/rule:
+	cd /home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build && $(MAKE) -f CMakeFiles/Makefile2 Apps/CMakeFiles/bundle_large.dir/rule
+.PHONY : Apps/CMakeFiles/bundle_large.dir/rule
 
 # Convenience name for target.
-bundle_large_lifted_schur: Apps/CMakeFiles/bundle_large_lifted_schur.dir/rule
+bundle_large: Apps/CMakeFiles/bundle_large.dir/rule
 
-.PHONY : bundle_large_lifted_schur
+.PHONY : bundle_large
 
 # fast build rule for target.
-bundle_large_lifted_schur/fast:
-	cd /home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build && $(MAKE) -f Apps/CMakeFiles/bundle_large_lifted_schur.dir/build.make Apps/CMakeFiles/bundle_large_lifted_schur.dir/build
-.PHONY : bundle_large_lifted_schur/fast
+bundle_large/fast:
+	cd /home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/build && $(MAKE) -f Apps/CMakeFiles/bundle_large.dir/build.make Apps/CMakeFiles/bundle_large.dir/build
+.PHONY : bundle_large/fast
 
 bundle_common.o: bundle_common.cpp.o
 
@@ -369,13 +369,13 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... edit_cache"
-	@echo "... bundle_varying"
-	@echo "... bundle_large"
+	@echo "... bundle_large_lifted_schur"
 	@echo "... bundle_common"
+	@echo "... bundle_varying"
 	@echo "... bundle_large_triggs"
 	@echo "... rebuild_cache"
 	@echo "... bundle_varying_nonlinlsq"
-	@echo "... bundle_large_lifted_schur"
+	@echo "... bundle_large"
 	@echo "... bundle_common.o"
 	@echo "... bundle_common.i"
 	@echo "... bundle_common.s"

@@ -609,8 +609,8 @@ namespace V3D
 
       int const nObjs = _costFunctions.size();
 
-      for (currentIteration = 0; currentIteration < maxIterations; ++currentIteration)
-      //for (currentIteration = 0; currentIteration < 1; ++currentIteration)
+      //for (currentIteration = 0; currentIteration < maxIterations; ++currentIteration)
+      for (currentIteration = 0; currentIteration < 1; ++currentIteration)
       {
          if (optimizerVerbosenessLevel >= 2)
             cout << "NLSQ_LM_Optimizer: currentIteration: " << currentIteration << endl;
@@ -730,15 +730,17 @@ namespace V3D
          } // end for (paramType)
 
          this->fillJtJ();
-         
+         //cout << "\n fillJtJ done!" << endl;
          //auto hess = getJtJ();
          //showSparseMatrixInfo(currentIteration,_JtJ);
-         //displaySparseMatrix(_JtJ);
          //writeJtetofile(currentIteration,Jt_e);
 
          //Block Jacobi Solve
          //this->blockjacobi_solve(_JtJ, Jt_e, delta);
-         LDL_perm(_JtJ_Parent.size(), &delta[0], &Jt_e[0], &_perm_JtJ[0]);
+         LDL_perm(_JtJ_Parent.size(), &delta[0], &Jt_e[0], &_perm_JtJ[0]); 
+         //cout << "\n Perm done!" << endl;
+         //showSparseMatrixInfo(currentIteration,_JtJ);
+         //writeJtetofile(currentIteration,delta);
          //MSC solve
          //this->MSC_solve(_JtJ, Jt_e, delta);
          this->MSC_solve(_JtJ, delta, deltaPerm);
@@ -746,19 +748,20 @@ namespace V3D
          //Block Jacobi Solve
          //this->blockjacobi_solve(_JtJ, delta, deltaPerm);
 
-         LDL_permt(_JtJ_Parent.size(), &delta[0], &deltaPerm[0], &_perm_JtJ[0]);
-         /*
+         //LDL_permt(_JtJ_Parent.size(), &delta[0], &deltaPerm[0], &_perm_JtJ[0]);
+         
+       	
          for(int k = 0; k < 10; k++)
-            cout << "\ndelta["<<k<<"] = "<<delta[k];
+            cout << "\ndelta["<<k<<"] = "<<deltaPerm[k];
          cout << "\n";
          
-         double const deltaSqrLength = sqrNorm_L2(delta);  cout << "\ndeltaSqrLength : "<< deltaSqrLength << "\n";
-         */
+         double const deltaSqrLength = sqrNorm_L2(deltaPerm);  cout << "\nSolution norm : "<< sqrt(deltaSqrLength) << "\n";
+         
          cout << "\n at line : 757" << endl;
          bool success_LDL = true;
          double rho = 0.0;
          /* Comment starts for using MSC solve*/
-       /*  {
+        /* {
             int const nCols = _JtJ_Parent.size();
             //int const nnz   = _JtJ.getNonzeroCount();
             int const lnz   = _JtJ_Lp.back();
@@ -783,7 +786,7 @@ namespace V3D
                LDL_lsolve(nCols, &deltaPerm[0], &_JtJ_Lp[0], &Li[0], &Lx[0]);
                LDL_dsolve(nCols, &deltaPerm[0], &D[0]);
                LDL_ltsolve(nCols, &deltaPerm[0], &_JtJ_Lp[0], &Li[0], &Lx[0]);
-               LDL_permt(nCols, &delta[0], &deltaPerm[0], &_perm_JtJ[0]);
+               //LDL_permt(nCols, &delta[0], &deltaPerm[0], &_perm_JtJ[0]);
             }
             else
             {
@@ -793,17 +796,18 @@ namespace V3D
             }
          } 
          /* Comment ends for MSC solve */
-
+         //writeJtetofile(currentIteration,deltaPerm);
          /*
          for(int k = 0; k < 10; k++)
-            cout << "\ndelta["<<k<<"] = "<<delta[k];
+            cout << "\ndelta["<<k<<"] = "<<deltaPerm[k];
          cout << "\n";
          */
          double deltaError = 0;
 
          if (success_LDL)
          {
-            double const deltaSqrLength = sqrNorm_L2(delta);  //cout << "\ndeltaSqrLength : "<< deltaSqrLength << "\n";
+            //double const deltaSqrLength = sqrNorm_L2(delta);  cout << "\ndeltaSqrLength : "<< deltaSqrLength << "\n";
+            double const deltaSqrLength = sqrNorm_L2(deltaPerm);  cout << "\nSolution norm : "<< sqrt(deltaSqrLength) << "\n";
             double const paramLength = this->getParameterLength();
             
 

@@ -124,30 +124,17 @@ V3D/fast:
 .PHONY : V3D/fast
 
 #=============================================================================
-# Target rules for targets named bundle_varying
+# Target rules for targets named bundle_large_lifted_schur
 
 # Build rule for target.
-bundle_varying: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 bundle_varying
-.PHONY : bundle_varying
+bundle_large_lifted_schur: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 bundle_large_lifted_schur
+.PHONY : bundle_large_lifted_schur
 
 # fast build rule for target.
-bundle_varying/fast:
-	$(MAKE) -f Apps/CMakeFiles/bundle_varying.dir/build.make Apps/CMakeFiles/bundle_varying.dir/build
-.PHONY : bundle_varying/fast
-
-#=============================================================================
-# Target rules for targets named bundle_large
-
-# Build rule for target.
-bundle_large: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 bundle_large
-.PHONY : bundle_large
-
-# fast build rule for target.
-bundle_large/fast:
-	$(MAKE) -f Apps/CMakeFiles/bundle_large.dir/build.make Apps/CMakeFiles/bundle_large.dir/build
-.PHONY : bundle_large/fast
+bundle_large_lifted_schur/fast:
+	$(MAKE) -f Apps/CMakeFiles/bundle_large_lifted_schur.dir/build.make Apps/CMakeFiles/bundle_large_lifted_schur.dir/build
+.PHONY : bundle_large_lifted_schur/fast
 
 #=============================================================================
 # Target rules for targets named bundle_common
@@ -161,6 +148,19 @@ bundle_common: cmake_check_build_system
 bundle_common/fast:
 	$(MAKE) -f Apps/CMakeFiles/bundle_common.dir/build.make Apps/CMakeFiles/bundle_common.dir/build
 .PHONY : bundle_common/fast
+
+#=============================================================================
+# Target rules for targets named bundle_varying
+
+# Build rule for target.
+bundle_varying: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 bundle_varying
+.PHONY : bundle_varying
+
+# fast build rule for target.
+bundle_varying/fast:
+	$(MAKE) -f Apps/CMakeFiles/bundle_varying.dir/build.make Apps/CMakeFiles/bundle_varying.dir/build
+.PHONY : bundle_varying/fast
 
 #=============================================================================
 # Target rules for targets named bundle_large_triggs
@@ -189,17 +189,17 @@ bundle_varying_nonlinlsq/fast:
 .PHONY : bundle_varying_nonlinlsq/fast
 
 #=============================================================================
-# Target rules for targets named bundle_large_lifted_schur
+# Target rules for targets named bundle_large
 
 # Build rule for target.
-bundle_large_lifted_schur: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 bundle_large_lifted_schur
-.PHONY : bundle_large_lifted_schur
+bundle_large: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 bundle_large
+.PHONY : bundle_large
 
 # fast build rule for target.
-bundle_large_lifted_schur/fast:
-	$(MAKE) -f Apps/CMakeFiles/bundle_large_lifted_schur.dir/build.make Apps/CMakeFiles/bundle_large_lifted_schur.dir/build
-.PHONY : bundle_large_lifted_schur/fast
+bundle_large/fast:
+	$(MAKE) -f Apps/CMakeFiles/bundle_large.dir/build.make Apps/CMakeFiles/bundle_large.dir/build
+.PHONY : bundle_large/fast
 
 Geometry/v3d_metricbundle.o: Geometry/v3d_metricbundle.cpp.o
 
@@ -345,12 +345,12 @@ help:
 	@echo "... edit_cache"
 	@echo "... V3D"
 	@echo "... rebuild_cache"
-	@echo "... bundle_varying"
-	@echo "... bundle_large"
+	@echo "... bundle_large_lifted_schur"
 	@echo "... bundle_common"
+	@echo "... bundle_varying"
 	@echo "... bundle_large_triggs"
 	@echo "... bundle_varying_nonlinlsq"
-	@echo "... bundle_large_lifted_schur"
+	@echo "... bundle_large"
 	@echo "... Geometry/v3d_metricbundle.o"
 	@echo "... Geometry/v3d_metricbundle.i"
 	@echo "... Geometry/v3d_metricbundle.s"
