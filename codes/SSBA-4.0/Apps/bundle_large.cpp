@@ -303,7 +303,7 @@ namespace
 
             for (int j = 0; j < _Xs.size(); ++j) _cachedParamLength += sqrNorm_L2(_Xs[j]);
 
-            _cachedParamLength = sqrt(_cachedParamLength); cout << "\n _cachedParamLength : "<<_cachedParamLength << "\n";
+            _cachedParamLength = sqrt(_cachedParamLength); //cout << "\n _cachedParamLength : "<<_cachedParamLength << "\n";
          }
 
          virtual double getParameterLength() const

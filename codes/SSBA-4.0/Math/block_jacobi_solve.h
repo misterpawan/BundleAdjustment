@@ -21,7 +21,7 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 441 //hardcoding it for the time being
+	#define sizeG 7965 //hardcoding it for the time being
 	#define size_MKL_IPAR 128
 
 	/* This function computes the preconditioner solve for the input array y_in
@@ -449,7 +449,7 @@ namespace V3D
 			//cout << "\n relres_nrm : " << relres_nrm << "\n";
 			//printf("\nRelres norm = %10.9f\n",relres_nrm);
 
-			if (relres_nrm<tol) goto COMPLETE;   //taking tolerance as 1e-04
+			if (relres_nrm<=tol) goto COMPLETE;   //taking tolerance as 1e-04
 
 			else goto ONE;
 			

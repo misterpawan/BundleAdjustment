@@ -35,7 +35,7 @@ function test_BA
 %          fprintf("\nb[%d] = %15.15f\n",i,b(i,1));
 %      end
 %         keyboard;
-     LDL_sol = load('~/Test/49/JTe49_1_Perm.txt');
+%      LDL_sol = load('~/Test/49/JTe49_1_Perm.txt');
     fprintf('\nFile read complete...\n');
     
 
@@ -48,9 +48,11 @@ function test_BA
 %     end
 %     keyboard;
     
-    nparts = 5;
-    [sizes_parts, A, p] = domain_decomposition(B, nparts);
-    sizeG = m - sum(sizes_parts(1:nparts))
+    nparts = 10;
+    %[sizes_parts, A, p] = domain_decomposition(B, nparts);
+    A=B;
+    %sizeG = m - sum(sizes_parts(1:nparts))
+    sizeG = 441;
     sizeD = m - sizeG; 
     %keyboard;
 %     D = A(1 : sizeD, 1 : sizeD);
@@ -62,7 +64,7 @@ function test_BA
     % blocks for schur complements
     %nmsc = 3; 
    % nmsc_blocks = [3 4 5 6 7 8 9 10 15 20];
-    nmsc_blocks = [3];
+    nmsc_blocks = [20];
     %nmsc_blocks = [25 30 35 40];
     %nmsc_blocks = [13 14 15 16 17 18];
     iters = zeros(1,length(nmsc_blocks));
@@ -77,13 +79,15 @@ function test_BA
     total_time_np = zeros(1,length(nmsc_blocks));
     conv_flag_np = zeros(1,length(nmsc_blocks));
     
+    D = A(1 : sizeD, 1 : sizeD);
+    L = A(sizeD + 1: m, 1 : sizeD);
+    U = L';
+    G = A(sizeD + 1:m, sizeD + 1:m);%%change
+    
     
     for z = 1:length(nmsc_blocks)
         
-        D = A(1 : sizeD, 1 : sizeD);
-        L = A(sizeD + 1: m, 1 : sizeD);
-        U = L';
-        G = A(sizeD + 1:m, sizeD + 1:m);%%change  
+        
 %         [L_block_G,U_block_G] = lu(G);
         %keyboard;
         r = rem(sizeG, nmsc_blocks(z)); sz = (sizeG - r)/nmsc_blocks(z); r1 = 1; r2 = sz;
@@ -215,7 +219,7 @@ function test_BA
         end
         t_factor_d = toc;
 
-        fprintf('done!!!\n'); clear D G ;      
+        fprintf('done!!!\n');      
 
       % b_req = load("~/req_prec_solve.txt");
        %prec_rhs = nssolve2(b);
@@ -256,24 +260,26 @@ function test_BA
 %           fprintf(fp,"%f\n",prec_vec);
 %           fclose(fp);
 %           keyboard;
-  J = blkdiag(A(1:sizeD, 1:sizeD),  A(sizeD+1 : n, sizeD+1: n));
-  %keyboard;
+tic;
+  J = blkdiag(D,G);
+%   keyboard;
   [LJ,UJ] = lu(J);
-  clear J;
+  t_jacobi = toc;
+  clear J D G ; 
   
 %   rand_vec = rand(m,1);
 %   norm_r = norm(jacobi_solve(rand_vec) - jacobi_split_solve(rand_vec))
             %% Solve with PCG
             precfun=@nssolve; sol=zeros(n,1);
-            tol = 1e-4; maxit = 10;restart = 40;
+            tol = 1e-2; maxit = 10;restart = 40;
             max_pcg = 400;
             try
                 fprintf('Enter GMRES...\n');
                 %tic, [x,flag,relres,iter] = pcg(B,b,tol,maxit,@nssolve2); t_pcg = toc;
                 %[x,flag,relres,iter,resvec] = pcg(B,b,tol,max_pcg,@jacobi_solve);t_gmres = toc;
                 %tic, [x_np,flag_np,relres_np,iter_np,resvec_np] = gmres(B,b,restart,tol,maxit); t_gmres_np = toc;
-                tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@nssolve2); t_gmres = toc;
-                %tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@jacobi_solve); t_gmres = toc;
+%                 tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@nssolve2); t_gmres = toc;
+                tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@jacobi_solve); t_gmres = toc;
                 %tic, [x,flag,relres,iter] = gmres(B,b,restart,tol,maxit); t_gmres = toc;
                 %% Display output
                 %its_np = (iter_np(1)-1)*restart+iter_np(2);
@@ -283,7 +289,8 @@ function test_BA
                 fprintf('flag: %d\nits: %d\nrelres: %d\n', flag, its, relres);
                 %fprintf('time lu MSC: %g\ntime ilu D: %g\ntime PCG: %g\n', t_factor_msc, t_factor_d, t_pcg);
                 %t_total_np = t_factor_msc + t_factor_d + t_gmres_np;
-                t_total = t_factor_msc + t_factor_d + t_gmres;
+%                 t_total = t_factor_msc + t_factor_d + t_gmres;
+                t_total = t_gmres + t_jacobi;
                 fprintf('total time: %g\n', t_total);
                 fprintf('time lu MSC: %g\ntime ilu D: %g\ntime GMRES: %g\n', t_factor_msc, t_factor_d, t_gmres);
             catch
@@ -295,11 +302,11 @@ function test_BA
 %             q = B*x -b;
 %             prec_q = nssolve2(q);
 %              prec_b = nssolve2(b);
-             for kk = 1: 10
-               fprintf("\nx[%d] = %10.6f\n",kk,x(kk,:));
-             end
+%              for kk = 1: 10
+%                fprintf("\nx[%d] = %f\n",kk,x(kk,:));
+%              end
 % % %             
-              keyboard;
+%               keyboard;
             clear LD UD LG UG x  
             
 %             iters_np(z) = its_np;
@@ -319,7 +326,7 @@ function test_BA
     end
     clear b
     
-    fprintf('tests done!!!\n');
+%     fprintf('tests done!!!\n');
     
 %     fprintf('\n===========================================GMRES NO PRECONDITIONING==============================================\n');
 %     fprintf('\nMSC block size | Restarts | Iter | normal_solve_time(s) | gmres_time(s) | Rel Res(gmres) | Total Time(s)  |  Flag \n');
@@ -352,10 +359,10 @@ function test_BA
         xx = UJ\(LJ\y);
     end
 
-    function xx = jacobi_split_solve(y)
-         y1 = y(1:sizeD); y2 = y(sizeD+1:sizeD+sizeG);
-         z1 = UD\(LD\y1);
-         z2 = U_block_G\(L_block_G\y2);
-         xx = [z1;z2];
-    end
+%     function xx = jacobi_split_solve(y)
+%          y1 = y(1:sizeD); y2 = y(sizeD+1:sizeD+sizeG);
+%          z1 = UD\(LD\y1);
+%          z2 = U_block_G\(L_block_G\y2);
+%          xx = [z1;z2];
+%     end
 end

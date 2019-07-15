@@ -22,15 +22,15 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 441 //hardcoding it for the time being
+	#define sizeG 7965 //hardcoding it for the time being
 	#define size_MKL_IPAR 128
 
 	/* This function densifies the jth column of input matrix A
 	*/
-	double* densify_column(cs_di* A, int j)
+	void densify_column(cs_di* A, int j,double* b)
 	{
 		//cout << "\n In densify....! \n";
-		double* b = new double[A->m];
+		//double* b = new double[A->m];
 		
 		int k;
 		int l = A->p[j]; //start index for rows of column j
@@ -45,7 +45,7 @@ namespace V3D
 			else b[k] = 0;
 		}
 
-		return b;
+		return ;
 	}
 
 	/* This function stores the dense array x1 into the jth column of AA as a sparse array
@@ -106,7 +106,7 @@ namespace V3D
 			b = new double[PU->m]; //vector to store the densified rhs at each iteration
 			x1 = new double[PD->n]; //vector to store the solution at each iteration
 
-			b = densify_column(PU,j); // densifies the jth column of PU 
+			densify_column(PU,j,b); // densifies the jth column of PU and stores it in b
 
 	  		
 	  		//  Using the numeric factorization, solve the linear system.
@@ -328,7 +328,7 @@ namespace V3D
 	*/
 	void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* U,cs_di* G)
 	{
-		int nmsc_block = 3 ;  //no of blocks for G
+		int nmsc_block = 20 ;  //no of blocks for G
 		int r = sizeG % nmsc_block;
 		int sz = (sizeG - r)/nmsc_block ; //size of each nmsc block for G
 		int r1 = 0,r2 = sz; //C++ convention   
@@ -787,7 +787,7 @@ namespace V3D
 
 	 void mini_schur_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,double *values,double *Jt_e,double *delta)
 	 //void MSC_solve(CCS_Matrix<Elem> const& H, Vector<double>& Jt_e,Vector<double>& delta)
-	 {
+	 {	//cout << "\n In MSC solve ...." << endl;
 		int i;
 		int *null = ( int * ) NULL;
 		double *solve_null = ( double * ) NULL;
@@ -960,7 +960,7 @@ namespace V3D
 		
 		//compute the mini schur complement in the Ccs_di format.
 		compute_mini_schur_complement(A,MSC,D,L,U,G);
-		cout << "\n Mini Schur Complement computation done! \n";
+		//cout << "\n Mini Schur Complement computation done! \n";
 
 		// Since L is not used anymore
 		delete [] U->p;delete [] U->i;delete [] U->x;delete U;
@@ -994,7 +994,7 @@ namespace V3D
 	  	
 	  	delete [] G->p; delete [] G->i; delete [] G->x; delete G;
 
-	  	cout <<  "\n Starting MKL routines ... " << endl;
+	  	//cout <<  "\n Starting MKL routines ... " << endl;
 		/**********************GMRES CALL******************************/
 
 		//initializing variables and data structures for DFGMRES call
@@ -1013,14 +1013,14 @@ namespace V3D
 		double* residual = new double[num_cols];   
 		double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev,prec_rhs_nrm,prec_relres_nrm;
 		double *prec_rhs = new double[num_cols];
-		double tol = 1.0E-04;
+		double tol = 1.0E-02;
 		
 
 		MKL_INT itercount,ierr=0;
 		MKL_INT RCI_request, RCI_count, ivar;
 		char cvar;
 
-		cout << "\nMKL var init done !\n";
+		//cout << "\nMKL var init done !\n";
 
 
 
@@ -1216,7 +1216,7 @@ namespace V3D
 			//cout << "\n relres_nrm : " << relres_nrm << "\n";
 			//printf("\nRelres norm = %10.9f\n",relres_nrm);
 
-			if (relres_nrm<tol) goto COMPLETE;   //taking tolerance as 1e-04
+			if (relres_nrm<=tol) goto COMPLETE;   //taking tolerance as 1e-04
 
 			else goto ONE;
 			
@@ -1279,7 +1279,7 @@ namespace V3D
 		/*---------------------------------------------------------------------------*/
 		COMPLETE:   ipar[12]=0;
 		dfgmres_get(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp, &itercount);
-		cout << "The system has been solved  in " << itercount << " iterations!\n";
+		//cout << "The system has been solved  in " << itercount << " iterations!\n";
 	//	cout << "\n RCI_request : "<< RCI_request << "\n";
 	/*
 		printf("\nThe following solution has been obtained: \n");
