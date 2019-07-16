@@ -12,7 +12,7 @@ addpath(genpath('/home/pawan/work/datasets')); % from IIIT
 %P = load(lhs_filename); 
 %B = P.A;
 
-P = load('JTJ49.txt'); 
+P = load('JTJ646.txt'); 
 B = spconvert(P);
 B = B + triu(B,1)'; % since matrix is stored in symm form, need to copy to lower
 
@@ -32,7 +32,7 @@ G = A(sizeD + 1:m, sizeD + 1:m);
     
 %% Identify MSCs
 % blocks for schur complements
-nmsc = 4; 
+nmsc = 10; 
 r = rem(sizeG, nmsc); sz = (sizeG - r)/nmsc; r1 = 1; r2 = sz;
 GS = []; %ol = 0;
 
@@ -120,20 +120,12 @@ if (i == nmsc)
   GS = sparse(GS); 
 end 
 t_construct = toc;
-
-%nnz(GS)
-
-%keyboard;
-       
+    
 fprintf('done with mini Schur complements!\n'); 
 fprintf('Computing LU of MSC ...');
 tic,[LG,UG] = lu(GS);t_factor_msc = toc; fprintf('done!!!\n');
 clear GS S PD PU PL PG
         
-
-
-
-
 setup.type='ilutp'; 
 setup.droptol = 1e-03; %ntol(ii); 
 fprintf('Computing ilu(%g) of D...', setup.droptol);
@@ -145,12 +137,16 @@ t_factor_d = toc;
 fprintf('done!!!\n'); clear D G ;
 
 % preconditioner memory
-total_nnz = nnz(LG)+nnz(UG)+nnz(LD) + nnz(UD) + nnz(A)
-keyboard;
+total_nnz = nnz(LG)+nnz(UG)+nnz(LD) + nnz(UD) + nnz(A);
+total_mem = (total_nnz * 8) / (1024^2);
+
+fprintf('memory for iterative solver = %g MB\n', total_mem);
+
+%keyboard;
         
 %% Solve with PCG
 %precfun=@nssolve; 
-sol=zeros(m,1); tol = 1e-5; maxit = 30;
+sol=zeros(m,1); tol = 1e-4; maxit = 30;
 restart = 60;
 
 fprintf('Enter GMRES...\n');
