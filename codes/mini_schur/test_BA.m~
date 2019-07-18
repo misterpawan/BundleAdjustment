@@ -2,11 +2,11 @@
 function test_BA
     clc;
     warning('off','all');
-    filepath = '~/Test/356';
+    filepath = '~/Test/49';
     addpath(filepath);
     addpath('../ddm');
-    lhs_filename = 'JTJ356_1.mat';
-    rhs_filename = 'JTe356_1.mat';
+    lhs_filename = 'JTJ49_1.mat';
+    rhs_filename = 'JTe49_1.mat';
 
     %P = load(strcat(filepath,lhs_filename),'-mat')
     P = load(lhs_filename,'-mat')
@@ -52,7 +52,7 @@ function test_BA
     %[sizes_parts, A, p] = domain_decomposition(B, nparts);
     A=B;
     %sizeG = m - sum(sizes_parts(1:nparts))
-    sizeG = 3204;
+    sizeG = 441;
     sizeD = m - sizeG; 
     %keyboard;
 %     D = A(1 : sizeD, 1 : sizeD);
@@ -228,7 +228,7 @@ function test_BA
   J = blkdiag(D,GS);
 %    keyboard;
 tic;
-%   [LJ,UJ] = lu(J);
+  [LJ,UJ] = lu(J);
 
 %     [L_block_G,U_block_G] = lu(G);
   t_jacobi = toc
@@ -236,9 +236,9 @@ tic;
    prec_rhs = ones(m,1);
     prec_sol = nssolve2(prec_rhs);
     pp = J * prec_sol;
-%     fp = fopen("~/rhs_MSC_20.txt","w");
-%     fprintf(fp,"%d\n",prec_rhs);
-%     fclose(fp);
+    fp = fopen("~/rhs_MSC_20.txt","w");
+    fprintf(fp,"%d\n",prec_rhs);
+    fclose(fp);
     keyboard;
     prec_sol_C = load("~/MSC_sol_20.txt");
     qq = J * prec_sol_C;

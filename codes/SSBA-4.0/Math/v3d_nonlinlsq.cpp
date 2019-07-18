@@ -739,11 +739,11 @@ namespace V3D
          //this->blockjacobi_solve(_JtJ, Jt_e, delta);
          LDL_perm(_JtJ_Parent.size(), &delta[0], &Jt_e[0], &_perm_JtJ[0]); 
          //cout << "\n Perm done!" << endl;
-         showSparseMatrixInfo(currentIteration,_JtJ);
-         writeJtetofile(currentIteration,delta);
+         //showSparseMatrixInfo(currentIteration,_JtJ);
+        // writeJtetofile(currentIteration,delta);
          //MSC solve
          //this->MSC_solve(_JtJ, Jt_e, delta);
-         //this->MSC_solve(_JtJ, delta, deltaPerm);
+         this->MSC_solve(_JtJ, delta, deltaPerm);
 
          //Block Jacobi Solve
          //this->blockjacobi_solve(_JtJ, delta, deltaPerm);
@@ -761,7 +761,7 @@ namespace V3D
          bool success_LDL = true;
          double rho = 0.0;
          /* Comment starts for using MSC solve*/
-         {
+        /* {
             int const nCols = _JtJ_Parent.size();
             //int const nnz   = _JtJ.getNonzeroCount();
             int const lnz   = _JtJ_Lp.back();

@@ -9,20 +9,23 @@
 #include <ctime>
 #include <cmath>
 
+using namespace std;
 
 #include "cs.h"
 #include "umfpack.h"
 #include "sort.h"
 #include "mkl.h"
+#include "util.h"
+#include "test.h"
 
-using namespace std;
+
 using namespace V3D;
 
 
 
 namespace V3D
 {
-	#define sizeG 7965 //hardcoding it for the time being
+	#define sizeG 3204 //hardcoding it for the time being
 	#define size_MKL_IPAR 128
 
 	/* This function densifies the jth column of input matrix A
@@ -967,13 +970,13 @@ namespace V3D
 
 		int ok = cs_di_sprealloc(MSC,MSC->p[sizeG]);
 		//cout << "\n ok : "<< ok << "\n";
-	/*
+		/*
 		for(int k = 0; k < 1; k++)
 		{
 			for(int l = MSC->p[k]; l<20; l++)
 				printf("\nMSC->i[%d] = %d\t\tMSC->x[%d] = %10.9f",l,MSC->i[l],l,MSC->x[l]);
 		}
-	*/
+		*/
 		/************LU Factorization of D and MSC******************************/
 
 		sym_status = umfpack_di_symbolic ( D->m, D->n, D->p, D->i, D->x, &Symbolic_D, solve_null, solve_null );
@@ -1055,26 +1058,26 @@ namespace V3D
 		// test_matvec_multiply(A);
 
 	    /***Testing the preconditioner solve with MATLAB***/
-	/*    double *matvec = new double[A->n];
-	    double *randvec = new double[A->n];
-	    string test_filename = "test/rand_vec.txt";
+	    //double *matvec = new double[A->n];
+	    //double *randvec = new double[A->n];
+	    //string test_filename = "~/rhs_MSC_20.txt";
 
-	    r8vec_data_read ( test_filename, A->n, randvec);
+	    //r8vec_data_read ( test_filename, A->n, randvec);
 
-		mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, randvec, matvec);
+		//mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, randvec, matvec);
 
-		ofstream outfile("test/rand_matvec_cpp.txt");
+		//ofstream outfile("test/rand_matvec_cpp.txt");
 
-	  	if(outfile.is_open())
-	  	{
-	  		for(int k = 0; k < A->n; k++)
-	  			outfile << matvec[k] << "\n";
-	  	}
-	  	outfile.close();
-
+	  	//if(outfile.is_open())
+	  	//{
+	  	//	for(int k = 0; k < A->n; k++)
+	  	//		outfile << matvec[k] << "\n";
+	  	//}
+	  	//outfile.close();
+	    //cout << "\n MSC->n : " << MSC->n << endl;
 	    test_prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl);
-	    delete [] matvec; delete [] randvec;
-	*/
+	    //delete [] matvec; delete [] randvec;
+	
 		/*---------------------------------------------------------------------------
 		/* Save the right-hand side in vector rhs for future use
 		/*---------------------------------------------------------------------------*/
@@ -1103,9 +1106,9 @@ namespace V3D
 
 		
 		ipar[7] = 1;
-		ipar[4] = 400;  // Max Iterations
+		ipar[4] = 200;  // Max Iterations
 		ipar[10] = 1;  //Preconditioner used
-		ipar[14] = 40; //internal iterations
+		ipar[14] = 20; //internal iterations
 		
 		dpar[0] = tol; //Relative Tolerance
 

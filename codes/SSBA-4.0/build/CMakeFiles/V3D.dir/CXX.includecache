@@ -111,8 +111,16 @@ sort.h
 .././Math/sort.h
 mkl.h
 .././Math/mkl.h
+util.h
+.././Math/util.h
+test.h
+.././Math/test.h
 
 .././Math/sort.h
+
+.././Math/test.h
+
+.././Math/util.h
 
 .././Math/v3d_ldl_private.h
 

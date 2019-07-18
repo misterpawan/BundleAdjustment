@@ -21,7 +21,7 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 7965 //hardcoding it for the time being
+	#define sizeG 12948 //hardcoding it for the time being
 	#define size_MKL_IPAR 128
 
 	/* This function computes the preconditioner solve for the input array y_in
@@ -336,9 +336,9 @@ namespace V3D
 
 		
 		ipar[7] = 1;
-		ipar[4] = 400;  // Max Iterations
+		ipar[4] = 200;  // Max Iterations
 		ipar[10] = 1;  //Preconditioner used
-		ipar[14] = 40; //internal iterations
+		ipar[14] = 20; //internal iterations
 		
 		dpar[0] = tol; //Relative Tolerance
 
