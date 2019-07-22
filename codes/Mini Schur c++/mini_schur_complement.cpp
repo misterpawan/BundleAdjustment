@@ -1044,257 +1044,336 @@ int main()
  
 	/**********************GMRES CALL******************************/
 
-	//initializing variables and data structures for DFGMRES call
-	//int restart = 20;  //DFGMRES restarts
-	MKL_INT* ipar = new MKL_INT[size_MKL_IPAR];
-	//ipar[14] = 150;  //non restarted iterations
+		//initializing variables and data structures for DFGMRES call
+		//int restart = 20;  //DFGMRES restarts
+		MKL_INT* ipar = new MKL_INT[size_MKL_IPAR];
+		//ipar[14] = 150;  //non restarted iterations
 
-	//cout << "\n tmp size : "<< num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1) << "\n";
+		//cout << "\n tmp size : "<< num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1) << "\n";
 
-	double* dpar = new double[size_MKL_IPAR]; 
-	//double tmp[num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1)];
-	//double* tmp = new double[num_cols*(2*ipar[14]+1)+(ipar[14]*(ipar[14]+9))/2+1];
-	double* tmp = new double[num_cols*(2*num_cols+1)+(num_cols*(num_cols+9))/2+1];
-	//double expected_solution[num_cols];
-	double* rhs = new double[num_cols];
-	double* computed_solution = new double[num_cols];
-	double* residual = new double[num_cols];   
-	double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev,prec_rhs_nrm,prec_relres_nrm;
-	double *prec_rhs = new double[num_cols];
-	
-
-	MKL_INT itercount,ierr=0;
-	MKL_INT RCI_request, RCI_count, ivar;
-	char cvar;
-
-	cout << "\nMKL var init done !\n";
-
-
-
-	ivar = num_cols;
-	cvar = 'N';  //no transpose
-	
-	/**********Converting A & L from CSC to CSR*****************/
-  	MKL_INT job[6] = {1,1,0,0,0,1};
-    double *acsr =  new double[ncc];
-    double *lcsr =  new double[L->nzmax];
-    MKL_INT *ja = new MKL_INT[ncc];
-    MKL_INT *jl = new MKL_INT[L->nzmax];
-    MKL_INT *ia = new MKL_INT[ivar+1];
-    MKL_INT *il = new MKL_INT[sizeG+1];
-    MKL_INT info;
-    MKL_INT lvar = sizeG;
-
-      //converting COO to CSR
-    mkl_dcsrcsc(job,&ivar,acsr,ja,ia,A->x,A->i,A->p,&info);
-    //cout << "\n Conversion info A : "<< info << "\n";
-
-
-    mkl_dcsrcsc(job,&lvar,lcsr,jl,il,L->x,L->i,L->p,&info);
-    //cout << "\n Conversion info L : "<< info << "\n";
-
-    /***Testing the preconditioner solve with MATLAB***/
-    //test_prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl);
-
-	/*---------------------------------------------------------------------------
-	/* Save the right-hand side in vector rhs for future use
-	/*---------------------------------------------------------------------------*/
-	RCI_count=1;
-	/** extracting the norm of the rhs for computing rel res norm**/
-	rhs_nrm = dnrm2(&ivar,JTe,&RCI_count); 
-	//cout << "\n rhs_nrm : " << rhs_nrm << "\n";
-	// JTe vector is not altered
-	//rhs is used for residual calculations
-	dcopy(&ivar, JTe, &RCI_count, rhs, &RCI_count);   
-
-	// PRECONDITIONED RHS
-	prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,JTe,prec_rhs);
-	//norm of the preconditioned rhs
-	prec_rhs_nrm = dnrm2(&ivar,prec_rhs,&RCI_count);
-	delete [] prec_rhs; 
-	cout << "\n prec rhs norm : "<< prec_rhs_nrm << "\n";
-
-	/*---------------------------------------------------------------------------
-	/* Initialize the initial guess
-	/*---------------------------------------------------------------------------*/
-	for(RCI_count=0; RCI_count<num_cols; RCI_count++)
-	{
-		computed_solution[RCI_count]=0.0;
-	}
-	//computed_solution[0]=0.0;
-
-	/*---------------------------------------------------------------------------
-	/* Initialize the solver
-	/*---------------------------------------------------------------------------*/
-	dfgmres_init(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp); 
-	if (RCI_request!=0) goto FAILED;
-
-	
-	ipar[7] = 1;
-	ipar[4] = 400;  // Max Iterations
-	ipar[10] = 1;  //Preconditioner used
-	ipar[14] = 20; //internal iterations
-	
-	dpar[0] = 1.0e-04; //Relative Tolerance
-
-	/*---------------------------------------------------------------------------
-	/* Check the correctness and consistency of the newly set parameters
-	/*---------------------------------------------------------------------------*/
-	dfgmres_check(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp); 
-	if (RCI_request!=0) goto FAILED;
-
-	/*---------------------------------------------------------------------------
-	/* Compute the solution by RCI (P)FGMRES solver with preconditioning
-	/* Reverse Communication starts here
-	/*---------------------------------------------------------------------------*/
-	ONE: dfgmres(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp);
-	//cout << "\n dfgmres RCI_request : "<<RCI_request << "\n";
-
-	//ipar[13] = 20; // No of inner iterations
-	if(RCI_request==0) goto COMPLETE;
-
-	/*---------------------------------------------------------------------------
-	/* If RCI_request=1, then compute the vector A*tmp[ipar[21]-1]
-	/* and put the result in vector tmp[ipar[22]-1]	
-	/*------------------DEPRECATED ROUTINE (FIND ANOTHER )-------------------------*/
-	if (RCI_request==1)
-	{
-		mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, &tmp[ipar[21]-1], &tmp[ipar[22]-1]);
-		goto ONE;
-	}
-
-	/*---------------------------------------------------------------------------
-	/* If RCI_request=2, then do the user-defined stopping test
-	/* The residual stopping test for the computed solution is performed here*/
-	if (RCI_request==2)
-	{
-		/* Request to the dfgmres_get routine to put the solution into b[N] via ipar[12]*/
-		ipar[12]=1;
-		/* Get the current FGMRES solution in the vector rhs[N] */
-		dfgmres_get(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp, &itercount);
-
-		//for(int kl = 0; kl < 10; kl++)
-		//	printf("\n comp_sol[%d] = %10.9f",kl, computed_solution[kl]);
-
-		/* Compute the current true residual via MKL (Sparse) BLAS routines */
-		mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, rhs, residual); // A*x for new solution x
-		dvar=-1.0E0;
-		RCI_count=1;
-		daxpy(&ivar, &dvar, JTe, &RCI_count, residual, &RCI_count);  // Ax - A*x_solution
+		double* dpar = new double[size_MKL_IPAR]; 
+		
+		double* tmp = new double[num_cols*(2*40+1)+(40*(40+9))/2+1];
+		//double expected_solution[num_cols];
+		double* rhs = new double[num_cols];
+		double* computed_solution = new double[num_cols];
+		double* residual = new double[num_cols];   
+		double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev,prec_rhs_nrm,prec_relres_nrm;
+		double *prec_rhs = new double[num_cols];
+		double tol = 1.0E-02;
 		
 
-		cout << "\n Iteration : " << itercount;
-		//for(int k = 0; k < 10; k++)
-		//		printf("\nresildual[%d] = %10.9f\n",k,residual[k]);
+		MKL_INT itercount,ierr=0;
+		MKL_INT RCI_request, RCI_count, ivar;
+		char cvar;
 
-		if(ipar[10] == 0)   // non preconditioned system
+		//cout << "\nMKL var init done !\n";
+
+
+
+		ivar = num_cols;
+		cvar = 'N';  //no transpose
+		
+		/**********Converting A & L from CSC to CSR*****************/
+	  	MKL_INT job[6] = {1,1,0,0,0,1};
+	    double *acsr =  new double[ncc];
+	    double *lcsr =  new double[L->nzmax];
+	    MKL_INT *ja = new MKL_INT[ncc];
+	    MKL_INT *jl = new MKL_INT[L->nzmax];
+	    MKL_INT *ia = new MKL_INT[ivar+1];
+	    MKL_INT *il = new MKL_INT[sizeG+1];
+	    MKL_INT info;
+	    MKL_INT lvar = sizeG;
+
+	      //converting COO to CSR
+	    mkl_dcsrcsc(job,&ivar,acsr,ja,ia,A->x,A->i,A->p,&info);
+	    //cout << "\n Conversion info A : "<< info << "\n";
+
+
+	    mkl_dcsrcsc(job,&lvar,lcsr,jl,il,L->x,L->i,L->p,&info);
+	    //cout << "\n Conversion info L : "<< info << "\n";
+
+		
+
+	    // Testing A solve with LU and comparing with MATLAB
+		//test_A_solve(A);
+		//test_D_solve(D);
+		//test_MSC_solve(MSC);
+		// test_matvec_multiply(A);
+
+	    /***Testing the preconditioner solve with MATLAB***/
+	    //double *matvec = new double[A->n];
+	    //double *randvec = new double[A->n];
+	    //string test_filename = "~/rhs_MSC_20.txt";
+
+	    //r8vec_data_read ( test_filename, A->n, randvec);
+
+		//mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, randvec, matvec);
+
+		//ofstream outfile("test/rand_matvec_cpp.txt");
+
+	  	//if(outfile.is_open())
+	  	//{
+	  	//	for(int k = 0; k < A->n; k++)
+	  	//		outfile << matvec[k] << "\n";
+	  	//}
+	  	//outfile.close();
+	    //cout << "\n MSC->n : " << MSC->n << endl;
+	    test_prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl);
+	    //delete [] matvec; delete [] randvec;
+	
+		/*---------------------------------------------------------------------------
+		/* Save the right-hand side in vector rhs for future use
+		/*---------------------------------------------------------------------------*/
+		RCI_count=1;
+		/** extracting the norm of the rhs for computing rel res norm**/
+		rhs_nrm = dnrm2(&ivar,JTe,&RCI_count); 
+		//cout << "\n rhs_nrm : " << rhs_nrm << "\n";
+		// Jt_e vector is not altered
+		//rhs is used for residual calculations
+		//dcopy(&ivar, Jt_e, &RCI_count, rhs, &RCI_count);   
+		for(int q = 0; q < num_cols; q++) rhs[q] = JTe[q];
+		//cout << "\n line 1089" << endl;
+		// PRECONDITIONED RHS
+		prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,JTe,prec_rhs);
+		//norm of the preconditioned rhs
+		prec_rhs_nrm = dnrm2(&ivar,prec_rhs,&RCI_count);
+		delete [] prec_rhs; 
+		//cout << "\n prec rhs norm : "<< prec_rhs_nrm << "\n";
+
+		
+		/*---------------------------------------------------------------------------
+		/* Initialize the solver
+		/*---------------------------------------------------------------------------*/
+		dfgmres_init(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp); 
+		if (RCI_request!=0) goto FAILED;
+
+		
+		ipar[7] = 1;
+		ipar[4] = 200;  // Max Iterations
+		ipar[10] = 1;  //Preconditioner used
+		ipar[14] = 20; //internal iterations
+		
+		dpar[0] = tol; //Relative Tolerance
+
+		/*---------------------------------------------------------------------------
+		/* Initialize the initial guess
+		/*---------------------------------------------------------------------------*/
+		for(RCI_count=0; RCI_count<num_cols; RCI_count++)
 		{
-			dvar=dnrm2(&ivar,residual,&RCI_count);
-			relres_nrm = dvar/rhs_nrm;
-			//relres_nrm = dvar/prec_rhs_nrm;
-			//printf("\nresidual norm non prec = %10.9f\n",dvar);
+			computed_solution[RCI_count]=0.0;
+		}
+		//if(ipar[10] == 1) computed_solution[0]=1000.0;
+
+		/*---------------------------------------------------------------------------
+		/* Check the correctness and consistency of the newly set parameters
+		/*---------------------------------------------------------------------------*/
+		dfgmres_check(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp); 
+		if (RCI_request!=0) goto FAILED;
+
+		/*---------------------------------------------------------------------------
+		/* Compute the solution by RCI (P)FGMRES solver with preconditioning
+		/* Reverse Communication starts here
+		/*---------------------------------------------------------------------------*/
+		ONE:  dfgmres(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp);
+		//cout << "\n dfgmres RCI_request : "<<RCI_request << "\n";
+
+		
+		if(RCI_request==0) goto COMPLETE;
+
+		/*---------------------------------------------------------------------------
+		/* If RCI_request=1, then compute the vector A*tmp[ipar[21]-1]
+		/* and put the result in vector tmp[ipar[22]-1]	
+		/*------------------DEPRECATED ROUTINE (FIND ANOTHER )-------------------------*/
+		if (RCI_request==1)
+		{
+			mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, &tmp[ipar[21]-1], &tmp[ipar[22]-1]);
+		/*	
+			ofstream outfile("RCI_1_matvec_cpp.txt");
+
+		  	if(outfile.is_open())
+		  	{
+		  		for(int k = 0; k < A->n; k++)
+		  			outfile << tmp[(ipar[21]-1)+k] << "\n";
+		  	}
+		  	outfile.close();
+
+		  	char comp_done ;
+		  	printf("\nMATLAB  matvec computation done ? :");
+		  	scanf(" %c[^\n]",&comp_done);
+		  	cout << "\n";
+		  	string matvec_filename = "matvec.txt"; 
+		  	
+		  	if(comp_done == 'y' || comp_done == 'Y')
+		  		r8vec_data_read ( matvec_filename, A->n, &tmp[ipar[22]-1]);
+		*/
+			goto ONE;
+		}
+
+		/*---------------------------------------------------------------------------
+		/* If RCI_request=2, then do the user-defined stopping test
+		/* The residual stopping test for the computed solution is performed here*/
+		if (RCI_request==2)
+		{
+			/* Request to the dfgmres_get routine to put the solution into b[N] via ipar[12]*/
+			ipar[12]=1;
+			
+			//for(int kl = 0; kl < 10; kl++)
+			//	printf("\n comp_sol[%d] = %10.9f",kl, rhs[kl]);
+
+			/* Get the current FGMRES solution in the vector rhs[N] */
+			dfgmres_get(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp, &itercount);
+
+			
+
+			/* Compute the current true residual via MKL (Sparse) BLAS routines */
+			mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, rhs, residual); // A*x for new solution x
+			dvar=-1.0E0;
+			RCI_count=1;
+			daxpy(&ivar, &dvar, JTe, &RCI_count, residual, &RCI_count);  // Ax - A*x_solution
+			
+
+			//cout << "\n Iteration : " << itercount;
+			//for(int k = 0; k < 10; k++)
+			//		printf("\nresildual[%d] = %10.9f\n",k,residual[k]);
+
+			if(ipar[10] == 0)   // non preconditioned system
+			{
+				dvar=dnrm2(&ivar,residual,&RCI_count);
+				relres_nrm = dvar/rhs_nrm;
+				//relres_nrm = dvar/prec_rhs_nrm;
+				//printf("\nresidual norm non prec = %10.9f\n",dvar);
+				
+			}
+			else if(ipar[10] == 1)  //preconditioned system
+			{
+				double *prec_relres = new double[num_cols];
+				//dvar=dnrm2(&ivar,residual,&RCI_count);
+				//printf("\nresidual norm with prec = %10.9f\n",dvar);
+
+				prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,residual,prec_relres);
+				prec_relres_nrm = dnrm2(&ivar,prec_relres,&RCI_count); 
+				delete [] prec_relres;
+				//cout << "\n prec relres norm : " << prec_relres_nrm << "\n";
+				//printf("\nPrec relres norm : %10.9f",prec_relres_nrm);
+				relres_nrm = prec_relres_nrm/prec_rhs_nrm;
+
+			}
+
+			//cout << "\n relres_nrm : " << relres_nrm << "\n";
+			//printf("\nRelres norm = %10.9f\n",relres_nrm);
+
+			if (relres_nrm<=tol) goto COMPLETE;   //taking tolerance as 1e-04
+
+			else goto ONE;
 			
 		}
-		else if(ipar[10] == 1)  //preconditioned system
+
+		/*---------------------------------------------------------------------------
+		/* If RCI_request=3, then apply the preconditioner on the vector
+		/* tmp[ipar[21]-1] and put the result in vector tmp[ipar[22]-1]*/
+		
+		if (RCI_request==3)
 		{
-			double *prec_relres = new double[num_cols];
-			//dvar=dnrm2(&ivar,residual,&RCI_count);
-			//printf("\nresidual norm with prec = %10.9f\n",dvar);
+			//cout << "\n Prec solve ..." << "\n";
+			prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,&tmp[(ipar[21]-1)],&tmp[(ipar[22]-1)]);
+		/*	
+			ofstream outfile("RCI_3_prec_solve_cpp.txt");
 
-			prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,residual,prec_relres);
-			prec_relres_nrm = dnrm2(&ivar,prec_relres,&RCI_count); 
-			delete [] prec_relres;
-			//cout << "\n prec relres norm : " << prec_relres_nrm << "\n";
-			//printf("\nPrec relres norm : %10.9f",prec_relres_nrm);
-			relres_nrm = prec_relres_nrm/prec_rhs_nrm;
+		  	if(outfile.is_open())
+		  	{
+		  		for(int k = 0; k < A->n; k++)
+		  			outfile << tmp[(ipar[21]-1)+k] << "\n";
+		  	}
+		  	outfile.close();
 
+		  	char comp_done ;
+		  	printf("\nMATLAB prec solve computation done ? :");
+		  	scanf(" %c[^\n]",&comp_done);
+		  	cout << "\n";
+		  	string precsolve_filename = "prec_solve.txt"; 
+		  	
+		  	if(comp_done == 'y' || comp_done == 'Y')
+		  		r8vec_data_read ( precsolve_filename, A->n, &tmp[ipar[22]-1]);
+		*/
+			goto ONE;
 		}
 
-		//cout << "\n relres_nrm : " << relres_nrm << "\n";
-		printf("\nRelres norm = %10.9f\n",relres_nrm);
+		/*---------------------------------------------------------------------------
+		/* If RCI_request=4, then check if the norm of the next generated vector is
+		/* not zero up to rounding and computational errors. The norm is contained
+		/* in dpar[6] parameter
+		/*---------------------------------------------------------------------------*/
+		if (RCI_request==4)
+		{
+			if (dpar[6]<1.0E-12) goto COMPLETE;
+			else goto ONE;
+		}
+		/*---------------------------------------------------------------------------
+		/* If RCI_request=anything else, then dfgmres subroutine failed
+		/* to compute the solution vector: computed_solution[N]
+		/*---------------------------------------------------------------------------*/
+		else
+		{
+			goto FAILED;
+		}
+		/*---------------------------------------------------------------------------
+		/* Reverse Communication ends here
+		/* Get the current iteration number and the FGMRES solution (DO NOT FORGET to
+		/* call dfgmres_get routine as computed_solution is still containing
+		/* the initial guess!). Request to dfgmres_get to put the solution
+		/* into vector computed_solution[N] via ipar[12]
+		/*---------------------------------------------------------------------------*/
+		COMPLETE:   ipar[12]=0;
+		dfgmres_get(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp, &itercount);
+		//cout << "The system has been solved  in " << itercount << " iterations!\n";
+	//	cout << "\n RCI_request : "<< RCI_request << "\n";
+	/*
+		printf("\nThe following solution has been obtained: \n");
+		for (RCI_count=0;RCI_count<10;RCI_count++)                //PRINTING ONLY THE FIRST 10 MEMBERS
+		{
+			printf("computed_solution[%d]=%f\n",RCI_count,computed_solution[RCI_count]);
+		}
+	*/
 
-		if (relres_nrm<1.0E-4) goto COMPLETE;   //taking tolerance as 1e-04
+		//store the solution into delta 
+		RCI_count = 1;
+		//dcopy(&ivar, computed_solution, &RCI_count, delta, &RCI_count); 
+		//for(int q = 0; q < num_cols; q++) delta[q] = computed_solution[q];
+	/*	for (RCI_count=0;RCI_count<10;RCI_count++)                //PRINTING ONLY THE FIRST 10 MEMBERS
+		{
+			printf("delta[%d]=%f\n",RCI_count,delta[RCI_count]);
+		}
+	*/
+		MKL_Free_Buffers();
 
-		else goto ONE;
+
+		//  Free the numeric factorization.
+	  	umfpack_di_free_numeric ( &Numeric_D );
+	  	umfpack_di_free_numeric ( &Numeric_MSC );
+
+		//delete [] Jt_e; 
 		
-	}
+		delete [] MSC->p; delete [] MSC->i;delete [] MSC->x;
+		delete [] D->p;  delete [] D->i;delete [] D->x; 
+		delete [] A->p; delete [] A->i; delete [] A->x; 
+		delete [] L->p; delete [] L->i; delete [] L->x; 
+		delete L; delete A;delete MSC; delete D;  
 
-	/*---------------------------------------------------------------------------
-	/* If RCI_request=3, then apply the preconditioner on the vector
-	/* tmp[ipar[21]-1] and put the result in vector tmp[ipar[22]-1]*/
-	
-	if (RCI_request==3)
-	{
-		//cout << "\n Prec solve ..." << "\n";
-		prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,&tmp[(ipar[21]-1)],&tmp[(ipar[22]-1)]);
-		goto ONE;
-	}
+		delete [] tmp; delete [] ipar; delete [] dpar;
+		delete [] rhs; delete [] computed_solution; delete [] residual;
+		delete [] acsr; delete [] ia; delete [] ja;
+		delete [] lcsr; delete [] il; delete [] jl;
 
-	/*---------------------------------------------------------------------------
-	/* If RCI_request=4, then check if the norm of the next generated vector is
-	/* not zero up to rounding and computational errors. The norm is contained
-	/* in dpar[6] parameter
-	/*---------------------------------------------------------------------------*/
-	if (RCI_request==4)
-	{
-		if (dpar[6]<1.0E-12) goto COMPLETE;
-		else goto ONE;
-	}
-	/*---------------------------------------------------------------------------
-	/* If RCI_request=anything else, then dfgmres subroutine failed
-	/* to compute the solution vector: computed_solution[N]
-	/*---------------------------------------------------------------------------*/
-	else
-	{
-		goto FAILED;
-	}
-	/*---------------------------------------------------------------------------
-	/* Reverse Communication ends here
-	/* Get the current iteration number and the FGMRES solution (DO NOT FORGET to
-	/* call dfgmres_get routine as computed_solution is still containing
-	/* the initial guess!). Request to dfgmres_get to put the solution
-	/* into vector computed_solution[N] via ipar[12]
-	/*---------------------------------------------------------------------------*/
-	COMPLETE:   ipar[12]=0;
-	dfgmres_get(&ivar, computed_solution, JTe, &RCI_request, ipar, dpar, tmp, &itercount);
-	cout << "The system has been solved  in " << itercount << " iterations!\n";
-//	cout << "\n RCI_request : "<< RCI_request << "\n";
-	printf("\nThe following solution has been obtained: \n");
-	for (RCI_count=0;RCI_count<10;RCI_count++)                //PRINTING ONLY THE FIRST 10 MEMBERS
-	{
-		printf("computed_solution[%d]=%10.6f\n",RCI_count,computed_solution[RCI_count]);
-	}
+		return 0;
 
-	MKL_Free_Buffers();
+		FAILED: cout << "The solver has returned the ERROR code " << RCI_request << "\n";
 
+		MKL_Free_Buffers();
 
-	//  Free the numeric factorization.
-  	umfpack_di_free_numeric ( &Numeric_D );
-  	umfpack_di_free_numeric ( &Numeric_MSC );
+		return 0;
 
-	delete [] JTe; 
-	delete [] A->p; delete [] A->i; delete [] A->x; 
-	delete [] MSC->p; delete [] MSC->i;delete [] MSC->x;
-	delete [] D->p;  delete [] D->i;delete [] D->x; 
-	delete [] L->p; delete [] L->i; delete [] L->x;
-	delete MSC; delete D; delete A;  delete L; 
+	    NOT_CONVERGE: cout << "The relative residual did not change for successive iterations !\n";
 
-	delete [] tmp; delete [] ipar; delete [] dpar;
-	delete [] rhs; delete [] computed_solution; delete [] residual;
-	delete [] acsr; delete [] ia; delete [] ja;
-	delete [] lcsr; delete [] il; delete [] jl;
-
-	return 0;
-
-	FAILED: cout << "The solver has returned the ERROR code " << RCI_request << "\n";
-
-	MKL_Free_Buffers();
-
-	return 0;
-
-    NOT_CONVERGE: cout << "The relative residual did not change for successive iterations !\n";
-
-    return 0;
-
-
-}
+	    return 0;
+	 }

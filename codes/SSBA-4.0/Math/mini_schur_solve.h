@@ -25,7 +25,7 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 3204 //hardcoding it for the time being
+	#define sizeG 441 //hardcoding it for the time being
 	#define size_MKL_IPAR 128
 
 	/* This function densifies the jth column of input matrix A
@@ -75,8 +75,8 @@ namespace V3D
 			else continue;
 		}
 
-		if(j < AA->n) AA->p[j+1] = row_arr_count+nz_count;
-
+		//if(j < AA->n) AA->p[j+1] = row_arr_count+nz_count;
+		AA->p[j+1] = row_arr_count+nz_count;
 		return;
 	}
 
@@ -103,6 +103,9 @@ namespace V3D
 		num_status = umfpack_di_numeric ( PD->p, PD->i, PD->x, Symbolic, &Numeric, null, null );
 		//cout << "\n Numeric status :" << num_status << "\n";
 
+		//  Free the symbolic factorization memory.
+	  	umfpack_di_free_symbolic ( &Symbolic );
+
 		for(j=0;j<PU->n;j++)
 		//for(j=0;j<1;j++)
 		{
@@ -123,8 +126,7 @@ namespace V3D
 			delete []  x1; delete [] b;
 		}
 
-		//  Free the symbolic factorization memory.
-	  	umfpack_di_free_symbolic ( &Symbolic );
+		
 	  	//  Free the numeric factorization.
 	  	umfpack_di_free_numeric ( &Numeric );
 
@@ -145,18 +147,43 @@ namespace V3D
 
 		cs_di* LDU;
 		
+		//cout << "\n nzmax : " << AA->nzmax << endl;
 		compute_PDinv_times_PU(PD,PU,AA);
-
+		int ok = cs_di_sprealloc(AA,AA->p[AA->n]); //cout << "\nAA->nzmax : " << AA->nzmax << endl;
 		//cout << "\nAA->p[AA->n] : " << AA->p[AA->n] << "\n";
 
 
 		LDU = cs_di_multiply(PL,AA);
-		
 
 		delete[] AA->p; delete[] AA->i; delete[] AA->x;
 		delete AA; 
 
-		
+/*
+		int kk;
+		for(kk = 0;kk < 1; kk++)
+		{
+			int ll = LDU->p[kk];
+			int nn;
+			for(nn = ll; nn < LDU->p[kk+1]; nn++)
+				cout << "\nLDU->i["<<nn<<"] = " <<LDU->i[nn] << endl;
+		}
+
+*/
+		/*
+		int j,k,l;
+
+		for(j=0;j< LDU->n; j++)
+		{
+			if(j < (LDU->n)-1)
+			{
+				sort_rows_val(&(LDU->i[LDU->p[j]]),&(LDU->x[LDU->p[j]]),(LDU->p[j+1]-LDU->p[j]));	
+			}
+			else
+			{
+				sort_rows_val(&(LDU->i[LDU->p[j]]),&(LDU->x[LDU->p[j]]),((LDU->nzmax)-(LDU->p[j])));
+			}
+		}
+		*/
 		cs_di* S ;
 
 
@@ -334,12 +361,12 @@ namespace V3D
 		int nmsc_block = 20 ;  //no of blocks for G
 		int r = sizeG % nmsc_block;
 		int sz = (sizeG - r)/nmsc_block ; //size of each nmsc block for G
-		int r1 = 0,r2 = sz; //C++ convention   
+		int r1 = 0,r2 = sz;   
 		int nD = nmsc_block ; //no of blocks for D (same as that for G)
 		int sizeD = D->m;
 		int rD = sizeD % nD;
 		int szD = (sizeD - rD)/nD; //size of each block for D
-		int rD1 = 0,rD2 = szD; //C++ convention
+		int rD1 = 0,rD2 = szD; 
 
 		//cout << "\n r1 :"<<r1 <<"\tr2 :"<<r2<<"\n";
 		//cout << "\n rD1 :"<<rD1 <<"\trD2 :"<<rD2<<"\n";
@@ -970,13 +997,15 @@ namespace V3D
 
 		int ok = cs_di_sprealloc(MSC,MSC->p[sizeG]);
 		//cout << "\n ok : "<< ok << "\n";
-		/*
-		for(int k = 0; k < 1; k++)
+		cout << "\n MSC->nzmax : " << MSC->nzmax << endl;
+		for(int k = 98; k < 99; k++)
 		{
-			for(int l = MSC->p[k]; l<20; l++)
-				printf("\nMSC->i[%d] = %d\t\tMSC->x[%d] = %10.9f",l,MSC->i[l],l,MSC->x[l]);
+			//cout << "\n In loop .. " << endl;
+			for(int l = MSC->p[k]; l<MSC->p[k+1]; l++)
+				printf("\nMSC->i[%d] = %d\t\tMSC->x[%d] = %lf",l,MSC->i[l],l,MSC->x[l]);
+				//cout << "\n l : " << l << endl;
 		}
-		*/
+		
 		/************LU Factorization of D and MSC******************************/
 
 		sym_status = umfpack_di_symbolic ( D->m, D->n, D->p, D->i, D->x, &Symbolic_D, solve_null, solve_null );

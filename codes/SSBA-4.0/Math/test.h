@@ -313,7 +313,7 @@ void test_prec_solve(cs_di_sparse* A, cs_di_sparse* D,cs_di_sparse* MSC,void *Nu
     for (j = 0; j < A->n; j++)
     {
     	//cout << Jt_e[j];
-      	fprintf(fp, "%f\n", prec_sol[j]);
+      	fprintf(fp, "%15.15lf\n", prec_sol[j]);
     }
 
     fclose(fp);

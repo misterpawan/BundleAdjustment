@@ -2,11 +2,11 @@
 function test_BA
     clc;
     warning('off','all');
-    filepath = '~/Test/356';
+    filepath = '~/Test/49';
     addpath(filepath);
     addpath('../ddm');
-    lhs_filename = 'JTJ356_1.mat';
-    rhs_filename = 'JTe356_1.mat';
+    lhs_filename = 'JTJ49_1.mat';
+    rhs_filename = 'JTe49_1.mat';
 
     %P = load(strcat(filepath,lhs_filename),'-mat')
     P = load(lhs_filename,'-mat')
@@ -42,6 +42,7 @@ function test_BA
     tic;
     xx = normal_solve(B, b);
     normal_solve_time = toc;
+    fprintf("\nDirect solve done!\n");
 %     xx = full(xx);
 %     for i = 1 : 10
 %         fprintf("\nxx[%d] = %f\n",i,xx(i));
@@ -52,7 +53,7 @@ function test_BA
     %[sizes_parts, A, p] = domain_decomposition(B, nparts);
     A=B;
     %sizeG = m - sum(sizes_parts(1:nparts))
-    sizeG = 3204;
+    sizeG = 441;
     sizeD = m - sizeG; 
     %keyboard;
 %     D = A(1 : sizeD, 1 : sizeD);
@@ -200,7 +201,12 @@ function test_BA
 %         fp = fopen("~/rand_sol_MSC_20.txt","w");
 %         fprintf(fp,"%10.9f\n",rand_sol);
 %         fclose(fp);
-%          keyboard;
+          GS = full(GS);
+%           for i = 62:124
+%               fprintf("GS(%d) = %f\n",i,GS(99,i));
+%           end
+          
+          keyboard;
         clear S PD PU PL PG
         %clear GS
  
@@ -235,7 +241,9 @@ tic;
  
    prec_rhs = ones(m,1);
     prec_sol = nssolve2(prec_rhs);
+%     prec_sol = UG\(LG\prec_rhs);
     pp = J * prec_sol;
+%     pp = GS*prec_sol;
 %     fp = fopen("~/rhs_MSC_20.txt","w");
 %     fprintf(fp,"%d\n",prec_rhs);
 %     fclose(fp);
