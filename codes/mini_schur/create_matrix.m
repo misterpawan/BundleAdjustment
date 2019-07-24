@@ -15,12 +15,18 @@ clc
 % [row,col,val] = find(A);
 % fp = fopen("")
 
-filepath = '~/Test/49';
+filepath = '~/Test/138';
 addpath(filepath);
 
-lhs_filename = 'JTJ49_1.mat';
-P = load(lhs_filename,'-mat');
+lhs_filename = 'JTJ138_1.mat';
+P = load(lhs_filename)
 A = P.lhs;
+%[row, col, val] = find(A);
+
+%nnz(find(A(:,2)< 1e-16))
+
+% A = spconvert(JTJ138_1);
+
 [m,n] = size(A);
 
 % A = full(A);
@@ -64,7 +70,7 @@ fprintf("\nDone..!\n");
     %[sizes_parts, A, p] = domain_decomposition(B, nparts);
 %     A=B;
     %sizeG = m - sum(sizes_parts(1:nparts))
-    sizeG = 441;
+    sizeG = 1242;
     sizeD = m - sizeG; 
     %keyboard;
 %     D = A(1 : sizeD, 1 : sizeD);
@@ -130,7 +136,11 @@ fprintf("\nDone..!\n");
            PU = U(rD1 : rD2 + ol, r1 : r2 + ol); 
            PL = PU'; % for BA L = U'
            PG = G(r1 : r2 + ol, r1 : r2 + ol);
-
+           
+%            fprintf("\n nnz(PD) = %d", nnz(PD));
+%            fprintf("\n nnz(PL) = %d", nnz(PL));
+%            fprintf("\n nnz(PU) = %d", nnz(PU));
+%            fprintf("\n nnz(PG) = %d", nnz(PG));
           % printf block sizes
 %            fprintf('\nPrinting block sizes for mini Schur complement: %d\n', i);
 %            fprintf('block size of G = %d x %d (%d : %d, %d : %d) \n', size(PG,1), size(PG,2), r1,r2, r1, r2);
@@ -138,19 +148,22 @@ fprintf("\nDone..!\n");
 %            fprintf('block size of L = %d x %d (%d : %d, %d : %d) \n', size(PL,1), size(PL,2), r1, r2, rD1, rD2);
 %            fprintf('block size of D = %d x %d (%d : %d, %d : %d) \n\n', size(PD,1), size(PD,2), rD1, rD2, rD1, rD2);
            invDU = PD\PU;
-           nnz(invDU)
+           %nnz(invDU)
+           fprintf("\n nnz(invDU) = %d", nnz(invDU));
            invDU = spconvert(invDU);
-           keyboard;
+%            keyboard;
            S{i} = PG - PL * invDU; 
+%            fprintf("\n nnz(PL * invDU) = %d", nnz(PL * invDU));
+           
            GS(r1:r2 + ol, r1 : r2 + ol) = S{i}; 
            GS = sparse(GS); 
            r1 = r2 + 1; 
            r2 = r2 + sz;
            rD1 = rD2 + 1;
            rD2 = rD2 + szD; 
-           %nnz(GS)
+           fprintf("\n nnz(GS) = %d", nnz(GS));
         end
-        %keyboard;
+%         keyboard;
         oll = 0; % overlap size for 2nd last msc
         i = i+1;
 
@@ -169,9 +182,11 @@ fprintf("\nDone..!\n");
 %            fprintf('block size of L = %d x %d (%d : %d, %d : %d) \n', size(PL,1), size(PL,2), r1, r2, rD1, rD2);
 %            fprintf('block size of D = %d x %d (%d : %d, %d : %d) \n\n', size(PD,1), size(PD,2), rD1, rD2, rD1, rD2);
            invDU = PD\PU;
-           nnz(invDU)
+           fprintf("\n nnz(invDU) = %d", nnz(invDU));
            S{i} = PG - PL * invDU; 
            GS(r1:r2+oll, r1:r2+oll) = S{i};
+           
+           fprintf("\n nnz(GS) = %d", nnz(GS));
            GS = sparse(GS); 
            r1 = r2+1;
            rD1 = rD2+1;
@@ -189,9 +204,11 @@ fprintf("\nDone..!\n");
           PG = G(r1:r2, r1:r2);
 
           invDU = PD\PU;
-          nnz(invDU)
+          fprintf("\n nnz(invDU) = %d", nnz(invDU));
           S{i} = PG - PL * (PD \ PU); 
           GS(r1:r2, r1:r2) = S{i};
+          
+          fprintf("\n nnz(GS) = %d\n", nnz(GS));
           GS = sparse(GS); 
         end 
         %det_GS = det(GS)

@@ -31,8 +31,6 @@ CMakeFiles/V3D.dir/Math/v3d_nonlinlsq.cpp.o
  .././Math/block_jacobi_solve.h
  .././Math/mini_schur_solve.h
  .././Math/sort.h
- .././Math/test.h
- .././Math/util.h
  .././Math/v3d_ldl_private.h
  .././Math/v3d_linear.h
  .././Math/v3d_linear_tnt.h

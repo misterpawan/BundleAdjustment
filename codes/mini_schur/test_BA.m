@@ -2,11 +2,11 @@
 function test_BA
     clc;
     warning('off','all');
-    filepath = '~/Test/49';
+    filepath = '~/Test/138';
     addpath(filepath);
     addpath('../ddm');
-    lhs_filename = 'JTJ49_1.mat';
-    rhs_filename = 'JTe49_1.mat';
+    lhs_filename = 'JTJ138_1.mat';
+    rhs_filename = 'JTe138_1.mat';
 
     %P = load(strcat(filepath,lhs_filename),'-mat')
     P = load(lhs_filename,'-mat')
@@ -53,7 +53,7 @@ function test_BA
     %[sizes_parts, A, p] = domain_decomposition(B, nparts);
     A=B;
     %sizeG = m - sum(sizes_parts(1:nparts))
-    sizeG = 441;
+    sizeG = 1242;
     sizeD = m - sizeG; 
     %keyboard;
 %     D = A(1 : sizeD, 1 : sizeD);
@@ -206,9 +206,9 @@ function test_BA
 %               fprintf("GS(%d) = %f\n",i,GS(99,i));
 %           end
           
-          keyboard;
+%           keyboard;
         clear S PD PU PL PG
-        %clear GS
+%         clear GS
  
 %         setup.type='ilutp'; 
 %         setup.droptol = 1e-03; %ntol(ii); 

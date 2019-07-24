@@ -15,8 +15,8 @@ using namespace std;
 #include "umfpack.h"
 #include "sort.h"
 #include "mkl.h"
-#include "util.h"
-#include "test.h"
+//#include "util.h"
+//#include "test.h"
 
 
 using namespace V3D;
@@ -25,28 +25,21 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 441 //hardcoding it for the time being
+	#define sizeG 1242 //hardcoding it for the time being
 	#define size_MKL_IPAR 128
-
+	#define NUM_MSC_BLOCKS 20
 	/* This function densifies the jth column of input matrix A
 	*/
-	void densify_column(cs_di* A, int j,double* b)
+	void densify_column(cs_di* PU, int j,double* b)
 	{
 		//cout << "\n In densify....! \n";
 		//double* b = new double[A->m];
 		
 		int k;
-		int l = A->p[j]; //start index for rows of column j
-
-		for(k = 0; k < A->m && l < A->p[j+1]; k++ )
-		{
-			if(k == A->i[l])
-			{
-				b[k] = A->x[l];
-				l += 1;
-			}
-			else b[k] = 0;
-		}
+		int  l = PU->p[j];
+		int u = PU->p[j+1];
+		for(int k=l; k < u; k++)
+			b[PU->i[k]] = PU->x[k];
 
 		return ;
 	}
@@ -65,7 +58,7 @@ namespace V3D
 
 		for(k=0;k<AA->m;k++)
 		{
-			if(x1[k] != 0)
+			if(abs(x1[k]) >= 1e-16)
 			{
 				//nz_count += 1;
 				AA->i[row_arr_count+nz_count] = k;
@@ -112,11 +105,20 @@ namespace V3D
 			b = new double[PU->m]; //vector to store the densified rhs at each iteration
 			x1 = new double[PD->n]; //vector to store the solution at each iteration
 
+			for(int k = 0; k < PU->m; k++)
+            	b[k] = 0.0;
+
 			densify_column(PU,j,b); // densifies the jth column of PU and stores it in b
 
 	  		
 	  		//  Using the numeric factorization, solve the linear system.
-	  		solve_status = umfpack_di_solve ( UMFPACK_A, PD->p, PD->i, PD->x, x1, b, Numeric, null, null );
+	  		if((PU->p[j+1] - PU->p[j]) > 0)
+	  			solve_status = umfpack_di_solve ( UMFPACK_A, PD->p, PD->i, PD->x, x1, b, Numeric, null, null );
+	  		else
+	  		{
+	  			for(int k = 0; k < PD->n; k++)
+	  				x1[k] = 0.0;
+	  		}
 	  		//cout << "\n Solve status :" << solve_status << "\n";
 		
 			
@@ -149,7 +151,7 @@ namespace V3D
 		
 		//cout << "\n nzmax : " << AA->nzmax << endl;
 		compute_PDinv_times_PU(PD,PU,AA);
-		int ok = cs_di_sprealloc(AA,AA->p[AA->n]); //cout << "\nAA->nzmax : " << AA->nzmax << endl;
+		int ok = cs_di_sprealloc(AA,AA->p[AA->n]); // cout << "\nAA->nzmax : " << AA->nzmax << endl;
 		//cout << "\nAA->p[AA->n] : " << AA->p[AA->n] << "\n";
 
 
@@ -220,7 +222,7 @@ namespace V3D
 			{
 				for(j = S->p[l]; j<S->p[l+1]; j++)
 				{
-					if(abs(S->x[j]) >= 1e-12)
+					if(abs(S->x[j]) >= 1e-16)
 					{	
 						nzStol += 1;
 					}
@@ -231,7 +233,7 @@ namespace V3D
 			{
 				for(j = S->p[l]; j < S->nzmax; j++)
 				{
-					if(abs(S->x[j]) >= 1e-12)
+					if(abs(S->x[j]) >= 1e-16)
 					{
 						nzStol += 1;
 					}
@@ -250,7 +252,7 @@ namespace V3D
 			{
 				for(j = S->p[l]; j<S->p[l+1]; j++)
 				{
-					if(abs(S->x[j]) >= 1e-12)
+					if(abs(S->x[j]) >= 1e-16)
 					{
 						S_tol->i[k] = S->i[j];
 						S_tol->x[k] = S->x[j];
@@ -262,7 +264,7 @@ namespace V3D
 			{
 				for(j = S->p[l]; j < S->nzmax; j++)
 				{
-					if(abs(S->x[j]) >= 1e-12)
+					if(abs(S->x[j]) >= 1e-16)
 					{
 						S_tol->i[k] = S->i[j];
 						S_tol->x[k] = S->x[j];
@@ -325,7 +327,7 @@ namespace V3D
 		}
 		*total_nz += S_tol->nzmax; //cout << "\nTotal nnz : " << *total_nz << "\n";
 		//cout << "\n Total nnz : "<< S->nzmax << "\n";
-		//cout << "\n Last element : "<< S->x[S->nzmax-1] << "\n";
+		//cout << "\n Last element : "<< S_tol->x[S->nzmax-1] << "\n";
 	/*
 		for(j=r1;j< r2+ol; j++)
 		{
@@ -358,7 +360,7 @@ namespace V3D
 	*/
 	void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* U,cs_di* G)
 	{
-		int nmsc_block = 20 ;  //no of blocks for G
+		int nmsc_block = NUM_MSC_BLOCKS ;  //no of blocks for G
 		int r = sizeG % nmsc_block;
 		int sz = (sizeG - r)/nmsc_block ; //size of each nmsc block for G
 		int r1 = 0,r2 = sz;   
@@ -997,7 +999,8 @@ namespace V3D
 
 		int ok = cs_di_sprealloc(MSC,MSC->p[sizeG]);
 		//cout << "\n ok : "<< ok << "\n";
-		cout << "\n MSC->nzmax : " << MSC->nzmax << endl;
+		//cout << "\n MSC->nzmax : " << MSC->nzmax << endl;
+		/*
 		for(int k = 98; k < 99; k++)
 		{
 			//cout << "\n In loop .. " << endl;
@@ -1005,7 +1008,7 @@ namespace V3D
 				printf("\nMSC->i[%d] = %d\t\tMSC->x[%d] = %lf",l,MSC->i[l],l,MSC->x[l]);
 				//cout << "\n l : " << l << endl;
 		}
-		
+		*/
 		/************LU Factorization of D and MSC******************************/
 
 		sym_status = umfpack_di_symbolic ( D->m, D->n, D->p, D->i, D->x, &Symbolic_D, solve_null, solve_null );
@@ -1104,7 +1107,7 @@ namespace V3D
 	  	//}
 	  	//outfile.close();
 	    //cout << "\n MSC->n : " << MSC->n << endl;
-	    test_prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl);
+	    //test_prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl);
 	    //delete [] matvec; delete [] randvec;
 	
 		/*---------------------------------------------------------------------------
