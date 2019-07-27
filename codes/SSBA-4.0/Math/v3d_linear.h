@@ -714,33 +714,33 @@ namespace V3D
       Elem const * values = A.getValues();
       //string filename = "JTJ49_1";
       int j, k;
-      FILE *fp_col;
-      FILE *fp_row;
-      FILE *fp_val;
-      
+      //FILE *fp_col;
+      //FILE *fp_row;
+      //FILE *fp_val;
+      /*
       if(iteration == 0)
       {
          fp_col = fopen("JTJ49_1_col.txt","w");
          fp_row = fopen("JTJ49_1_row.txt","w");
          fp_val = fopen("JTJ49_1_val.txt","w");
-      }
+      }*/
      /* else if (iteration == 1)
       {
          fp_col = fopen("JTJ49_2_col.txt","w");
          fp_row = fopen("JTJ49_2_row.txt","w");
          fp_val = fopen("JTJ49_2_val.txt","w");
       }*/  
-      /*
+      
       FILE* fp;
       switch(iteration)
       {
-      	case 0: fp = fopen("JTJ49_1.txt","w"); break;
+      	case 0: fp = fopen("JTJ1778_1.txt","w"); break;
       	//case 1: fp = fopen("JTJ49_2.txt","w"); break;
       	//case 2: fp = fopen("JTJ49_3.txt","w"); break;
       	//case 3: fp = fopen("JTJ49_4.txt","w"); break;
       	//case 4: fp = fopen("JTJ49_5.txt","w"); break;
       }
-      */
+      
       //FILE* fp = fopen(filename,"w");
       
       // Dump Matrix in Matlab Matrix Format - indexing with 1
@@ -750,7 +750,7 @@ namespace V3D
       //freopen("test9.txt","w",stdout);
 
       /***** writes the matrix in COO format ***/
-      /*
+      
       for (j = 0; j < nCols; j++)
       {
          const int start = colStarts[j];
@@ -762,8 +762,10 @@ namespace V3D
       }
     
 
-      fclose(fp);*/
+      fclose(fp);
+      
       /*****Dump matrix to file in CSC format****/
+      /*
       for(j = 0;j<nCols;j++)
       {
          fprintf(fp_col, "%d\n", colStarts[j]);
@@ -777,7 +779,7 @@ namespace V3D
       }
       fclose(fp_row);
       fclose(fp_val);
-   
+      */
       //fclose(stdout);
       
 
@@ -798,7 +800,7 @@ namespace V3D
       FILE* fp;
       switch(iteration)
       {
-      	case 0: fp = fopen("JTe49_1.txt","w"); break;
+      	case 0: fp = fopen("JTe1778_1.txt","w"); break;
       	//case 1: fp = fopen("JTe49_2.txt","w"); break;
       	//case 2: fp = fopen("JTe49_3.txt","w"); break;
       	//case 3: fp = fopen("JTe49_4.txt","w"); break;

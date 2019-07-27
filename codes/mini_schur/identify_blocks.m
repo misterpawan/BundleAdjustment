@@ -1,11 +1,13 @@
 clc;
-matfile = '~/Test/49/JTJ49_1.mat';
+matfile = '~/Test/1778/JTJ1778_1.txt';
 
-P = load(matfile); A = P.lhs;
+% P = load(matfile); A = P.lhs;
+A = load(matfile);
+A = spconvert(A);
 
 [m,n] = size(A)
-
-p = 885*9;
+keyboard;
+p = 1778*9;
 
 min_row = m;
 % 

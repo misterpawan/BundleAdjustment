@@ -84,6 +84,67 @@ namespace V3D
    }
 #endif
 
+
+// lifted schur cost define start
+
+#if !defined(USE_TUKEYS_BIWEIGHT)
+   inline double kappa(double const tau, double const w2) { return 0.70710678118*tau*(w2 - 1); }
+   inline double dkappa(double const tau, double const w2) { return 0.70710678118*tau; }
+#else
+   inline double kappa(double const tau, double const w2)
+   {
+      double const f = sqrt(1.0/3);
+      double const w = sqrt(w2);
+      return f * tau * (w - 1)*sqrt(2*w+1);
+   }
+   inline double dkappa(double const tau, double const w2)
+   {
+      double const f = sqrt(3.0)/2;
+      double const w = sqrt(w2);
+      return f * tau / sqrt(2*w+1);
+   }
+#endif
+
+// The mapping w |-> h(w)
+#if 1
+   inline double omega(double const w) { return w; }
+   inline double domega(double const w) { return 1.0; }
+   inline double omega2_inv(double const w) { return sqrt(w); }
+#elif 0
+   //double const slope_w = 0.25; //3.0;
+   double const slope_w = 4.0;
+   inline double omega(double const w) { return slope_w*w; }
+   inline double domega(double const w) { return slope_w; }
+   inline double omega2_inv(double const w) { return sqrt(w)/slope_w; }
+#elif 1
+   inline double omega(double const w) { return 0.5*(w/sqrt(1+w*w)+1); }
+   inline double domega(double const w) { return 0.5*sqrt(1+w*w)/(1+w*w); }
+   inline double omega2_inv(double const w) { double const ww = sqrt(w); return (2*ww-1.0)/sqrt(1.0 - sqr(2*ww-1)); }
+// #elif 1
+//    inline double omega(double const w) { return w*w; }
+//    inline double domega(double const w) { return 2.0*w; }
+//    inline double omega2_inv(double const w) { return sqrt(sqrt(w)); }
+// #elif 0
+//    inline double omega(double const w) { return sqr(std::max(0.0, w)); }
+//    inline double domega(double const w) { return (w > 0) ? 2.0*w : 0.0; }
+//    inline double omega2_inv(double const w) { return sqrt(sqrt(w)); }
+#elif 1
+   // h(w) = exp(w)
+   double const exp_const = 1.0/4.0;
+   inline double omega(double const w) { return exp(w * exp_const); }
+   inline double domega(double const w) { return exp_const * exp(w * exp_const); }
+   inline double omega2_inv(double const w) { return log(w)/2.0/exp_const; }
+#else
+   // h(w) = soft-max(0, w), logistic
+   double const exp_const = 4.0;
+   inline double omega(double const w) { return exp_const * log(1.0 + exp(w/exp_const)); }
+   inline double domega(double const w) { double const exp_w = exp(w/exp_const); return exp_w/(1.0 + exp_w); }
+   inline double omega2_inv(double const w) { return exp_const * log(exp(sqrt(w)/exp_const) - 1.0); }
+#endif
+
+//  lifted schur cost define end
+
+
    inline double
    showErrorStatistics(double const avg_focal_length, double const inlierThreshold,
                        vector<CameraMatrix> const& cams,
@@ -126,12 +187,15 @@ namespace V3D
                  vector<int> const& correspondingView,
                  vector<int> const& correspondingPoint)
    {
+      
       int const K = measurements.size();
 
       double const tau2 = inlierThreshold*inlierThreshold;
       double const avg_focal_length2 = avg_focal_length*avg_focal_length;
 
       double obj = 0.0;
+      double E_data = 0.0, E_reg = 0.0;
+      
       for (int k = 0; k < K; ++k)
       {
          int const i = correspondingView[k];
@@ -140,9 +204,42 @@ namespace V3D
 
          double const r2 = avg_focal_length2 * sqrNorm_L2(p - measurements[k]);
          obj += psi(tau2, r2);
+
+         // for lifted schur objective
+         
+         //double const r2 = avg_focal_length2*sqrNorm_L2(p - measurements[k]);
+         //double const weights = psi_weight(tau2, r2);
+         //double const w2 = sqr(omega(weights));
+         //E_data += w2*r2;
+         //E_reg += sqr(kappa(inlierThreshold, w2));
+         //E_data /= 2.0; E_reg /= 2.0;
+         //obj += psi_hat(tau2, r2, w2);
+         //obj += psi(tau2, r2);
+         //obj += r2; 
+         //obj += E_data + E_reg;
       }
       //cout << "true objective = " << obj << endl;
       return obj;
+      
+
+      // Computing lifted schur objective
+
+      /*
+      double E_data = 0.0, E_reg = 0.0;
+
+      for (int k = 0; k < _nMeasurements; ++k)
+      {
+         double const w2 = sqr(omega(_weights[k]));
+         //double const w2 = sqr(omega(_weights[k]));
+         E_data += w2*sqrNorm_L2(residuals[k]);
+         E_reg += sqr(kappa(_inlierThreshold, w2));
+      }
+      E_data /= 2.0; E_reg /= 2.0;
+      //cout << "evalCost(): E_data = " << E_data << " E_reg = " << E_reg << endl;
+      obj = E_data + E_reg;
+
+      return obj; 
+      */
    }
 
 //**********************************************************************

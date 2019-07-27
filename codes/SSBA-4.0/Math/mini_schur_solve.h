@@ -15,9 +15,6 @@ using namespace std;
 #include "umfpack.h"
 #include "sort.h"
 #include "mkl.h"
-//#include "util.h"
-//#include "test.h"
-
 
 using namespace V3D;
 
@@ -25,16 +22,13 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 1242 //hardcoding it for the time being
+	#define sizeG 16002 
 	#define size_MKL_IPAR 128
 	#define NUM_MSC_BLOCKS 20
-	/* This function densifies the jth column of input matrix A
-	*/
+
+	//This function densifies the jth column of input matrix PU
 	void densify_column(cs_di* PU, int j,double* b)
 	{
-		//cout << "\n In densify....! \n";
-		//double* b = new double[A->m];
-		
 		int k;
 		int  l = PU->p[j];
 		int u = PU->p[j+1];
@@ -44,12 +38,11 @@ namespace V3D
 		return ;
 	}
 
-	/* This function stores the dense array x1 into the jth column of AA as a sparse array
-	*/
+	//This function stores the dense array x1 into the jth column of AA as a sparse array
 	void make_x_sparse(cs_di* AA,int j,double* x1)
 	{
 		int k;
-		int row_arr_count; //displacement on the row and val array where the next iterm must be stored.
+		int row_arr_count; 
 		int nz_count = 0;
 
 		if(j==0) AA->p[j] = 0;
@@ -60,7 +53,6 @@ namespace V3D
 		{
 			if(abs(x1[k]) >= 1e-16)
 			{
-				//nz_count += 1;
 				AA->i[row_arr_count+nz_count] = k;
 				AA->x[row_arr_count+nz_count] = x1[k];  
 				nz_count += 1;
@@ -68,12 +60,11 @@ namespace V3D
 			else continue;
 		}
 
-		//if(j < AA->n) AA->p[j+1] = row_arr_count+nz_count;
 		AA->p[j+1] = row_arr_count+nz_count;
 		return;
 	}
 
-	/* This function does the computation PD\PU (MATLAB '\') by solving 
+	/* This function does the computation PD\PU (MATLAB inverse operator) by solving 
 	a linear system with multiple right hand sides. The output is written 
 	in the AA structure.
 	*/
@@ -86,21 +77,16 @@ namespace V3D
 		double* b;
 		double* x1;
 		int sym_status,num_status,solve_status;
-		//int nz_count;
 
-		//  From the matrix data, create the symbolic factorization information.
 		sym_status = umfpack_di_symbolic ( PD->m, PD->n, PD->p, PD->i, PD->x, &Symbolic, null, null );
 		//cout << "\n Symbolic status :" << sym_status << "\n";
 
-		//  From the symbolic factorization information, carry out the numeric factorization.
 		num_status = umfpack_di_numeric ( PD->p, PD->i, PD->x, Symbolic, &Numeric, null, null );
 		//cout << "\n Numeric status :" << num_status << "\n";
 
-		//  Free the symbolic factorization memory.
 	  	umfpack_di_free_symbolic ( &Symbolic );
 
 		for(j=0;j<PU->n;j++)
-		//for(j=0;j<1;j++)
 		{
 			b = new double[PU->m]; //vector to store the densified rhs at each iteration
 			x1 = new double[PD->n]; //vector to store the solution at each iteration
@@ -112,6 +98,7 @@ namespace V3D
 
 	  		
 	  		//  Using the numeric factorization, solve the linear system.
+	  		//  No need to solve if the jth column has no zeros. Simply set the solution vector x1=0 
 	  		if((PU->p[j+1] - PU->p[j]) > 0)
 	  			solve_status = umfpack_di_solve ( UMFPACK_A, PD->p, PD->i, PD->x, x1, b, Numeric, null, null );
 	  		else
@@ -129,72 +116,39 @@ namespace V3D
 		}
 
 		
-	  	//  Free the numeric factorization.
 	  	umfpack_di_free_numeric ( &Numeric );
-
-		//cout << "\nAA->x[210] : " << AA->x[210] << "\n";
 
 		return;
 	}
 
-	/* This function computes the full Schur complement using the blocks 
-	given as input. The output id written in MSC.
-	*/
+	// This function computes the full Schur complement using the blocks 
+	//given as input. The output is written in MSC.
 	void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* MSC,cs_di* PD,cs_di* PL,cs_di* PU,cs_di* PG,int* total_nz)
 	{
+		int j,k,l,ok;
+		cs_di* LDU;
+		cs_di* S ;
 		cs_di* AA = new cs_di;
+		
 		AA->nz = -1;
 		AA->m = PD->m; AA->n = PU->n; AA->nzmax = AA->m * AA->n;
 		AA->p = new int[AA->n+1]; AA->i = new int[AA->nzmax]; AA->x = new double[AA->nzmax];
 
-		cs_di* LDU;
 		
-		//cout << "\n nzmax : " << AA->nzmax << endl;
+		
 		compute_PDinv_times_PU(PD,PU,AA);
-		int ok = cs_di_sprealloc(AA,AA->p[AA->n]); // cout << "\nAA->nzmax : " << AA->nzmax << endl;
-		//cout << "\nAA->p[AA->n] : " << AA->p[AA->n] << "\n";
-
-
+		ok = cs_di_sprealloc(AA,AA->p[AA->n]);  //reallocate unused space
+		// cout << "\nAA->nzmax : " << AA->nzmax << endl;
+		
 		LDU = cs_di_multiply(PL,AA);
 
 		delete[] AA->p; delete[] AA->i; delete[] AA->x;
 		delete AA; 
 
-/*
-		int kk;
-		for(kk = 0;kk < 1; kk++)
-		{
-			int ll = LDU->p[kk];
-			int nn;
-			for(nn = ll; nn < LDU->p[kk+1]; nn++)
-				cout << "\nLDU->i["<<nn<<"] = " <<LDU->i[nn] << endl;
-		}
-
-*/
-		/*
-		int j,k,l;
-
-		for(j=0;j< LDU->n; j++)
-		{
-			if(j < (LDU->n)-1)
-			{
-				sort_rows_val(&(LDU->i[LDU->p[j]]),&(LDU->x[LDU->p[j]]),(LDU->p[j+1]-LDU->p[j]));	
-			}
-			else
-			{
-				sort_rows_val(&(LDU->i[LDU->p[j]]),&(LDU->x[LDU->p[j]]),((LDU->nzmax)-(LDU->p[j])));
-			}
-		}
-		*/
-		cs_di* S ;
-
-
 		
-		S = cs_di_add(PG,LDU,1.0,-1.0); //subtraction
-		//S = cs_add(PG,PG,1.0,-1.0); //subtraction
-		//cout << "S->nzmax : " << S->nzmax << "\n";
-		//cout << "S->nzmax : " << S->p[10] << "\n";
-		int j,k,l;
+
+		S = cs_di_add(PG,LDU,1.0,-1.0); // sparse matrix - matrix subtraction
+		
 
 		for(j=0;j< S->n; j++)
 		{
@@ -208,7 +162,7 @@ namespace V3D
 			}
 		}
 
-	   // keeping only values greater than 1e-12 in S 
+	   // keeping only values greater than 1e-16 in S 
 		cs_di* S_tol = new cs_di;
 		S_tol->nz = -1;
 		S_tol->m = S->m; S_tol->n = S->n;
@@ -240,7 +194,6 @@ namespace V3D
 				}
 				S_tol->nzmax = nzStol;
 			}
-			//cout << "\n l:"<< l<<"\tnzStol : "<< nzStol << "\n";
 		}
 		S_tol->p[S_tol->n] = S_tol->nzmax;
 		S_tol->i = new int[S_tol->nzmax]; S_tol->x = new double[S_tol->nzmax];
@@ -273,28 +226,19 @@ namespace V3D
 				}
 			}
 		}
-	/*
-		for(l=0; l < 20; l++)
-			printf("\nS_tol->i[%d] = %d",l,S_tol->i[l]);
-	*/
+	
 		delete [] S->p; delete [] S->i; delete [] S->x; delete S;
-		//printf("\nS->p[%d] = %d\t\tS->p[%d] = %d\n\n",0,S->p[0],1,S->p[1]);
-		//cout << "\n S_tol->nzmax : "<< S_tol->nzmax << "\n";
-		//filling up the msc block
 		
+		//filling up the msc block
 		for(j=0;j< S_tol->n; j++)
 		{
 			if(r1 == 0 && j == 0) MSC->p[0] = 0;
 			else if(j==0) continue;
 			else
 				MSC->p[r1+j] = (S_tol->p[j]-S_tol->p[j-1])+MSC->p[r1+j-1];
-			//cout << "\np[j] : " << MSC->p[r1+j];
-			//cout << "\n r1 +j : " << r1+j << "\n";
 			if(j == S_tol->n-1) 
 			{	
 				MSC->p[r1+j+1] = (S_tol->p[S_tol->n] - S_tol->p[S_tol->n-1]) + MSC->p[r1+j];
-				//cout << "\nMSC->p["<<r1+j+1<<"] : " <<  MSC->p[r1+j+1] << "\n";
-				//cout << "\n r1 +j : " << r1+j << "\n";
 			}	
 		}	
 
@@ -304,7 +248,6 @@ namespace V3D
 		{
 			if(j < sizeG-1)
 			{
-				//cout <<  "\n MSC->p[j+1] : "<< MSC->p[j+1] << "\n";
 				for(k = MSC->p[j];k  < MSC->p[j+1] && l < S_tol->nzmax; k++)
 				{
 					MSC->i[k] = S_tol->i[l] + r1;
@@ -315,7 +258,6 @@ namespace V3D
 			else
 			{
 				for(k = MSC->p[j];k  < MSC->nzmax && l < S_tol->nzmax; k++)
-				//for(k = MSC->p[j];k  < MSC->p[j+1] && l < S->nzmax; k++)
 				{
 					{
 						MSC->i[k] = S_tol->i[l] + r1;
@@ -325,22 +267,9 @@ namespace V3D
 				}
 			}
 		}
-		*total_nz += S_tol->nzmax; //cout << "\nTotal nnz : " << *total_nz << "\n";
-		//cout << "\n Total nnz : "<< S->nzmax << "\n";
-		//cout << "\n Last element : "<< S_tol->x[S->nzmax-1] << "\n";
-	/*
-		for(j=r1;j< r2+ol; j++)
-		{
-			if(j < sizeG-1)
-			{
-				sort_rows_val(&(MSC->i[MSC->p[j]]),&(MSC->x[MSC->p[j]]),(MSC->p[j+1]-MSC->p[j]));	
-			}
-			else
-			{
-				sort_rows_val(&(MSC->i[MSC->p[j]]),&(MSC->x[MSC->p[j]]),((MSC->p[r1]+S->nzmax)-MSC->p[j]));
-			}
-		}*/
-	//	cout << "\nSorting done!\n";
+		*total_nz += S_tol->nzmax; 
+		//cout << "\nTotal nnz : " << *total_nz << "\n";
+	
 
 		delete [] LDU->p; delete [] LDU->i; delete [] LDU->x;
 		delete [] S_tol->p; delete [] S_tol->i; delete [] S_tol->x;
@@ -351,12 +280,12 @@ namespace V3D
 	}
 
 	/* This function computes the mini schur complement of the input matrix.
-	PARAMS : 
-		A,D,L,U : INPUT, the blocks obtained after domain decomposition
-		MSC : OUTPUT,  the mini schur complement block computed.
+		PARAMS : 
+			A,D,L,U : INPUT, the blocks obtained after domain decomposition
+			MSC : OUTPUT,  the mini schur complement block computed.
 
-	The domain decomposition step is not shown as it is assumed that the size of 
-	block G is available. 
+		The domain decomposition step is not shown as it is assumed that the size of 
+		block G is available. 
 	*/
 	void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* U,cs_di* G)
 	{
@@ -370,8 +299,6 @@ namespace V3D
 		int szD = (sizeD - rD)/nD; //size of each block for D
 		int rD1 = 0,rD2 = szD; 
 
-		//cout << "\n r1 :"<<r1 <<"\tr2 :"<<r2<<"\n";
-		//cout << "\n rD1 :"<<rD1 <<"\trD2 :"<<rD2<<"\n";
 
 		int ol = 0; //overlap size
 		int i=0;
@@ -388,7 +315,6 @@ namespace V3D
 		//cout<< "\nComputing Mini Schur Complement...\n";
 		for(i ; i < nmsc_block - 2;i++ )
 		{
-			//cout << "\n i : " << i << "\n";
 			nzPD = 0; nzPL = 0; nzPU = 0; nzPG = 0;
 			cs_di* PD = new cs_di; cs_di* PL = new cs_di; cs_di* PU = new cs_di; cs_di* PG = new cs_di;
 			PD->m = (rD2+ol) -rD1; PD->n = (rD2+ol) -rD1;
@@ -398,11 +324,6 @@ namespace V3D
 			PD->p = new int[PD->n+1];PL->p = new int[PL->n+1];PU->p = new int[PU->n+1];PG->p = new int[PG->n+1];
 			PD->nz = -1; PL->nz = -1; PU->nz = -1;PG->nz = -1;
 
-			//cout<< "\n Computing nnz..." << "\n";
-			//This is the wrong way as we only want the non zeros of the blocks and not the whole column
-			//nzPD = D->p[rD2] - D->p[rD1]; nzPL = L->p[rD2] - L->p[rD1];
-			//nzPU = U->p[r2] - U->p[r1];          // cout<< "U->p[r2] :"<< U->p[r2] <<"\t U->p[r1] :"<<U->p[r1] << "\n";
-			//nzPG = G->p[r2] - G->p[r1];
 			for(j = rD1;j<rD2+ol;j++)
 			{
 				for(k = D->p[j];k<D->p[j+1];k++)
@@ -426,12 +347,10 @@ namespace V3D
 				}
 				for(l = G->p[j];l< G->p[j+1];l++)
 				{
-					//cout << "\n G->i[j] "<< G->i[j] << "\n"; 
 					if(G->i[l] >= r1 && G->i[l] < r2+ol) ++nzPG;
 					else continue;
 				}
 			}
-			//cout << "\n nzPD : "<< nzPD<<"\tnzPL :"<<nzPL<<"\tnzPU :"<<nzPU<<"\tnzPG :"<<nzPG<<"\n";
 
 
 			//cout << "\n Allocating memory..."<<"\n";		
@@ -441,11 +360,10 @@ namespace V3D
 
 			//cout << "\n Allocating PD and PL..."<<"\n";
 			iterPD =0; iterPL = 0;
+			
 			//filling the blocks PD and PL
 			for(j=rD1;j<rD2+ol;j++)
 			{
-				//cout << "\n j : "<< j<<"\n";
-				
 				PD->p[j-rD1] = iterPD;
 				for(k = D->p[j];k<D->p[j+1];k++)
 				{
@@ -471,10 +389,6 @@ namespace V3D
 				}
 			}
 			PD->p[PD->n] = iterPD; PL->p[PL->n] = iterPL;
-			//cout << "\n PL->i[0] : " << PL->i[0] << "\n";
-			//cout << "\n PL->p[ncol] :" << PL->p[PL->n] << "\n";
-			//cout << "\n Diff PD : "<< nzPD - iterPD << "\n";
-			//cout << "\n Diff PL : "<< nzPL - iterPL << "\n";
 
 			status = umfpack_di_transpose(PL->m,PL->n, PL->p,PL->i,PL->x,null,null,PU->p,PU->i,PU->x) ;
 			//cout << "\n Transpose status : "<< status << "\n";
@@ -485,8 +399,6 @@ namespace V3D
 				PG->p[j-r1] = iterPG;
 				for(l = G->p[j];l< G->p[j+1];l++)
 				{
-					//cout << "\n G->i[j] "<< G->i[j] << "\n"; 
-					
 					if(G->i[l] >= r1 && G->i[l] < r2+ol) 
 					{
 						PG->i[iterPG] = G->i[l] - r1;
@@ -497,32 +409,23 @@ namespace V3D
 				}
 			}
 			PG->p[PG->n] = iterPG;
-			//cout << "\n MSC G->x[0]: "<< G->x[0] << "\n";
-			//cout << "\n MSC PG->p[0]: "<< PG->p[0] << "\n";
-			//cout << "\n Diff PG : "<< nzPG - iterPG << "\n";
-			//cout << "\n Block 1 : r1 : "<<r1 << " "<< "r2 : "<< r2 << "\n";
+
 			//compute the full schur complement of the extracted blocks
 			compute_full_schur_complement(r1,r2,rD1,rD2,ol,MSC,PD,PL,PU,PG,&total_nz);
 
-			//cout << "\n MSC->p[0] : "<< MSC->p[0] << "\n";
-			//cout << "\n MSC->nnz : "<< total_nz << "\n";
-			//cout << "\n MSC->x[total_nz-1] : "<< MSC->x[total_nz-1] << "\n";
 
 			//updating the coordinates
 			r1 = r2;  r2 = r2+sz;
 			rD1 = rD2; rD2 = rD2 + szD;
-			//cout << "\n1st k blocks done!\n";
+
 			delete [] PD->p;delete [] PL->p;delete [] PU->p;delete [] PG->p;
 			delete [] PD->i;delete [] PL->i;delete [] PU->i;delete [] PG->i;
 			delete [] PD->x;delete [] PL->x;delete [] PU->x;delete [] PG->x;
 			delete PD;delete PL;delete PU;delete PG;
 		}
 
-		//i = i + 1;
-		//cout << "\n i : " << i <<"\n";
 		if(i == nmsc_block - 2)
 		{
-			//cout << "\n i : " << i << "\n";
 			nzPD = 0; nzPL = 0; nzPU = 0; nzPG = 0;
 			cs_di* PD = new cs_di; cs_di* PL = new cs_di; cs_di* PU = new cs_di; cs_di* PG = new cs_di;
 			PD->m = (rD2+oll) -rD1; PD->n = (rD2+oll) -rD1;
@@ -532,7 +435,6 @@ namespace V3D
 			PD->p = new int[PD->n+1];PL->p = new int[PL->n+1];PU->p = new int[PU->n+1];PG->p = new int[PG->n+1];
 			PD->nz = -1; PL->nz = -1; PU->nz = -1;PG->nz = -1;
 
-			//cout << "\nnnz count\n";
 			for(j = rD1;j<rD2+oll;j++)
 			{
 				for(k = D->p[j];k<D->p[j+1];k++)
@@ -546,7 +448,7 @@ namespace V3D
 					else continue;
 				}
 			}
-			//cout << "\nnnz count U and G\n";
+
 			for(j = r1;j<r2+oll;j++)
 			{
 				for(k = U->p[j];k<U->p[j+1];k++)
@@ -556,12 +458,10 @@ namespace V3D
 				}
 				for(l = G->p[j];l< G->p[j+1];l++)
 				{
-					//cout << "\n G->i[j] "<< G->i[j] << "\n"; 
 					if(G->i[l] >= r1 && G->i[l] < r2+oll) ++nzPG;
 					else continue;
 				}
 			}
-			//cout << "\n nzPD : "<< nzPD<<"\tnzPL :"<<nzPL<<"\tnzPU :"<<nzPU<<"\tnzPG :"<<nzPG<<"\n";
 
 
 			//cout << "\n Allocating memory..."<<"\n";		
@@ -571,10 +471,10 @@ namespace V3D
 
 			//cout << "\n Allocating PD and PL..."<<"\n";
 			iterPD =0; iterPL = 0;
+
 			//filling the blocks PD and PL
 			for(j=rD1;j<rD2+oll;j++)
 			{
-				//cout << "\n j : "<< j<<"\n";
 				PD->p[j-rD1] = iterPD;
 				for(k = D->p[j];k<D->p[j+1];k++)
 				{
@@ -611,8 +511,6 @@ namespace V3D
 				PG->p[j-r1] = iterPG;
 				for(l = G->p[j];l< G->p[j+1];l++)
 				{
-					//cout << "\n G->i[j] "<< G->i[j] << "\n"; 
-					
 					if(G->i[l] >= r1 && G->i[l] < r2+oll) 
 					{
 						PG->i[iterPG] = G->i[l] - r1;
@@ -623,6 +521,7 @@ namespace V3D
 				}
 			}
 			PG->p[PG->n] = iterPG;
+
 			//compute the full schur complement of the extracted blocks
 			compute_full_schur_complement(r1,r2,rD1,rD2,oll,MSC,PD,PL,PU,PG,&total_nz);
 
@@ -631,19 +530,18 @@ namespace V3D
 			//updating the coordinates
 			r1 = r2;  
 			rD1 = rD2; 
-			//cout << "\n 2nd last block done! \n";
+
 			delete [] PD->p;delete [] PL->p;delete [] PU->p;delete [] PG->p;
 			delete [] PD->i;delete [] PL->i;delete [] PU->i;delete [] PG->i;
 			delete [] PD->x;delete [] PL->x;delete [] PU->x;delete [] PG->x;
 			delete PD;delete PL;delete PU;delete PG;
 		}
 
-		i = i+1;  //cout << "\n i :"<< i << "\n";
+		i = i+1;  
 		r2 = sizeG; rD2 = sizeD;
 
 		if(i == nmsc_block-1)
 		{
-			//cout << "\n i : " << i << "\n";
 			nzPD = 0; nzPL = 0; nzPU = 0; nzPG = 0;
 			cs_di* PD = new cs_di; cs_di* PL = new cs_di; cs_di* PU = new cs_di; cs_di* PG = new cs_di;
 			PD->m = rD2 -rD1; PD->n = rD2 -rD1;
@@ -675,15 +573,12 @@ namespace V3D
 					else continue;
 				}
 				for(l = G->p[j];l< G->p[j+1];l++)
-				{
-					//cout << "\n G->i[j] "<< G->i[j] << "\n"; 
+				{ 
 					if(G->i[l] >= r1 && G->i[l] < r2) ++nzPG;
 					else continue;
 				}
 			}
-			//cout << "\n nzPD : "<< nzPD<<"\tnzPL :"<<nzPL<<"\tnzPU :"<<nzPU<<"\tnzPG :"<<nzPG<<"\n";
-
-
+			
 			//cout << "\n Allocating memory..."<<"\n";		
 			PD->nzmax = nzPD; PL->nzmax = nzPL; PU->nzmax = nzPU;PG->nzmax = nzPG;
 			PD->i = new int[nzPD];PL->i = new int[nzPL];PU->i = new int[nzPU];PG->i = new int[nzPG];
@@ -691,10 +586,10 @@ namespace V3D
 
 			//cout << "\n Allocating PD and PL..."<<"\n";
 			iterPD =0; iterPL = 0;
+			
 			//filling the blocks PD and PL
 			for(j=rD1;j<rD2;j++)
 			{
-				//cout << "\n j : "<< j<<"\n";
 				PD->p[j-rD1] = iterPD;
 				for(k = D->p[j];k<D->p[j+1];k++)
 				{
@@ -720,9 +615,6 @@ namespace V3D
 				}
 			}
 			PD->p[PD->n] = iterPD; PL->p[PL->n] = iterPL;
-			//cout << "\n PL->p[ncol] :" << PL->p[PL->n] << "\n";
-			//cout << "\n Diff PD : "<< nzPD - iterPD << "\n";
-			//cout << "\n Diff PL : "<< nzPL - iterPL << "\n";
 
 			status = umfpack_di_transpose(PL->m,PL->n, PL->p,PL->i,PL->x,null,null,PU->p,PU->i,PU->x) ;
 			//cout << "\n Transpose status : "<< status << "\n";
@@ -732,9 +624,7 @@ namespace V3D
 			{
 				PG->p[j-r1] = iterPG;
 				for(l = G->p[j];l< G->p[j+1];l++)
-				{
-					//cout << "\n G->i[j] "<< G->i[j] << "\n"; 
-					
+				{		
 					if(G->i[l] >= r1 && G->i[l] < r2) 
 					{
 						PG->i[iterPG] = G->i[l] - r1;
@@ -745,17 +635,11 @@ namespace V3D
 				}
 			}
 			PG->p[PG->n] = iterPG;
-			//cout << "\n MSC G->x[0]: "<< G->x[0] << "\n";
-			//cout << "\n MSC PG->p[0]: "<< PG->p[0] << "\n";
-			//cout << "\n Diff PG : "<< nzPG - iterPG << "\n";
-			//cout << "\n Block 3 : r1 : "<<r1 << " "<< "r2 : "<< r2 << "\n";
+			
 			//compute the full schur complement of the extracted blocks
 			compute_full_schur_complement(r1,r2,rD1,rD2,0,MSC,PD,PL,PU,PG,&total_nz);
 
 			MSC->p[sizeG] = total_nz;
-			//cout << "\n MSC->p[0] : "<< MSC->p[0] << "\n";
-			//cout << "\n MSC->nnz : "<< MSC->p[sizeG] << "\n";
-			//cout << "\n MSC->x[total_nz-1] : "<< MSC->x[total_nz-1] << "\n";
 
 
 			delete [] PD->p;delete [] PL->p;delete [] PU->p;delete [] PG->p;
@@ -818,8 +702,7 @@ namespace V3D
 	}
 
 	 void mini_schur_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,double *values,double *Jt_e,double *delta)
-	 //void MSC_solve(CCS_Matrix<Elem> const& H, Vector<double>& Jt_e,Vector<double>& delta)
-	 {	//cout << "\n In MSC solve ...." << endl;
+	 {	
 		int i;
 		int *null = ( int * ) NULL;
 		double *solve_null = ( double * ) NULL;
@@ -833,16 +716,11 @@ namespace V3D
 		int iterD = 0, iterL = 0 ,iterG = 0;
 		int count = 1;
 
-		//int const num_cols = H.num_cols();
-		//int const ncc = H.getNonzeroCount();
 
 		//creating structures of cs_diPARSE
 		cs_di* A = new cs_di;cs_di* MSC = new cs_di;cs_di* D = new cs_di;
 		cs_di* L = new cs_di;cs_di* G = new cs_di;cs_di* U = new cs_di;
 
-		//num_cols = num_cols+1;         
-		//cout << "\nNo of non zeros = "<< ncc << "\n";
-		//cout << "\nNo of columns = "<< num_cols << "\n";
 
 		//size of the D matrix
 		sizeD = num_cols - sizeG; 
@@ -853,31 +731,12 @@ namespace V3D
 		//Allocate space for the coefficient matrix
 		A->x = new double[ncc]; A->p = new int[num_cols+1]; A->i = new int[ncc];
 
-		//A->p = colStarts;
-		//A->i = rowIdxs;
-		//A->x = values;
 
 		for(int q = 0; q < num_cols; q++) A->p[q] = colStarts[q];
 		for(int q = 0; q < ncc; q++) A->i[q] = rowIdxs[q];
 		for(int q = 0; q < ncc; q++) A->x[q] = values[q];
-		//dcopy(&num_cols, values, &count, A->x, &count); 
+
 		A->p[num_cols] = ncc;
-
-		//cout << "\n values[ncc-1] = "<< values[ncc-1] << "\t\t A->x[ncc-1] = "<<A->x[ncc-1]<<"\n";
-		/***
-		//LU solve of Ax=b
-		sym_status = umfpack_di_symbolic ( A->m, A->n, A->p, A->i, A->x, &Symbolic, solve_null, solve_null );
-		//cout << "\n Symbolic status :" << sym_status << "\n";
-
-		num_status = umfpack_di_numeric ( A->p, A->i, A->x, Symbolic, &Numeric, solve_null, solve_null );
-		//cout << "\n Numeric status :" << num_status << "\n";
-
-  		solve_status = umfpack_di_solve ( UMFPACK_A, A->p, A->i, A->x, delta, Jt_e, Numeric, solve_null, solve_null );
-  		//cout << "\n Solve status :" << solve_status << "\n";
-
-  		return;
-		****/
-		/***Domain Decomposition***/
 
 		//Allocating memory for blocks
 		MSC->p = new int[sizeG+1];
@@ -929,7 +788,6 @@ namespace V3D
 					D->i[iterD] = A->i[k];
 					D->x[iterD] = A->x[k];
 					iterD += 1;
-					//++nzD_col;
 				}
 				else
 				{
@@ -951,38 +809,30 @@ namespace V3D
 			G->p[j - sizeD] = iterG;
 			if(j < num_cols-1)
 			{
-				//cout << "\n In first condition...\n";
 				for(k = A->p[j]; k < A->p[j+1];k++)
 				{
 					if(A->i[k] < sizeD) continue;
 					else
 					{
-						//cout << "\n row : " << A->i[k] << "\n";
 						G->i[iterG] = A->i[k]-sizeD;
 						G->x[iterG] = A->x[k];
 						iterG += 1;
 					}			
 				}	
 			}
-			//for the last column
 			else 
 			{
-				//cout << "\n In second condition..."<<A->nzmax <<"\n";
 				for(k = A->p[j]; k < A->nzmax;k++)
 				{
 					if(A->i[k] < sizeD) continue;
 					else
 					{
-						//cout << "\n row : " << A->i[k] << "\n";
 						G->i[iterG] = A->i[k] - sizeD;
 						G->x[iterG] = A->x[k];
 						iterG += 1;
 					}
-					//cout << "\n k : " << k << "\n";
-					//break;
 				}
 			}
-		    //break;
 		}
 
 		G->p[sizeG] = iterG;
@@ -990,7 +840,7 @@ namespace V3D
 		//cout << "\nFilling non zeros complete!!\n";
 		
 		
-		//compute the mini schur complement in the Ccs_di format.
+		//compute the mini schur complement in the cs_di format.
 		compute_mini_schur_complement(A,MSC,D,L,U,G);
 		//cout << "\n Mini Schur Complement computation done! \n";
 
@@ -998,8 +848,7 @@ namespace V3D
 		delete [] U->p;delete [] U->i;delete [] U->x;delete U;
 
 		int ok = cs_di_sprealloc(MSC,MSC->p[sizeG]);
-		//cout << "\n ok : "<< ok << "\n";
-		//cout << "\n MSC->nzmax : " << MSC->nzmax << endl;
+		
 		/*
 		for(int k = 98; k < 99; k++)
 		{
@@ -1009,6 +858,7 @@ namespace V3D
 				//cout << "\n l : " << l << endl;
 		}
 		*/
+
 		/************LU Factorization of D and MSC******************************/
 
 		sym_status = umfpack_di_symbolic ( D->m, D->n, D->p, D->i, D->x, &Symbolic_D, solve_null, solve_null );
@@ -1017,7 +867,6 @@ namespace V3D
 		num_status = umfpack_di_numeric ( D->p, D->i, D->x, Symbolic_D, &Numeric_D, solve_null, solve_null );
 		//cout << "\n Numeric status for D:" << num_status << "\n";
 
-		//  Free the symbolic factorization memory.
 	  	umfpack_di_free_symbolic ( &Symbolic_D );
 
 		sym_status = umfpack_di_symbolic ( MSC->m, MSC->n, MSC->p, MSC->i, MSC->x, &Symbolic_MSC, solve_null, solve_null );
@@ -1033,16 +882,11 @@ namespace V3D
 		/**********************GMRES CALL******************************/
 
 		//initializing variables and data structures for DFGMRES call
-		//int restart = 20;  //DFGMRES restarts
 		MKL_INT* ipar = new MKL_INT[size_MKL_IPAR];
-		//ipar[14] = 150;  //non restarted iterations
-
-		//cout << "\n tmp size : "<< num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1) << "\n";
 
 		double* dpar = new double[size_MKL_IPAR]; 
 		
 		double* tmp = new double[num_cols*(2*40+1)+(40*(40+9))/2+1];
-		//double expected_solution[num_cols];
 		double* rhs = new double[num_cols];
 		double* computed_solution = new double[num_cols];
 		double* residual = new double[num_cols];   
@@ -1056,7 +900,6 @@ namespace V3D
 		char cvar;
 
 		//cout << "\nMKL var init done !\n";
-
 
 
 		ivar = num_cols;
@@ -1082,34 +925,6 @@ namespace V3D
 	    //cout << "\n Conversion info L : "<< info << "\n";
 
 		
-
-	    // Testing A solve with LU and comparing with MATLAB
-		//test_A_solve(A);
-		//test_D_solve(D);
-		//test_MSC_solve(MSC);
-		// test_matvec_multiply(A);
-
-	    /***Testing the preconditioner solve with MATLAB***/
-	    //double *matvec = new double[A->n];
-	    //double *randvec = new double[A->n];
-	    //string test_filename = "~/rhs_MSC_20.txt";
-
-	    //r8vec_data_read ( test_filename, A->n, randvec);
-
-		//mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, randvec, matvec);
-
-		//ofstream outfile("test/rand_matvec_cpp.txt");
-
-	  	//if(outfile.is_open())
-	  	//{
-	  	//	for(int k = 0; k < A->n; k++)
-	  	//		outfile << matvec[k] << "\n";
-	  	//}
-	  	//outfile.close();
-	    //cout << "\n MSC->n : " << MSC->n << endl;
-	    //test_prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl);
-	    //delete [] matvec; delete [] randvec;
-	
 		/*---------------------------------------------------------------------------
 		/* Save the right-hand side in vector rhs for future use
 		/*---------------------------------------------------------------------------*/
@@ -1119,15 +934,12 @@ namespace V3D
 		//cout << "\n rhs_nrm : " << rhs_nrm << "\n";
 		// Jt_e vector is not altered
 		//rhs is used for residual calculations
-		//dcopy(&ivar, Jt_e, &RCI_count, rhs, &RCI_count);   
 		for(int q = 0; q < num_cols; q++) rhs[q] = Jt_e[q];
-		//cout << "\n line 1089" << endl;
 		// PRECONDITIONED RHS
 		prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,Jt_e,prec_rhs);
 		//norm of the preconditioned rhs
 		prec_rhs_nrm = dnrm2(&ivar,prec_rhs,&RCI_count);
 		delete [] prec_rhs; 
-		//cout << "\n prec rhs norm : "<< prec_rhs_nrm << "\n";
 
 		
 		/*---------------------------------------------------------------------------
@@ -1139,8 +951,8 @@ namespace V3D
 		
 		ipar[7] = 1;
 		ipar[4] = 200;  // Max Iterations
-		ipar[10] = 1;  //Preconditioner used
-		ipar[14] = 20; //internal iterations
+		ipar[10] = 1;  //  Preconditioner used
+		ipar[14] = 20; //  Internal iterations
 		
 		dpar[0] = tol; //Relative Tolerance
 
@@ -1151,7 +963,6 @@ namespace V3D
 		{
 			computed_solution[RCI_count]=0.0;
 		}
-		//if(ipar[10] == 1) computed_solution[0]=1000.0;
 
 		/*---------------------------------------------------------------------------
 		/* Check the correctness and consistency of the newly set parameters
@@ -1164,7 +975,6 @@ namespace V3D
 		/* Reverse Communication starts here
 		/*---------------------------------------------------------------------------*/
 		ONE:  dfgmres(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp);
-		//cout << "\n dfgmres RCI_request : "<<RCI_request << "\n";
 
 		
 		if(RCI_request==0) goto COMPLETE;
@@ -1176,25 +986,7 @@ namespace V3D
 		if (RCI_request==1)
 		{
 			mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, &tmp[ipar[21]-1], &tmp[ipar[22]-1]);
-		/*	
-			ofstream outfile("RCI_1_matvec_cpp.txt");
 
-		  	if(outfile.is_open())
-		  	{
-		  		for(int k = 0; k < A->n; k++)
-		  			outfile << tmp[(ipar[21]-1)+k] << "\n";
-		  	}
-		  	outfile.close();
-
-		  	char comp_done ;
-		  	printf("\nMATLAB  matvec computation done ? :");
-		  	scanf(" %c[^\n]",&comp_done);
-		  	cout << "\n";
-		  	string matvec_filename = "matvec.txt"; 
-		  	
-		  	if(comp_done == 'y' || comp_done == 'Y')
-		  		r8vec_data_read ( matvec_filename, A->n, &tmp[ipar[22]-1]);
-		*/
 			goto ONE;
 		}
 
@@ -1206,9 +998,6 @@ namespace V3D
 			/* Request to the dfgmres_get routine to put the solution into b[N] via ipar[12]*/
 			ipar[12]=1;
 			
-			//for(int kl = 0; kl < 10; kl++)
-			//	printf("\n comp_sol[%d] = %10.9f",kl, rhs[kl]);
-
 			/* Get the current FGMRES solution in the vector rhs[N] */
 			dfgmres_get(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp, &itercount);
 
@@ -1221,37 +1010,24 @@ namespace V3D
 			daxpy(&ivar, &dvar, Jt_e, &RCI_count, residual, &RCI_count);  // Ax - A*x_solution
 			
 
-			//cout << "\n Iteration : " << itercount;
-			//for(int k = 0; k < 10; k++)
-			//		printf("\nresildual[%d] = %10.9f\n",k,residual[k]);
-
 			if(ipar[10] == 0)   // non preconditioned system
 			{
 				dvar=dnrm2(&ivar,residual,&RCI_count);
 				relres_nrm = dvar/rhs_nrm;
-				//relres_nrm = dvar/prec_rhs_nrm;
-				//printf("\nresidual norm non prec = %10.9f\n",dvar);
 				
 			}
 			else if(ipar[10] == 1)  //preconditioned system
 			{
 				double *prec_relres = new double[num_cols];
-				//dvar=dnrm2(&ivar,residual,&RCI_count);
-				//printf("\nresidual norm with prec = %10.9f\n",dvar);
 
 				prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,residual,prec_relres);
 				prec_relres_nrm = dnrm2(&ivar,prec_relres,&RCI_count); 
 				delete [] prec_relres;
-				//cout << "\n prec relres norm : " << prec_relres_nrm << "\n";
-				//printf("\nPrec relres norm : %10.9f",prec_relres_nrm);
 				relres_nrm = prec_relres_nrm/prec_rhs_nrm;
 
 			}
 
-			//cout << "\n relres_nrm : " << relres_nrm << "\n";
-			//printf("\nRelres norm = %10.9f\n",relres_nrm);
-
-			if (relres_nrm<=tol) goto COMPLETE;   //taking tolerance as 1e-04
+			if (relres_nrm<=tol) goto COMPLETE; 
 
 			else goto ONE;
 			
@@ -1263,27 +1039,8 @@ namespace V3D
 		
 		if (RCI_request==3)
 		{
-			//cout << "\n Prec solve ..." << "\n";
 			prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,&tmp[(ipar[21]-1)],&tmp[(ipar[22]-1)]);
-		/*	
-			ofstream outfile("RCI_3_prec_solve_cpp.txt");
-
-		  	if(outfile.is_open())
-		  	{
-		  		for(int k = 0; k < A->n; k++)
-		  			outfile << tmp[(ipar[21]-1)+k] << "\n";
-		  	}
-		  	outfile.close();
-
-		  	char comp_done ;
-		  	printf("\nMATLAB prec solve computation done ? :");
-		  	scanf(" %c[^\n]",&comp_done);
-		  	cout << "\n";
-		  	string precsolve_filename = "prec_solve.txt"; 
-		  	
-		  	if(comp_done == 'y' || comp_done == 'Y')
-		  		r8vec_data_read ( precsolve_filename, A->n, &tmp[ipar[22]-1]);
-		*/
+		
 			goto ONE;
 		}
 
@@ -1315,24 +1072,12 @@ namespace V3D
 		COMPLETE:   ipar[12]=0;
 		dfgmres_get(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp, &itercount);
 		//cout << "The system has been solved  in " << itercount << " iterations!\n";
-	//	cout << "\n RCI_request : "<< RCI_request << "\n";
-	/*
-		printf("\nThe following solution has been obtained: \n");
-		for (RCI_count=0;RCI_count<10;RCI_count++)                //PRINTING ONLY THE FIRST 10 MEMBERS
-		{
-			printf("computed_solution[%d]=%f\n",RCI_count,computed_solution[RCI_count]);
-		}
-	*/
+
 
 		//store the solution into delta 
 		RCI_count = 1;
-		//dcopy(&ivar, computed_solution, &RCI_count, delta, &RCI_count); 
 		for(int q = 0; q < num_cols; q++) delta[q] = computed_solution[q];
-	/*	for (RCI_count=0;RCI_count<10;RCI_count++)                //PRINTING ONLY THE FIRST 10 MEMBERS
-		{
-			printf("delta[%d]=%f\n",RCI_count,delta[RCI_count]);
-		}
-	*/
+	
 		MKL_Free_Buffers();
 
 
@@ -1340,7 +1085,7 @@ namespace V3D
 	  	umfpack_di_free_numeric ( &Numeric_D );
 	  	umfpack_di_free_numeric ( &Numeric_MSC );
 
-		//delete [] Jt_e; 
+		
 		
 		delete [] MSC->p; delete [] MSC->i;delete [] MSC->x;
 		delete [] D->p;  delete [] D->i;delete [] D->x; 

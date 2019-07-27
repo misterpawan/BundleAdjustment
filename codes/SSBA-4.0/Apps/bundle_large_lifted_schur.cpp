@@ -29,7 +29,7 @@ namespace
    }
 
 //**********************************************************************
-
+/*
 #if !defined(USE_TUKEYS_BIWEIGHT)
    inline double kappa(double const tau, double const w2) { return 0.70710678118*tau*(w2 - 1); }
    inline double dkappa(double const tau, double const w2) { return 0.70710678118*tau; }
@@ -84,7 +84,7 @@ namespace
    inline double domega(double const w) { double const exp_w = exp(w/exp_const); return exp_w/(1.0 + exp_w); }
    inline double omega2_inv(double const w) { return exp_const * log(exp(sqrt(w)/exp_const) - 1.0); }
 #endif
-
+*/
 
 //**********************************************************************
 
@@ -128,6 +128,7 @@ namespace
             e[1] = r[1];
          }
 
+         // this function is the same as psi_hat()
          virtual double evalCost(VectorArray<double> const& residuals, Vector<double> const& W) const
          {
 #if 0
