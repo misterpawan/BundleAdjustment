@@ -520,7 +520,7 @@ namespace V3D
 
    //call to mini schur solve
    void
-   NLSQ_LM_Optimizer::MSC_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta)
+   NLSQ_LM_Optimizer::MSC_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta,double *prev_sol,int msc_block)
    {
       int  nCols = A.num_cols();
       int  nnz = A.getNonzeroCount();
@@ -538,7 +538,7 @@ namespace V3D
       }
 
 
-      mini_schur_solve(nCols,nnz,(int*)colStarts,(int*)rowIdxs,(double*)values,Jte,del);
+      mini_schur_solve(nCols,nnz,(int*)colStarts,(int*)rowIdxs,(double*)values,Jte,del, prev_sol,msc_block);
 
       for(i = 0; i < nCols; i++)
       {
@@ -586,7 +586,7 @@ namespace V3D
 
 
    void
-   NLSQ_LM_Optimizer::minimize()
+   NLSQ_LM_Optimizer::minimize(int msc_block)
    {
       status = LEVENBERG_OPTIMIZER_TIMEOUT;
       bool computeDerivatives = true;
@@ -604,6 +604,10 @@ namespace V3D
       Vector<double> Jt_e(totalParamDimension);
       Vector<double> delta(totalParamDimension);
       Vector<double> deltaPerm(totalParamDimension);
+
+      //This vector is initialized with 0 and then stores the solution of the current iteration
+      //to be used as an initial starting point for the GMRES iterations in the next LM iteration
+      double *prev_sol = new double[totalParamDimension](); 
 
       double err = 0.0;
 
@@ -640,9 +644,13 @@ namespace V3D
             
             if (optimizerVerbosenessLevel >= 1)
             {
-               cout << "NLSQ_LM_Optimizer: iteration: " << currentIteration << ", |residual|^2 = " << err
-                    << ", lambda = " << lambda << ", residuals itemized: "; displayVector(errors);
+               if (currentIteration == 0 || currentIteration == 99)
+               {
+                  cout << "NLSQ_LM_Optimizer: iteration: " << currentIteration << ", |residual|^2 = " << err
+                       << ", lambda = " << lambda << ", residuals itemized: "; displayVector(errors);
+               }
             }
+            
             
             //if (optimizerVerbosenessLevel >= 2) cout << "NLSQ_LM_Optimizer: lambda = " << lambda << endl;
 
@@ -656,6 +664,11 @@ namespace V3D
                if (optimizerVerbosenessLevel >= 2) cout << "NLSQ_LM_Optimizer: exiting due to gradient stopping,"
                                                         << "norm_Linf_Jt_e = " << norm_Linf_Jt_e << endl;
                status = LEVENBERG_OPTIMIZER_CONVERGED;
+
+               // added to check if all 100 iterations are not completed
+               cout << "NLSQ_LM_Optimizer: iteration: " << currentIteration << ", |residual|^2 = " << err
+                       << ", lambda = " << lambda << ", residuals itemized: "; displayVector(errors);
+
                goto end;
             }
 
@@ -732,24 +745,26 @@ namespace V3D
 
          this->fillJtJ();
          
-         //LDL_perm(_JtJ_Parent.size(), &delta[0], &Jt_e[0], &_perm_JtJ[0]); 
+         LDL_perm(_JtJ_Parent.size(), &delta[0], &Jt_e[0], &_perm_JtJ[0]); 
          
          //showSparseMatrixInfo(currentIteration,_JtJ);
          //writeJtetofile(currentIteration,delta);
 
          //MSC solve
-         //this->MSC_solve(_JtJ, delta, deltaPerm);
+         this->MSC_solve(_JtJ, delta, deltaPerm,prev_sol,msc_block);
+
+         for (int n=0; n<totalParamDimension; n++) prev_sol[n] = deltaPerm[n];
 
          //Block Jacobi Solve
          //this->blockjacobi_solve(_JtJ, delta, deltaPerm);
 
-         //LDL_permt(_JtJ_Parent.size(), &delta[0], &deltaPerm[0], &_perm_JtJ[0]);
+         LDL_permt(_JtJ_Parent.size(), &delta[0], &deltaPerm[0], &_perm_JtJ[0]);
          
        	
          bool success_LDL = true;
          double rho = 0.0;
          /* Comment starts for using MSC solve*/
-         {
+         /*{
             int const nCols = _JtJ_Parent.size();
             //int const nnz   = _JtJ.getNonzeroCount();
             int const lnz   = _JtJ_Lp.back();
@@ -805,6 +820,11 @@ namespace V3D
             {
                if (optimizerVerbosenessLevel >= 2) cout << "NLSQ_LM_Optimizer: exiting due to small update, deltaSqrLength = " << deltaSqrLength << endl;
                status = LEVENBERG_OPTIMIZER_SMALL_UPDATE;
+
+               //added to check if all LM iterations are not completed
+               cout << "NLSQ_LM_Optimizer: iteration: " << currentIteration << ", |residual|^2 = " << err
+                       << ", lambda = " << lambda << endl; //", residuals itemized: "; displayVector(errors);
+
                goto end;
             }
 
@@ -855,7 +875,7 @@ namespace V3D
                double const corr = denom2 / norm_L2(delta) / norm_L2(Jt_e);
                double const stable_denom2 = stable_innerProduct(delta, Jt_e);
 
-               cout << "NLSQ_LM_Optimizer: WARNING: denom2 = " << denom2 << " < 0, |delta| = " << norm_L2(delta) << " |Jt_e| = " << norm_L2(Jt_e) << " corr = " << corr << " stable denom2 = " << stable_denom2 << endl;
+               //cout << "NLSQ_LM_Optimizer: WARNING: denom2 = " << denom2 << " < 0, |delta| = " << norm_L2(delta) << " |Jt_e| = " << norm_L2(Jt_e) << " corr = " << corr << " stable denom2 = " << stable_denom2 << endl;
             } // end if
 
             // Note: if one uses the extended interface to compute J^T J and
@@ -874,6 +894,11 @@ namespace V3D
             {
                if (optimizerVerbosenessLevel >= 2)
                   cout << "NLSQ_LM_Optimizer: too small improvement in cost function, exiting." << endl;
+
+               //added to check if all LM iterations are not completed
+               cout << "NLSQ_LM_Optimizer: iteration: " << currentIteration << ", |residual|^2 = " << err
+                       << ", lambda = " << lambda << endl; //", residuals itemized: "; displayVector(errors);
+
                goto end;
             }
          }

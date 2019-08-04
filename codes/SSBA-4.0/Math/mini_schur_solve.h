@@ -20,11 +20,11 @@ using namespace V3D;
 
 
 
-namespace V3D
-{
-	#define sizeG 16002 
+//namespace V3D
+//{
+	#define sizeG 12948 
 	#define size_MKL_IPAR 128
-	#define NUM_MSC_BLOCKS 20
+	//#define NUM_MSC_BLOCKS 50
 
 	//This function densifies the jth column of input matrix PU
 	void densify_column(cs_di* PU, int j,double* b)
@@ -88,11 +88,11 @@ namespace V3D
 
 		for(j=0;j<PU->n;j++)
 		{
-			b = new double[PU->m]; //vector to store the densified rhs at each iteration
-			x1 = new double[PD->n]; //vector to store the solution at each iteration
+			b = new double[PU->m](); //vector to store the densified rhs at each iteration
+			x1 = new double[PD->n](); //vector to store the solution at each iteration
 
-			for(int k = 0; k < PU->m; k++)
-            	b[k] = 0.0;
+			//for(int k = 0; k < PU->m; k++)
+            //	b[k] = 0.0;
 
 			densify_column(PU,j,b); // densifies the jth column of PU and stores it in b
 
@@ -101,11 +101,11 @@ namespace V3D
 	  		//  No need to solve if the jth column has no zeros. Simply set the solution vector x1=0 
 	  		if((PU->p[j+1] - PU->p[j]) > 0)
 	  			solve_status = umfpack_di_solve ( UMFPACK_A, PD->p, PD->i, PD->x, x1, b, Numeric, null, null );
-	  		else
+	  		/*else
 	  		{
 	  			for(int k = 0; k < PD->n; k++)
 	  				x1[k] = 0.0;
-	  		}
+	  		}*/
 	  		//cout << "\n Solve status :" << solve_status << "\n";
 		
 			
@@ -127,12 +127,12 @@ namespace V3D
 	{
 		int j,k,l,ok;
 		cs_di* LDU;
-		cs_di* S ;
+		cs_di* S_tol ;
 		cs_di* AA = new cs_di;
 		
 		AA->nz = -1;
 		AA->m = PD->m; AA->n = PU->n; AA->nzmax = AA->m * AA->n;
-		AA->p = new int[AA->n+1]; AA->i = new int[AA->nzmax]; AA->x = new double[AA->nzmax];
+		AA->p = new int[AA->n+1](); AA->i = new int[AA->nzmax](); AA->x = new double[AA->nzmax]();
 
 		
 		
@@ -147,21 +147,21 @@ namespace V3D
 
 		
 
-		S = cs_di_add(PG,LDU,1.0,-1.0); // sparse matrix - matrix subtraction
+		S_tol = cs_di_add(PG,LDU,1.0,-1.0); // sparse matrix - matrix subtraction
 		
 
-		for(j=0;j< S->n; j++)
+		for(j=0;j< S_tol->n; j++)
 		{
-			if(j < (S->n)-1)
+			if(j < (S_tol->n)-1)
 			{
-				sort_rows_val(&(S->i[S->p[j]]),&(S->x[S->p[j]]),(S->p[j+1]-S->p[j]));	
+				sort_rows_val(&(S_tol->i[S_tol->p[j]]),&(S_tol->x[S_tol->p[j]]),(S_tol->p[j+1]-S_tol->p[j]));	
 			}
 			else
 			{
-				sort_rows_val(&(S->i[S->p[j]]),&(S->x[S->p[j]]),((S->nzmax)-(S->p[j])));
+				sort_rows_val(&(S_tol->i[S_tol->p[j]]),&(S_tol->x[S_tol->p[j]]),((S_tol->nzmax)-(S_tol->p[j])));
 			}
 		}
-
+		/*
 	   // keeping only values greater than 1e-16 in S 
 		cs_di* S_tol = new cs_di;
 		S_tol->nz = -1;
@@ -228,7 +228,8 @@ namespace V3D
 		}
 	
 		delete [] S->p; delete [] S->i; delete [] S->x; delete S;
-		
+		*/
+
 		//filling up the msc block
 		for(j=0;j< S_tol->n; j++)
 		{
@@ -287,9 +288,9 @@ namespace V3D
 		The domain decomposition step is not shown as it is assumed that the size of 
 		block G is available. 
 	*/
-	void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* U,cs_di* G)
+	void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* U,cs_di* G,int msc_block)
 	{
-		int nmsc_block = NUM_MSC_BLOCKS ;  //no of blocks for G
+		int nmsc_block = msc_block ;  //no of blocks for G
 		int r = sizeG % nmsc_block;
 		int sz = (sizeG - r)/nmsc_block ; //size of each nmsc block for G
 		int r1 = 0,r2 = sz;   
@@ -321,7 +322,7 @@ namespace V3D
 			PL->m = (r2+ol) -r1; PL->n = (rD2+ol) -rD1;  
 			PU->m = (rD2+ol) -rD1; PU->n = (r2+ol) -r1;
 			PG->m = (r2+ol) -r1; PG->n = (r2+ol) -r1;
-			PD->p = new int[PD->n+1];PL->p = new int[PL->n+1];PU->p = new int[PU->n+1];PG->p = new int[PG->n+1];
+			PD->p = new int[PD->n+1]();PL->p = new int[PL->n+1]();PU->p = new int[PU->n+1]();PG->p = new int[PG->n+1]();
 			PD->nz = -1; PL->nz = -1; PU->nz = -1;PG->nz = -1;
 
 			for(j = rD1;j<rD2+ol;j++)
@@ -355,8 +356,8 @@ namespace V3D
 
 			//cout << "\n Allocating memory..."<<"\n";		
 			PD->nzmax = nzPD; PL->nzmax = nzPL; PU->nzmax = nzPU;PG->nzmax = nzPG;
-			PD->i = new int[nzPD];PL->i = new int[nzPL];PU->i = new int[nzPU];PG->i = new int[nzPG];
-			PD->x = new double[nzPD];PL->x = new double[nzPL];PU->x = new double[nzPU];PG->x = new double[nzPG];
+			PD->i = new int[nzPD]();PL->i = new int[nzPL]();PU->i = new int[nzPU]();PG->i = new int[nzPG]();
+			PD->x = new double[nzPD]();PL->x = new double[nzPL]();PU->x = new double[nzPU]();PG->x = new double[nzPG]();
 
 			//cout << "\n Allocating PD and PL..."<<"\n";
 			iterPD =0; iterPL = 0;
@@ -432,7 +433,7 @@ namespace V3D
 			PL->m = (r2+oll) -r1; PL->n = (rD2+oll) -rD1;  
 			PU->m = (rD2+oll) -rD1; PU->n = (r2+oll) -r1;
 			PG->m = (r2+oll) -r1; PG->n = (r2+oll) -r1;
-			PD->p = new int[PD->n+1];PL->p = new int[PL->n+1];PU->p = new int[PU->n+1];PG->p = new int[PG->n+1];
+			PD->p = new int[PD->n+1]();PL->p = new int[PL->n+1]();PU->p = new int[PU->n+1]();PG->p = new int[PG->n+1]();
 			PD->nz = -1; PL->nz = -1; PU->nz = -1;PG->nz = -1;
 
 			for(j = rD1;j<rD2+oll;j++)
@@ -466,8 +467,8 @@ namespace V3D
 
 			//cout << "\n Allocating memory..."<<"\n";		
 			PD->nzmax = nzPD; PL->nzmax = nzPL; PU->nzmax = nzPU;PG->nzmax = nzPG;
-			PD->i = new int[nzPD];PL->i = new int[nzPL];PU->i = new int[nzPU];PG->i = new int[nzPG];
-			PD->x = new double[nzPD];PL->x = new double[nzPL];PU->x = new double[nzPU];PG->x = new double[nzPG];
+			PD->i = new int[nzPD]();PL->i = new int[nzPL]();PU->i = new int[nzPU]();PG->i = new int[nzPG]();
+			PD->x = new double[nzPD]();PL->x = new double[nzPL]();PU->x = new double[nzPU]();PG->x = new double[nzPG]();
 
 			//cout << "\n Allocating PD and PL..."<<"\n";
 			iterPD =0; iterPL = 0;
@@ -548,7 +549,7 @@ namespace V3D
 			PL->m = r2 -r1; PL->n = rD2 -rD1;  
 			PU->m = rD2 -rD1; PU->n = r2 -r1;
 			PG->m = r2 -r1; PG->n = r2 -r1;
-			PD->p = new int[PD->n+1];PL->p = new int[PL->n+1];PU->p = new int[PU->n+1];PG->p = new int[PG->n+1];
+			PD->p = new int[PD->n+1]();PL->p = new int[PL->n+1]();PU->p = new int[PU->n+1]();PG->p = new int[PG->n+1]();
 			PD->nz = -1; PL->nz = -1; PU->nz = -1;PG->nz = -1;
 
 			for(j = rD1;j<rD2;j++)
@@ -581,8 +582,8 @@ namespace V3D
 			
 			//cout << "\n Allocating memory..."<<"\n";		
 			PD->nzmax = nzPD; PL->nzmax = nzPL; PU->nzmax = nzPU;PG->nzmax = nzPG;
-			PD->i = new int[nzPD];PL->i = new int[nzPL];PU->i = new int[nzPU];PG->i = new int[nzPG];
-			PD->x = new double[nzPD];PL->x = new double[nzPL];PU->x = new double[nzPU];PG->x = new double[nzPG];
+			PD->i = new int[nzPD]();PL->i = new int[nzPL]();PU->i = new int[nzPU]();PG->i = new int[nzPG]();
+			PD->x = new double[nzPD]();PL->x = new double[nzPL]();PU->x = new double[nzPU]();PG->x = new double[nzPG]();
 
 			//cout << "\n Allocating PD and PL..."<<"\n";
 			iterPD =0; iterPL = 0;
@@ -656,11 +657,11 @@ namespace V3D
 	*/
 	void prec_solve(cs_di *A,cs_di *D,cs_di *MSC,void *Numeric_D,void *Numeric_MSC,double *lcsr,int *il,int *jl,double *y_in,double *z_out)
 	{
-		double* y1 = new double[D->n];
-		double* y2 = new double[MSC->n];
-		double* z1 = new double[D->n];
-		double* z2 = new double[MSC->n];
-		double* Lz1 = new double[MSC->n];
+		double* y1 = new double[D->n]();
+		double* y2 = new double[MSC->n]();
+		double* z1 = new double[D->n]();
+		double* z2 = new double[MSC->n]();
+		double* Lz1 = new double[MSC->n]();
 		int prec_solve_status;
 		double* null = (double*)NULL;
 		int zvar = MSC->n ; //no of rows of L
@@ -701,7 +702,7 @@ namespace V3D
 		return;
 	}
 
-	 void mini_schur_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,double *values,double *Jt_e,double *delta)
+	 void mini_schur_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,double *values,double *Jt_e,double *delta,double *prev_sol,int msc_block)
 	 {	
 		int i;
 		int *null = ( int * ) NULL;
@@ -729,7 +730,7 @@ namespace V3D
 
 
 		//Allocate space for the coefficient matrix
-		A->x = new double[ncc]; A->p = new int[num_cols+1]; A->i = new int[ncc];
+		A->x = new double[ncc](); A->p = new int[num_cols+1](); A->i = new int[ncc]();
 
 
 		for(int q = 0; q < num_cols; q++) A->p[q] = colStarts[q];
@@ -739,11 +740,11 @@ namespace V3D
 		A->p[num_cols] = ncc;
 
 		//Allocating memory for blocks
-		MSC->p = new int[sizeG+1];
-		D->p = new int[sizeD+1];
-		L->p = new int[sizeD+1];
-		G->p = new int[sizeG+1];	
-		U->p = new int[sizeG+1];
+		MSC->p = new int[sizeG+1]();
+		D->p = new int[sizeD+1]();
+		L->p = new int[sizeD+1]();
+		G->p = new int[sizeG+1]();	
+		U->p = new int[sizeG+1]();
 
 		MSC->nz = -1;MSC->m = sizeG;MSC->n = sizeG;
 		D->nz = -1;D->m = sizeD;D->n = sizeD;
@@ -766,11 +767,11 @@ namespace V3D
 		nzG = ncc - (nzD + 2*nzL); 
 
 		//Allocating memory
-		D->i = new int[nzD]; D->x = new double[nzD];
-		L->i = new int[nzL]; L->x = new double[nzL];
-		U->i = new int[nzL]; U->x = new double[nzL];
-		G->i = new int[nzG]; G->x = new double[nzG];
-		MSC->i = new int[sizeG*sizeG]; MSC->x = new double[sizeG*sizeG];
+		D->i = new int[nzD](); D->x = new double[nzD]();
+		L->i = new int[nzL](); L->x = new double[nzL]();
+		U->i = new int[nzL](); U->x = new double[nzL]();
+		G->i = new int[nzG](); G->x = new double[nzG]();
+		MSC->i = new int[sizeG*sizeG](); MSC->x = new double[sizeG*sizeG]();
 
 		//setting values
 		D->nzmax = nzD; L->nzmax = nzL; U->nzmax = nzL; G->nzmax = nzG;MSC->nzmax = sizeG*sizeG;
@@ -841,7 +842,7 @@ namespace V3D
 		
 		
 		//compute the mini schur complement in the cs_di format.
-		compute_mini_schur_complement(A,MSC,D,L,U,G);
+		compute_mini_schur_complement(A,MSC,D,L,U,G,msc_block);
 		//cout << "\n Mini Schur Complement computation done! \n";
 
 		// Since L is not used anymore
@@ -882,16 +883,16 @@ namespace V3D
 		/**********************GMRES CALL******************************/
 
 		//initializing variables and data structures for DFGMRES call
-		MKL_INT* ipar = new MKL_INT[size_MKL_IPAR];
+		MKL_INT* ipar = new MKL_INT[size_MKL_IPAR]();
 
-		double* dpar = new double[size_MKL_IPAR]; 
+		double* dpar = new double[size_MKL_IPAR](); 
 		
-		double* tmp = new double[num_cols*(2*40+1)+(40*(40+9))/2+1];
-		double* rhs = new double[num_cols];
-		double* computed_solution = new double[num_cols];
-		double* residual = new double[num_cols];   
+		double* tmp = new double[num_cols*(2*40+1)+(40*(40+9))/2+1]();
+		double* rhs = new double[num_cols]();
+		double* computed_solution = new double[num_cols]();
+		double* residual = new double[num_cols]();   
 		double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev,prec_rhs_nrm,prec_relres_nrm;
-		double *prec_rhs = new double[num_cols];
+		double *prec_rhs = new double[num_cols]();
 		double tol = 1.0E-02;
 		
 
@@ -907,12 +908,12 @@ namespace V3D
 		
 		/**********Converting A & L from CSC to CSR*****************/
 	  	MKL_INT job[6] = {1,1,0,0,0,1};
-	    double *acsr =  new double[ncc];
-	    double *lcsr =  new double[L->nzmax];
-	    MKL_INT *ja = new MKL_INT[ncc];
-	    MKL_INT *jl = new MKL_INT[L->nzmax];
-	    MKL_INT *ia = new MKL_INT[ivar+1];
-	    MKL_INT *il = new MKL_INT[sizeG+1];
+	    double *acsr =  new double[ncc]();
+	    double *lcsr =  new double[L->nzmax]();
+	    MKL_INT *ja = new MKL_INT[ncc]();
+	    MKL_INT *jl = new MKL_INT[L->nzmax]();
+	    MKL_INT *ia = new MKL_INT[ivar+1]();
+	    MKL_INT *il = new MKL_INT[sizeG+1]();
 	    MKL_INT info;
 	    MKL_INT lvar = sizeG;
 
@@ -952,7 +953,7 @@ namespace V3D
 		ipar[7] = 1;
 		ipar[4] = 200;  // Max Iterations
 		ipar[10] = 1;  //  Preconditioner used
-		ipar[14] = 20; //  Internal iterations
+		ipar[14] = 40; //  Internal iterations
 		
 		dpar[0] = tol; //Relative Tolerance
 
@@ -961,9 +962,9 @@ namespace V3D
 		/*---------------------------------------------------------------------------*/
 		for(RCI_count=0; RCI_count<num_cols; RCI_count++)
 		{
-			computed_solution[RCI_count]=0.0;
+			computed_solution[RCI_count]=prev_sol[RCI_count];
 		}
-
+		
 		/*---------------------------------------------------------------------------
 		/* Check the correctness and consistency of the newly set parameters
 		/*---------------------------------------------------------------------------*/
@@ -1018,7 +1019,7 @@ namespace V3D
 			}
 			else if(ipar[10] == 1)  //preconditioned system
 			{
-				double *prec_relres = new double[num_cols];
+				double *prec_relres = new double[num_cols]();
 
 				prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,residual,prec_relres);
 				prec_relres_nrm = dnrm2(&ivar,prec_relres,&RCI_count); 
@@ -1110,5 +1111,5 @@ namespace V3D
 
 	    return ;
 	 }
-}
+//}
 #endif

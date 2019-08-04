@@ -21,7 +21,7 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 16002
+	#define sizeG 12948
 	#define size_MKL_IPAR 128
 
 	/* This function computes the preconditioner solve for the input array y_in
@@ -29,10 +29,10 @@ namespace V3D
 	*/
 	void prec_solve(cs_di *A,cs_di *D,cs_di *G,void *Numeric_D,void *Numeric_G,double *y_in,double *z_out)
 	{
-		double* y1 = new double[D->n];
-		double* y2 = new double[G->n];
-		double* z1 = new double[D->n];
-		double* z2 = new double[G->n];
+		double* y1 = new double[D->n]();
+		double* y2 = new double[G->n]();
+		double* z1 = new double[D->n]();
+		double* z2 = new double[G->n]();
 		int prec_solve_status;
 		double* null = (double*)NULL;
 		int zvar = G->n ; //no of rows of L
@@ -102,7 +102,7 @@ namespace V3D
 
 
 		//Allocate space for the coefficient matrix
-		A->x = new double[ncc]; A->p = new int[num_cols+1]; A->i = new int[ncc];
+		A->x = new double[ncc](); A->p = new int[num_cols+1](); A->i = new int[ncc]();
 
 		//A->p = colStarts;
 		//A->i = rowIdxs;
@@ -120,8 +120,8 @@ namespace V3D
 		/***Domain Decomposition***/
 
 		//Allocating memory for blocks
-		D->p = new int[sizeD+1];
-		G->p = new int[sizeG+1];	
+		D->p = new int[sizeD+1]();
+		G->p = new int[sizeG+1]();	
 
 		D->nz = -1;D->m = sizeD;D->n = sizeD;
 		G->nz = -1;G->m = sizeG;G->n = sizeG;
@@ -140,8 +140,8 @@ namespace V3D
 		nzG = ncc - (nzD + 2*nzL); 
 
 		//Allocating memory
-		D->i = new int[nzD]; D->x = new double[nzD];
-		G->i = new int[nzG]; G->x = new double[nzG];
+		D->i = new int[nzD](); D->x = new double[nzD]();
+		G->i = new int[nzG](); G->x = new double[nzG]();
 
 		//setting values
 		D->nzmax = nzD; G->nzmax = nzG;
@@ -240,20 +240,20 @@ namespace V3D
 
 		//initializing variables and data structures for DFGMRES call
 		//int restart = 20;  //DFGMRES restarts
-		MKL_INT* ipar = new MKL_INT[size_MKL_IPAR];
+		MKL_INT* ipar = new MKL_INT[size_MKL_IPAR]();
 		//ipar[14] = 150;  //non restarted iterations
 
 		//cout << "\n tmp size : "<< num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1) << "\n";
 
-		double* dpar = new double[size_MKL_IPAR]; 
+		double* dpar = new double[size_MKL_IPAR](); 
 		
-		double* tmp = new double[num_cols*(2*40+1)+(40*(40+9))/2+1];
+		double* tmp = new double[num_cols*(2*40+1)+(40*(40+9))/2+1]();
 		//double expected_solution[num_cols];
-		double* rhs = new double[num_cols];
-		double* computed_solution = new double[num_cols];
-		double* residual = new double[num_cols];   
+		double* rhs = new double[num_cols]();
+		double* computed_solution = new double[num_cols]();
+		double* residual = new double[num_cols]();   
 		double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev,prec_rhs_nrm,prec_relres_nrm;
-		double *prec_rhs = new double[num_cols];
+		double *prec_rhs = new double[num_cols]();
 		double tol = 1.0e-02;
 		
 
@@ -270,9 +270,9 @@ namespace V3D
 		
 		/**********Converting A & L from CSC to CSR*****************/
 	  	MKL_INT job[6] = {1,1,0,0,0,1};
-	    double *acsr =  new double[ncc];
-	    MKL_INT *ja = new MKL_INT[ncc];
-	    MKL_INT *ia = new MKL_INT[ivar+1];
+	    double *acsr =  new double[ncc]();
+	    MKL_INT *ja = new MKL_INT[ncc]();
+	    MKL_INT *ia = new MKL_INT[ivar+1]();
 	    MKL_INT info;
 	    MKL_INT lvar = sizeG;
 
@@ -338,17 +338,17 @@ namespace V3D
 		ipar[7] = 1;
 		ipar[4] = 200;  // Max Iterations
 		ipar[10] = 1;  //Preconditioner used
-		ipar[14] = 20; //internal iterations
+		ipar[14] = 40; //internal iterations
 		
 		dpar[0] = tol; //Relative Tolerance
 
 		/*---------------------------------------------------------------------------
 		/* Initialize the initial guess
 		/*---------------------------------------------------------------------------*/
-		for(RCI_count=0; RCI_count<num_cols; RCI_count++)
+		/*for(RCI_count=0; RCI_count<num_cols; RCI_count++)
 		{
 			computed_solution[RCI_count]=0.0;
-		}
+		}*/
 		//if(ipar[10] == 1) computed_solution[0]=1000.0;
 
 		/*---------------------------------------------------------------------------
@@ -433,7 +433,7 @@ namespace V3D
 			}
 			else if(ipar[10] == 1)  //preconditioned system
 			{
-				double *prec_relres = new double[num_cols];
+				double *prec_relres = new double[num_cols]();
 				//dvar=dnrm2(&ivar,residual,&RCI_count);
 				//printf("\nresidual norm with prec = %10.9f\n",dvar);
 

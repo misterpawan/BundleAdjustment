@@ -178,7 +178,7 @@ namespace V3D
 
          
 
-         void minimize();
+         void minimize(int msc_block);
 
          virtual double getParameterLength() const = 0;
 
@@ -220,7 +220,7 @@ namespace V3D
          CCS_Matrix<double> _JtJ;
 
          //call to mini schur solve
-         void MSC_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta);
+         void MSC_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta,double *prev_sol,int msc_block);
 
          //call to block jacobi solve
          void blockjacobi_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta);
