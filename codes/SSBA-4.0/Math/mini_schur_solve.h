@@ -22,7 +22,7 @@ using namespace V3D;
 
 //namespace V3D
 //{
-	#define sizeG 12948 
+	#define sizeG 441 
 	#define size_MKL_IPAR 128
 	//#define NUM_MSC_BLOCKS 50
 
@@ -951,7 +951,7 @@ using namespace V3D;
 
 		
 		ipar[7] = 1;
-		ipar[4] = 200;  // Max Iterations
+		ipar[4] = 100;  // Max Iterations
 		ipar[10] = 1;  //  Preconditioner used
 		ipar[14] = 40; //  Internal iterations
 		

@@ -954,7 +954,7 @@ namespace V3D
       if (optimizerVerbosenessLevel >= 2)
          cout << "Leaving NLSQ_LM_Optimizer::minimize()." << endl;
 
-      
+      delete [] prev_sol;
    //showSparseMatrixInfo(_JtJ); // Call to Function, dumps the Matrix JtJ
      
 
