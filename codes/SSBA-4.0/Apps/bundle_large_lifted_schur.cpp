@@ -537,11 +537,13 @@ namespace
       opt.maxIterations = 100; //params.nIterations;
       opt.tau = 1e-3;
 
+      double total_MSC_time = 0.0;  // to compute the MSC construction time per iteration
       Timer t("BA");
       t.start();
-      opt.minimize(msc_block);
+      opt.minimize(msc_block,&total_MSC_time);  // MSC_time is an output parameter
       t.stop();
       cout << "Time per iteration: " << t.getTime() / opt.currentIteration << endl;
+      cout << "MSC construction time per iteration: " << (double)total_MSC_time / (double)opt.currentIteration << endl;
 
       if (0)
       {
@@ -564,7 +566,7 @@ namespace
 #endif
          } // end for (k)
          opt.tau = 1e-3;
-         opt.minimize(msc_block);
+         opt.minimize(msc_block,&total_MSC_time);
       }
 
       //params.lambda = opt.lambda;

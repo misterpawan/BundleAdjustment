@@ -36,6 +36,20 @@ cstring
 Base/v3d_exception.h
 .././Base/Base/v3d_exception.h
 
+.././Base/v3d_timer.h
+cstdio
+-
+ctime
+-
+algorithm
+-
+windows.h
+-
+cstring
+-
+sys/time.h
+-
+
 .././Geometry/v3d_cameramatrix.h
 Base/v3d_serialization.h
 .././Geometry/Base/v3d_serialization.h
@@ -47,16 +61,6 @@ Geometry/v3d_distortion.h
 .././Geometry/v3d_distortion.h
 Math/v3d_linear.h
 .././Geometry/Math/v3d_linear.h
-
-.././Geometry/v3d_metricbundle.h
-Math/v3d_optimization.h
-.././Geometry/Math/v3d_optimization.h
-Math/v3d_linear.h
-.././Geometry/Math/v3d_linear.h
-Geometry/v3d_cameramatrix.h
-.././Geometry/Geometry/v3d_cameramatrix.h
-Geometry/v3d_distortion.h
-.././Geometry/Geometry/v3d_distortion.h
 
 .././Math/v3d_linear.h
 Math/v3d_linearbase.h
@@ -92,6 +96,20 @@ Math/v3d_linear_tnt.h
 vector
 -
 
+.././Math/v3d_nonlinlsq.h
+Math/v3d_linear.h
+.././Math/Math/v3d_linear.h
+Math/v3d_linear_tnt.h
+.././Math/Math/v3d_linear_tnt.h
+Math/v3d_mathutilities.h
+.././Math/Math/v3d_mathutilities.h
+Math/v3d_optimization.h
+.././Math/Math/v3d_optimization.h
+vector
+-
+iostream
+-
+
 .././Math/v3d_optimization.h
 Math/v3d_linear.h
 .././Math/Math/v3d_linear.h
@@ -104,15 +122,15 @@ vector
 iostream
 -
 
-/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_varying.cpp
-Math/v3d_linear.h
-/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Math/v3d_linear.h
-Geometry/v3d_metricbundle.h
-/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Geometry/v3d_metricbundle.h
-iostream
--
-fstream
--
-map
--
+/home/iiit/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_large.cpp
+bundle_large_common.h
+/home/iiit/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_large_common.h
+Base/v3d_timer.h
+/home/iiit/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Base/v3d_timer.h
+Math/v3d_nonlinlsq.h
+/home/iiit/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Math/v3d_nonlinlsq.h
+
+/home/iiit/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_large_common.h
+Geometry/v3d_cameramatrix.h
+/home/iiit/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Geometry/v3d_cameramatrix.h
 

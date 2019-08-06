@@ -469,9 +469,10 @@ namespace
       opt.tau = 1e-3;
       //opt.tau = 1e-6;
 
+      double total_MSC_time = 0.0;
       Timer t("BA");
       t.start();
-      opt.minimize();
+      opt.minimize(1,&total_MSC_time); //1 should be replaced with the no of MSC blocks, 0.0 for total MSC time
       t.stop();
       cout << "Time per iteration: " << t.getTime() / opt.currentIteration << endl;
 

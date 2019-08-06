@@ -520,7 +520,8 @@ namespace V3D
 
    //call to mini schur solve
    void
-   NLSQ_LM_Optimizer::MSC_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta,double *prev_sol,int msc_block)
+   NLSQ_LM_Optimizer::MSC_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta,
+                               double *prev_sol,int msc_block,double *MSC_time)
    {
       int  nCols = A.num_cols();
       int  nnz = A.getNonzeroCount();
@@ -538,7 +539,7 @@ namespace V3D
       }
 
 
-      mini_schur_solve(nCols,nnz,(int*)colStarts,(int*)rowIdxs,(double*)values,Jte,del, prev_sol,msc_block);
+      mini_schur_solve(nCols,nnz,(int*)colStarts,(int*)rowIdxs,(double*)values,Jte,del, prev_sol,msc_block,MSC_time);
 
       for(i = 0; i < nCols; i++)
       {
@@ -586,7 +587,7 @@ namespace V3D
 
 
    void
-   NLSQ_LM_Optimizer::minimize(int msc_block)
+   NLSQ_LM_Optimizer::minimize(int msc_block,double *total_MSC_time)
    {
       status = LEVENBERG_OPTIMIZER_TIMEOUT;
       bool computeDerivatives = true;
@@ -608,6 +609,7 @@ namespace V3D
       //This vector is initialized with 0 and then stores the solution of the current iteration
       //to be used as an initial starting point for the GMRES iterations in the next LM iteration
       double *prev_sol = new double[totalParamDimension](); 
+      double MSC_time = 0.0;
 
       double err = 0.0;
 
@@ -751,7 +753,8 @@ namespace V3D
          //writeJtetofile(currentIteration,delta);
 
          //MSC solve
-         this->MSC_solve(_JtJ, delta, deltaPerm,prev_sol,msc_block);
+         this->MSC_solve(_JtJ, delta, deltaPerm,prev_sol,msc_block,&MSC_time);
+         *total_MSC_time += MSC_time;
 
          for (int n=0; n<totalParamDimension; n++) prev_sol[n] = deltaPerm[n];
 
