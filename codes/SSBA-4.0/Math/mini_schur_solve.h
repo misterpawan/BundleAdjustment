@@ -23,7 +23,7 @@ using namespace V3D;
 
 //namespace V3D
 //{
-	#define sizeG 441 
+	#define sizeG 1242 
 	#define size_MKL_IPAR 128
 	//#define NUM_MSC_BLOCKS 50
 

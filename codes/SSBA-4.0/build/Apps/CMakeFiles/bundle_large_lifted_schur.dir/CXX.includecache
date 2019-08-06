@@ -122,15 +122,15 @@ vector
 iostream
 -
 
-/home/iiit/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_large_common.h
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_large_common.h
 Geometry/v3d_cameramatrix.h
-/home/iiit/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Geometry/v3d_cameramatrix.h
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Geometry/v3d_cameramatrix.h
 
-/home/iiit/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_large_lifted_schur.cpp
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_large_lifted_schur.cpp
 bundle_large_common.h
-/home/iiit/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_large_common.h
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_large_common.h
 Base/v3d_timer.h
-/home/iiit/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Base/v3d_timer.h
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Base/v3d_timer.h
 Math/v3d_nonlinlsq.h
-/home/iiit/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Math/v3d_nonlinlsq.h
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Math/v3d_nonlinlsq.h
 

@@ -114,13 +114,13 @@ vector
 iostream
 -
 
-/home/iiit/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_common.cpp
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/bundle_common.cpp
 Math/v3d_linear.h
-/home/iiit/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Math/v3d_linear.h
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Math/v3d_linear.h
 Base/v3d_vrmlio.h
-/home/iiit/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Base/v3d_vrmlio.h
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Base/v3d_vrmlio.h
 Geometry/v3d_metricbundle.h
-/home/iiit/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Geometry/v3d_metricbundle.h
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Apps/Geometry/v3d_metricbundle.h
 iostream
 -
 fstream

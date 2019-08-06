@@ -1,4 +1,4 @@
-FILE(REMOVE_RECURSE
+file(REMOVE_RECURSE
   "CMakeFiles/V3D.dir/Math/v3d_nonlinlsq.cpp.o"
   "CMakeFiles/V3D.dir/Math/v3d_optimization.cpp.o"
   "CMakeFiles/V3D.dir/Math/v3d_optimization_lm.cpp.o"
@@ -9,6 +9,6 @@ FILE(REMOVE_RECURSE
 )
 
 # Per-language clean rules from dependency scanning.
-FOREACH(lang CXX)
-  INCLUDE(CMakeFiles/V3D.dir/cmake_clean_${lang}.cmake OPTIONAL)
-ENDFOREACH(lang)
+foreach(lang CXX)
+  include(CMakeFiles/V3D.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()
