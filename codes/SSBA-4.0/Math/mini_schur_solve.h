@@ -8,6 +8,7 @@
 #include <cstring>
 #include <ctime>
 #include <cmath>
+#include "Base/v3d_timer.h"
 
 using namespace std;
 
@@ -22,7 +23,7 @@ using namespace V3D;
 
 //namespace V3D
 //{
-	#define sizeG 12948 
+	#define sizeG 441 
 	#define size_MKL_IPAR 128
 	//#define NUM_MSC_BLOCKS 50
 
@@ -702,7 +703,8 @@ using namespace V3D;
 		return;
 	}
 
-	 void mini_schur_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,double *values,double *Jt_e,double *delta,double *prev_sol,int msc_block)
+	 void mini_schur_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,double *values,double *Jt_e,
+	 					   double *delta,double *prev_sol,int msc_block, double *MSC_time)
 	 {	
 		int i;
 		int *null = ( int * ) NULL;
@@ -840,10 +842,14 @@ using namespace V3D;
 
 		//cout << "\nFilling non zeros complete!!\n";
 		
-		
+		Timer t("MSC");
+		t.start();
 		//compute the mini schur complement in the cs_di format.
 		compute_mini_schur_complement(A,MSC,D,L,U,G,msc_block);
 		//cout << "\n Mini Schur Complement computation done! \n";
+		t.stop();
+		//cout << "\n Time for MSC construction : " << t.getTime() << endl;
+		*MSC_time = t.getTime();
 
 		// Since L is not used anymore
 		delete [] U->p;delete [] U->i;delete [] U->x;delete U;
@@ -951,7 +957,7 @@ using namespace V3D;
 
 		
 		ipar[7] = 1;
-		ipar[4] = 200;  // Max Iterations
+		ipar[4] = 100;  // Max Iterations
 		ipar[10] = 1;  //  Preconditioner used
 		ipar[14] = 40; //  Internal iterations
 		

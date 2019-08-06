@@ -537,11 +537,13 @@ namespace
       opt.maxIterations = 100; //params.nIterations;
       opt.tau = 1e-3;
 
+      double total_MSC_time = 0.0;  // to compute the MSC construction time per iteration
       Timer t("BA");
       t.start();
-      opt.minimize(msc_block);
+      opt.minimize(msc_block,&total_MSC_time);  // MSC_time is an output parameter
       t.stop();
       cout << "Time per iteration: " << t.getTime() / opt.currentIteration << endl;
+      cout << "MSC construction time per iteration: " << (double)total_MSC_time / (double)opt.currentIteration << endl;
 
       if (0)
       {
@@ -564,7 +566,7 @@ namespace
 #endif
          } // end for (k)
          opt.tau = 1e-3;
-         opt.minimize(msc_block);
+         opt.minimize(msc_block,&total_MSC_time);
       }
 
       //params.lambda = opt.lambda;
@@ -581,10 +583,10 @@ main(int argc, char * argv[])
    
 
    // This loop is for testing with different number of MSC blocks in mini_schur_solve
-   int msc_blocks[5] = {10,20,30,40,50};
-   //int msc_blocks[1] = {10};
+   //int msc_blocks[5] = {10,20,30,40,50};
+   int msc_blocks[1] = {20};
 
-   for(int m = 0; m < 5; ++m)
+   for(int m = 0; m < 1; ++m)
    {
          if (argc != 2)
          {
