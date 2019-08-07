@@ -9,5 +9,5 @@ https://s3.amazonaws.com/LocationRecognition/Datasets/Rome16K_images.tar
 # COLMAP reconstruction video
 https://colmap.github.io/datasets.html
 
-# VisualSfM recondtruction video
+# VisualSfM reconstruction video
 http://ccwu.me/vsfm/
