@@ -747,27 +747,27 @@ namespace V3D
 
          this->fillJtJ();
          
-         LDL_perm(_JtJ_Parent.size(), &delta[0], &Jt_e[0], &_perm_JtJ[0]); 
+         //LDL_perm(_JtJ_Parent.size(), &delta[0], &Jt_e[0], &_perm_JtJ[0]); 
          
          //showSparseMatrixInfo(currentIteration,_JtJ);
          //writeJtetofile(currentIteration,delta);
 
          //MSC solve
-         this->MSC_solve(_JtJ, delta, deltaPerm,prev_sol,msc_block,&MSC_time);
-         *total_MSC_time += MSC_time;
+         //this->MSC_solve(_JtJ, delta, deltaPerm,prev_sol,msc_block,&MSC_time);
+         //*total_MSC_time += MSC_time;
 
-         for (int n=0; n<totalParamDimension; n++) prev_sol[n] = deltaPerm[n];
+         //for (int n=0; n<totalParamDimension; n++) prev_sol[n] = deltaPerm[n];
 
          //Block Jacobi Solve
          //this->blockjacobi_solve(_JtJ, delta, deltaPerm);
 
-         LDL_permt(_JtJ_Parent.size(), &delta[0], &deltaPerm[0], &_perm_JtJ[0]);
+         //LDL_permt(_JtJ_Parent.size(), &delta[0], &deltaPerm[0], &_perm_JtJ[0]);
          
        	
          bool success_LDL = true;
          double rho = 0.0;
          /* Comment starts for using MSC solve*/
-         /*{
+        {
             int const nCols = _JtJ_Parent.size();
             //int const nnz   = _JtJ.getNonzeroCount();
             int const lnz   = _JtJ_Lp.back();

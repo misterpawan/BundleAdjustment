@@ -734,7 +734,7 @@ namespace V3D
       FILE* fp;
       switch(iteration)
       {
-      	case 0: fp = fopen("JTJ1778_1.txt","w"); break;
+      	case 0: fp = fopen("JTJ427_1.txt","w"); break;
       	//case 1: fp = fopen("JTJ49_2.txt","w"); break;
       	//case 2: fp = fopen("JTJ49_3.txt","w"); break;
       	//case 3: fp = fopen("JTJ49_4.txt","w"); break;
@@ -800,7 +800,7 @@ namespace V3D
       FILE* fp;
       switch(iteration)
       {
-      	case 0: fp = fopen("JTe1778_1.txt","w"); break;
+      	case 0: fp = fopen("JTe427_1.txt","w"); break;
       	//case 1: fp = fopen("JTe49_2.txt","w"); break;
       	//case 2: fp = fopen("JTe49_3.txt","w"); break;
       	//case 3: fp = fopen("JTe49_4.txt","w"); break;

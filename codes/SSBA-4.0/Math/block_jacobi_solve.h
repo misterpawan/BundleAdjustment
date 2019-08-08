@@ -21,7 +21,7 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 1242
+	#define sizeG 27612
 	#define size_MKL_IPAR 128
 
 	/* This function computes the preconditioner solve for the input array y_in
