@@ -21,8 +21,10 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 27612
+	#define sizeG 9279
 	#define size_MKL_IPAR 128
+	#define MAX_ITERS 100
+	#define RESTARTS 40
 
 	/* This function computes the preconditioner solve for the input array y_in
 		and writes the output in z_out
@@ -70,7 +72,8 @@ namespace V3D
 		return;
 	}
 
-	 void block_jacobi_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,double *values,double *Jt_e,double *delta)
+	 void block_jacobi_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,
+	 							double *values,double *Jt_e,double *delta,int *total_iters)
 	 {
 		int i;
 		int *null = ( int * ) NULL;
@@ -247,7 +250,7 @@ namespace V3D
 
 		double* dpar = new double[size_MKL_IPAR](); 
 		
-		double* tmp = new double[num_cols*(2*40+1)+(40*(40+9))/2+1]();
+		double* tmp = new double[num_cols*(2*RESTARTS+1)+(RESTARTS*(RESTARTS+9))/2+1]();
 		//double expected_solution[num_cols];
 		double* rhs = new double[num_cols]();
 		double* computed_solution = new double[num_cols]();
@@ -336,9 +339,9 @@ namespace V3D
 
 		
 		ipar[7] = 1;
-		ipar[4] = 100;  // Max Iterations
+		ipar[4] = MAX_ITERS;  // Max Iterations
 		ipar[10] = 1;  //Preconditioner used
-		ipar[14] = 40; //internal iterations
+		ipar[14] = RESTARTS; //internal iterations
 		
 		dpar[0] = tol; //Relative Tolerance
 
@@ -513,6 +516,7 @@ namespace V3D
 		COMPLETE:   ipar[12]=0;
 		dfgmres_get(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp, &itercount);
 		//cout << "The system has been solved  in " << itercount << " iterations!\n";
+		*total_iters = itercount;
 	//	cout << "\n RCI_request : "<< RCI_request << "\n";
 	/*
 		printf("\nThe following solution has been obtained: \n");

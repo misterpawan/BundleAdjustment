@@ -23,8 +23,10 @@ using namespace V3D;
 
 //namespace V3D
 //{
-	#define sizeG 27612 
+	#define sizeG 441 
 	#define size_MKL_IPAR 128
+	#define MAX_ITERS 100
+	#define RESTARTS 40 
 	//#define NUM_MSC_BLOCKS 50
 
 	//This function densifies the jth column of input matrix PU
@@ -704,7 +706,7 @@ using namespace V3D;
 	}
 
 	 void mini_schur_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,double *values,double *Jt_e,
-	 					   double *delta,double *prev_sol,int msc_block, double *MSC_time)
+	 					   double *delta,double *prev_sol,int msc_block, double *MSC_time, int *total_iters)
 	 {	
 		int i;
 		int *null = ( int * ) NULL;
@@ -893,7 +895,7 @@ using namespace V3D;
 
 		double* dpar = new double[size_MKL_IPAR](); 
 		
-		double* tmp = new double[num_cols*(2*40+1)+(40*(40+9))/2+1]();
+		double* tmp = new double[num_cols*(2*RESTARTS+1)+(RESTARTS*(RESTARTS+9))/2+1]();
 		double* rhs = new double[num_cols]();
 		double* computed_solution = new double[num_cols]();
 		double* residual = new double[num_cols]();   
@@ -957,9 +959,9 @@ using namespace V3D;
 
 		
 		ipar[7] = 1;
-		ipar[4] = 100;  // Max Iterations
+		ipar[4] = MAX_ITERS;  // Max Iterations
 		ipar[10] = 1;  //  Preconditioner used
-		ipar[14] = 40; //  Internal iterations
+		ipar[14] = RESTARTS; //  Internal iterations
 		
 		dpar[0] = tol; //Relative Tolerance
 
@@ -1079,7 +1081,7 @@ using namespace V3D;
 		COMPLETE:   ipar[12]=0;
 		dfgmres_get(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp, &itercount);
 		//cout << "The system has been solved  in " << itercount << " iterations!\n";
-
+		*total_iters = itercount;
 
 		//store the solution into delta 
 		RCI_count = 1;

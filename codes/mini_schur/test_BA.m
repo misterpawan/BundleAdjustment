@@ -41,13 +41,15 @@ function test_BA
 
     tic;
     xx = normal_solve(B, b);
+%     [LB,DB] = ldl(full(B));
+%     xx = LB'\(LD\(LB\b));
     normal_solve_time = toc;
     fprintf("\nDirect solve done!\n");
 %     xx = full(xx);
 %     for i = 1 : 10
 %         fprintf("\nxx[%d] = %f\n",i,xx(i));
 %     end
-%     keyboard;
+%      keyboard;
     
     nparts = 10;
     %[sizes_parts, A, p] = domain_decomposition(B, nparts);
@@ -65,8 +67,8 @@ function test_BA
     % blocks for schur complements
     %nmsc = 3; 
    % nmsc_blocks = [3 4 5 6 7 8 9 10 15 20];
-%     nmsc_blocks = [3 5 10 20 30];
-    nmsc_blocks = [20];
+     nmsc_blocks = [10 20 30];
+    %nmsc_blocks = [30];
     %nmsc_blocks = [25 30 35 40];
     %nmsc_blocks = [13 14 15 16 17 18];
     iters = zeros(1,length(nmsc_blocks));
@@ -89,6 +91,8 @@ function test_BA
         L = A(sizeD + 1: m, 1 : sizeD);
         U = L';
         G = A(sizeD + 1:m, sizeD + 1:m);%%change
+        
+%         Schur = G - L*(D\U);
         
 %         [L_block_G,U_block_G] = lu(G);
         %keyboard;
@@ -201,14 +205,14 @@ function test_BA
 %         fp = fopen("~/rand_sol_MSC_20.txt","w");
 %         fprintf(fp,"%10.9f\n",rand_sol);
 %         fclose(fp);
-          GS = full(GS);
+%           GS = full(GS);
 %           for i = 62:124
 %               fprintf("GS(%d) = %f\n",i,GS(99,i));
 %           end
           
-%           keyboard;
+%            keyboard;
         clear S PD PU PL PG
-%         clear GS
+        clear GS
  
 %         setup.type='ilutp'; 
 %         setup.droptol = 1e-03; %ntol(ii); 
@@ -231,38 +235,38 @@ function test_BA
 
        
 
-  J = blkdiag(D,GS);
+  J = blkdiag(D,G);
 %    keyboard;
 tic;
-%   [LJ,UJ] = lu(J);
+  [LJ,UJ] = lu(J);
 
 %     [L_block_G,U_block_G] = lu(G);
   t_jacobi = toc
  
-   prec_rhs = ones(m,1);
-    prec_sol = nssolve2(prec_rhs);
+%    prec_rhs = ones(m,1);
+%     prec_sol = nssolve2(prec_rhs);
 %     prec_sol = UG\(LG\prec_rhs);
-    pp = J * prec_sol;
+%     pp = J * prec_sol;
 %     pp = GS*prec_sol;
 %     fp = fopen("~/rhs_MSC_20.txt","w");
 %     fprintf(fp,"%d\n",prec_rhs);
 %     fclose(fp);
-    keyboard;
-    prec_sol_C = load("~/MSC_sol_20.txt");
-    qq = J * prec_sol_C;
-    keyboard;
+%     keyboard;
+%     prec_sol_C = load("~/MSC_sol_20.txt");
+%     qq = J * prec_sol_C;
+%     keyboard;
  clear J D G ; 
             %% Solve with PCG
             sol=zeros(n,1);
-            tol = 1e-2; maxit = 10;restart = 20;
+            tol = 1e-2; maxit = 3;restart = 40;
             max_pcg = 200;
             try
                 fprintf('Enter GMRES...\n');
                 %tic, [x,flag,relres,iter] = pcg(B,b,tol,maxit,@nssolve2); t_pcg = toc;
                 %[x,flag,relres,iter,resvec] = pcg(B,b,tol,max_pcg,@jacobi_solve);t_gmres = toc;
                 %tic, [x_np,flag_np,relres_np,iter_np,resvec_np] = gmres(B,b,restart,tol,maxit); t_gmres_np = toc;
-%                 tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@nssolve2); t_gmres = toc;
-                tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@jacobi_solve); t_gmres = toc;
+                tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@nssolve2); t_gmres = toc;
+%                 tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@jacobi_solve); t_gmres = toc;
                 %tic, [x,flag,relres,iter] = gmres(B,b,restart,tol,maxit); t_gmres = toc;
                 %% Display output
                 %its_np = (iter_np(1)-1)*restart+iter_np(2);

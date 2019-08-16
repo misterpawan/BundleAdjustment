@@ -178,7 +178,7 @@ namespace V3D
 
          
 
-         void minimize(int msc_block,double *total_MSC_time);
+         void minimize(int msc_block,double *total_MSC_time,int *num_gmres_iters,double *MSC_solve_time);
 
          virtual double getParameterLength() const = 0;
 
@@ -220,10 +220,11 @@ namespace V3D
          CCS_Matrix<double> _JtJ;
 
          //call to mini schur solve
-         void MSC_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta,double *prev_sol,int msc_block,double *MSC_time);
+         void MSC_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta,
+                        double *prev_sol,int msc_block,double *MSC_time,int *total_iters);
 
          //call to block jacobi solve
-         void blockjacobi_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta);
+         void blockjacobi_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta, int *total_iters);
         
 
    }; // end struct NLSQ_LM_Optimizer
