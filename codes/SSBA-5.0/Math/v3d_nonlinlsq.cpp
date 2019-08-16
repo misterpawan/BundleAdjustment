@@ -521,7 +521,7 @@ namespace V3D
 
    //call to two grid solve
    void
-   NLSQ_LM_Optimizer::TG_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta)
+   NLSQ_LM_Optimizer::TG_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta, double *prev_sol)
    {
       int  nCols = A.num_cols();
       int  nnz = A.getNonzeroCount();
@@ -539,7 +539,7 @@ namespace V3D
       }
 
 
-      tg_gmres_solve(nCols,nnz,(int*)colStarts,(int*)rowIdxs,(double*)values,Jte,del);
+      tg_gmres_solve(nCols,nnz,(int*)colStarts,(int*)rowIdxs,(double*)values,Jte,del,prev_sol);
 
       for(i = 0; i < nCols; i++)
       {
@@ -572,6 +572,12 @@ namespace V3D
       Vector<double> Jt_e(totalParamDimension);
       Vector<double> delta(totalParamDimension);
       Vector<double> deltaPerm(totalParamDimension);
+
+	
+      //This vector is initialized with 0 and then stores the solution of the current iteration
+      //to be used as an initial starting point for the GMRES iterations in the next LM iteration
+
+      double *prev_sol = new double[totalParamDimension]();
 
       double err = 0.0;
 
@@ -702,9 +708,19 @@ namespace V3D
          //showSparseMatrixInfo(currentIteration,_JtJ);
          //displaySparseMatrix(_JtJ);
          //writeJtetofile(currentIteration,Jt_e);
-
+         
+        // LDL_perm(_JtJ_Parent.size(), &delta[0], &Jt_e[0], &_perm_JtJ[0]);
+	LDL_perm(_JtJ_Parent.size(), &delta[0], &Jt_e[0], &_perm_JtJ[0]); 
          //two grid solve
-         this->TG_solve(_JtJ, Jt_e, delta);
+        // this->TG_solve(_JtJ, Jt_e, delta, prev_sol);
+	this->TG_solve(_JtJ, delta, deltaPerm, prev_sol);
+
+	 for (int n=0; n<totalParamDimension; n++){
+	    prev_sol[n] = deltaPerm[n];
+	}
+
+	// LDL_perm(_JtJ_Parent.size(), &delta[0], &Jt_e[0], &_perm_JtJ[0]);
+	LDL_permt(_JtJ_Parent.size(), &delta[0], &deltaPerm[0], &_perm_JtJ[0]);
          /*
          for(int k = 0; k < 10; k++)
             cout << "\ndelta["<<k<<"] = "<<delta[k];
@@ -893,7 +909,7 @@ namespace V3D
       if (optimizerVerbosenessLevel >= 2)
          cout << "Leaving NLSQ_LM_Optimizer::minimize()." << endl;
 
-      
+     delete [] prev_sol;
    //showSparseMatrixInfo(_JtJ); // Call to Function, dumps the Matrix JtJ
      
 
