@@ -22,7 +22,10 @@ using namespace V3D;
 
 //mkl libraries
 #include "mkl.h"
+
 #include "mkl_solvers_ee.h"
+
+
 
 namespace V3D
 {
@@ -30,7 +33,7 @@ namespace V3D
 // macros
 //#define max(a, b) (a) < (b) ? (b): (a)  // for eigenvalue solve routine
 #define sizelu 128                       // for ILU 
-#define sizeG 441 //hardcoding it for the time being
+#define sizeG 9279 //hardcoding it for the time being
 #define size_MKL_IPAR 128
 
 
@@ -303,7 +306,7 @@ void tg_solve(int num_cols,int kk, double *acsr,int *ia,int *ja, double *bilu0, 
 
 
 
-void tg_gmres_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,double *values,double *Jt_e,double *delta)
+void tg_gmres_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,double *values,double *Jt_e,double *delta, double *prev_sol)
 {
   
 
@@ -447,7 +450,7 @@ void tg_gmres_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,double *val
 /* mkl_sparse_d_ev input parameters */
   char         which = 'L'; /* Which eigenvalues to calculate. ('L' - largest (algebraic) eigenvalues, 'S' - smallest (algebraic) eigenvalues) */
   MKL_INT      pm[128];     /* This array is used to pass various parameters to Extended Eigensolver Extensions routines. */
-  MKL_INT      k0  = 5;     /* Desired number of max/min eigenvalues */   
+  MKL_INT      k0  = 3;     /* Desired number of max/min eigenvalues */   
   MKL_INT      k1  = k0*num_cols;  /* array size for Eigenvalues */
 
   /* mkl_sparse_d_ev output parameters */        
@@ -459,7 +462,7 @@ void tg_gmres_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,double *val
   /* Local variables */
   MKL_INT      info;               /* Errors */
   MKL_INT      compute_vectors = 1;/* Flag to compute eigenvectors */
-  MKL_INT      tol = 7;            /* Tolerance */
+  MKL_INT      tol = 5;            /* Tolerance */
   double       Y[k0];               /* Y=(X')*X-I */
   double       sparsity;           /* Sparsity of randomly generated matrix */
   MKL_INT      i1, j1;
@@ -502,6 +505,10 @@ void tg_gmres_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,double *val
      printf("   %d  %.15e %.15e \n" ,i1, E[i1], res[i1]);
   }
  */
+  for (int r = 0; r < kk ; r++){       // scaling eigenvalues 
+ 	  E[r] = E[r] * 1e-10;
+  }
+
   mkl_sparse_destroy(AA);  // free memory for csr matrix handle
 
 /*******Eigen value/vector Computation Complete *********/
@@ -700,8 +707,8 @@ delete [] U->p;delete [] U->i;delete [] U->x;delete U;
 
   // Initialize the parameters
   ipar1[30] = 1;
-  dpar1[30] = 1.E-20;  // 1.0e-16
-  dpar1[31] = 1.E-16;
+  dpar1[30] = 1.E-10;  // 1.0e-20
+  dpar1[31] = 1.E-8;   //  1.0e-16
 
   // call to ILU routine for B
   dcsrilu0 (&ivar1, bacsr, bia, bja, bilu0, ipar1, dpar1, &ierr1);
@@ -810,8 +817,9 @@ delete [] U->p;delete [] U->i;delete [] U->x;delete U;
 	/*---------------------------------------------------------------------------*/
 	for(RCI_count=0; RCI_count<num_cols; RCI_count++)
 	{
-		computed_solution[RCI_count]=0.0;
+		computed_solution[RCI_count]=prev_sol[RCI_count];
 	}
+
 //  if(ipar[10] == 1) computed_solution[0]=1000.0;   // for preconditioner GMRES to work
 	//computed_solution[0]=0.0;
 
@@ -823,11 +831,11 @@ delete [] U->p;delete [] U->i;delete [] U->x;delete U;
 
 	
 	ipar[7] = 1;
-	ipar[4] = 20;  // Max Iterations
+	ipar[4] = 10;  // Max Iterations
 	ipar[10] = 1;  //Preconditioner used
-	ipar[14] = 22; //internal iterations
+	ipar[14] = 5; //internal iterations
 	
-	dpar[0] = 1.0e-04; //Relative Tolerance
+	dpar[0] = 1.0e-02; //Relative Tolerance
 
 	/*---------------------------------------------------------------------------
 	/* Check the correctness and consistency of the newly set parameters
@@ -906,7 +914,7 @@ delete [] U->p;delete [] U->i;delete [] U->x;delete U;
 		//cout << "\n relres_nrm : " << relres_nrm << "\n";
 //		printf("\nRelres norm = %10.9f\n",relres_nrm);
 
-		if (relres_nrm<1.0E-4) goto COMPLETE;   //taking tolerance as 1e-04
+		if (relres_nrm<1.0E-2) goto COMPLETE;   //taking tolerance as 1e-04
 
 		else goto ONE;
 		
@@ -931,7 +939,7 @@ delete [] U->p;delete [] U->i;delete [] U->x;delete U;
 	/*---------------------------------------------------------------------------*/
 	if (RCI_request==4)
 	{
-		if (dpar[6]<1.0E-12) goto COMPLETE;
+		if (dpar[6]<1.0E-2) goto COMPLETE;
 		else goto ONE;
 	}
 	/*---------------------------------------------------------------------------

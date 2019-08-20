@@ -220,7 +220,7 @@ namespace V3D
          CCS_Matrix<double> _JtJ;
 
          //call to mini schur solve
-         void TG_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta);
+         void TG_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta,  double *prev_sol);
         
 
    }; // end struct NLSQ_LM_Optimizer
