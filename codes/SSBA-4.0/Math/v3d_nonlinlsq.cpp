@@ -757,6 +757,7 @@ namespace V3D
          //writeJtetofile(currentIteration,delta);
 
          //MSC solve
+         
          Timer t("MSC_solve");
          t.start();
 
@@ -787,7 +788,7 @@ namespace V3D
         /*{
             int const nCols = _JtJ_Parent.size();
             //int const nnz   = _JtJ.getNonzeroCount();
-            int const lnz   = _JtJ_Lp.back(); cout << "lnz : " << lnz+nCols << endl;
+            int const lnz   = _JtJ_Lp.back(); //cout << "lnz : " << lnz+nCols << endl;
 
             vector<int> Li(lnz);
             vector<double> Lx(lnz);

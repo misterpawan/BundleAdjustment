@@ -29,7 +29,7 @@ using namespace V3D;
 	#define sizeG 441 
 	#define size_MKL_IPAR 128
 	#define MAX_ITERS 100
-	#define RESTARTS 50 
+	//#define RESTARTS 50 
 	//#define NUM_MSC_BLOCKS 50
 
 	//This function densifies the jth column of input matrix PU
@@ -917,7 +917,7 @@ using namespace V3D;
 
 		double* dpar = new double[size_MKL_IPAR](); 
 		
-		double* tmp = new double[num_cols*(2*RESTARTS+1)+(RESTARTS*(RESTARTS+9))/2+1]();
+		double* tmp = new double[num_cols*4]();
 		double* rhs = new double[num_cols]();
 		double* computed_solution = new double[num_cols]();
 		double* residual = new double[num_cols]();   
@@ -993,14 +993,15 @@ using namespace V3D;
 		/*---------------------------------------------------------------------------
 		/* Initialize the solver
 		/*---------------------------------------------------------------------------*/
-		dfgmres_init(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp); 
+		//dfgmres_init(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp); 
+		dcg_init(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp);
 		if (RCI_request!=0) goto FAILED;
 
 		
 		ipar[7] = 1;
 		ipar[4] = MAX_ITERS;  // Max Iterations
 		ipar[10] = 1;  //  Preconditioner used
-		ipar[14] = RESTARTS; //  Internal iterations
+		//ipar[14] = RESTARTS; //  Internal iterations
 		
 		dpar[0] = tol; //Relative Tolerance
 
@@ -1015,14 +1016,16 @@ using namespace V3D;
 		/*---------------------------------------------------------------------------
 		/* Check the correctness and consistency of the newly set parameters
 		/*---------------------------------------------------------------------------*/
-		dfgmres_check(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp); 
+		//dfgmres_check(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp); 
+		dcg_check(&ivar,computed_solution,rhs,&RCI_request,ipar,dpar,tmp);
 		if (RCI_request!=0) goto FAILED;
 
 		/*---------------------------------------------------------------------------
 		/* Compute the solution by RCI (P)FGMRES solver with preconditioning
 		/* Reverse Communication starts here
 		/*---------------------------------------------------------------------------*/
-		ONE:  dfgmres(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp);
+		//ONE:  dfgmres(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp);
+		ONE:  dcg(&ivar,computed_solution,Jt_e,&RCI_request,ipar,dpar,tmp);
 
 		
 		if(RCI_request==0) goto COMPLETE;
@@ -1033,7 +1036,8 @@ using namespace V3D;
 		/*-----------------------DEPRECATED ROUTINE --------------------------------*/
 		if (RCI_request==1)
 		{
-			mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, &tmp[ipar[21]-1], &tmp[ipar[22]-1]);
+			//mkl_dcsrsymv(&tr, &n, a, ia, ja, tmp, &tmp[n]);
+			mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, tmp, &tmp[ivar]);
 
 			goto ONE;
 		}

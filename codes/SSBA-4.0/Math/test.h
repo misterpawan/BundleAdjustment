@@ -343,8 +343,8 @@ void test_prec_solve(cs_di_sparse* A, cs_di_sparse* D,cs_di_sparse* MSC,void *Nu
 	for(kk = 0; kk < nrows; ++kk)
 		z1[kk] = z1[kk] - t1[kk];
 
-	for(kk = 0; kk < 20; ++kk)
-		cout << "z1["<<kk<<"] = " << z1[kk] << endl; 
+	//for(kk = 0; kk < 20; ++kk)
+	//	cout << "z1["<<kk<<"] = " << z1[kk] << endl; 
 	
 	for(kk = 0; kk < ivar; kk++)
 	{
@@ -376,6 +376,97 @@ void test_prec_solve(cs_di_sparse* A, cs_di_sparse* D,cs_di_sparse* MSC,void *Nu
 	delete [] y1; delete [] y2; delete [] z1; delete [] z2; delete [] Lz1;
 	delete [] rhs_prec; delete [] prec_mat_sol; delete [] prec_sol;
 	delete [] Uz2; delete [] t1; 
+
+	return;
+}
+
+
+void test_jacobi_solve(cs_di_sparse* A, cs_di_sparse* D,cs_di_sparse* G,void *Numeric_D,void *Numeric_G)
+{
+	double* y1 = new double[D->n]();
+	double* y2 = new double[G->n]();
+	double* z1 = new double[D->n]();
+	double* z2 = new double[G->n]();
+	int prec_solve_status;
+	double* null = (double*)NULL;
+	int zvar = G->n ; //no of rows of L
+	int kk;
+	char cvar = 'N';
+
+	int ivar = A->n;
+	int p = 1;
+	double dvar = -1.0E0;
+
+	double *rhs_prec = new double[A->n]();
+	double *prec_sol = new double[A->n]();
+	double *prec_mat_sol = new double[A->n]();
+	//string test_filename = "~/rhs_MSC_20.txt";
+	//string solve_filename = "test/rand_sol_prec.txt";
+	
+	/*
+	for(int k = 0; k < 1; k++)
+	{
+		//cout << "\n In loop .. " << endl;
+		for(int l = MSC->p[k]; l<MSC->p[k+1]; l++)
+			printf("\nMSC->i[%d] = %d\t\tMSC->x[%d] = %lf",l,MSC->i[l],l,MSC->x[l]);
+			//cout << "\n l : " << l << endl;
+	}
+	cout << "\n MSC non zeros : " << MSC->p[MSC->n] << endl;
+	cout << "\n";
+	*/
+	//r8vec_data_read ( test_filename, A->n, rhs_prec);
+	//r8vec_data_read ( solve_filename, A->n, prec_mat_sol); // MATLAB solution
+	//cout << "\nData read done!" << endl;
+	for(kk = 0; kk < A->n; kk++)
+		rhs_prec[kk] = 1.0; 
+
+
+	for(kk = 0; kk<ivar; kk++)
+	{
+		if(kk < (D->n)) y1[kk] = rhs_prec[kk];
+		else y2[kk-(D->n)] = rhs_prec[kk];  //splitting vector into y1,y2
+	}
+
+	// computing D_inv(y1)
+	prec_solve_status = umfpack_di_solve ( UMFPACK_A, D->p, D->i, D->x, z1, y1, Numeric_D, null, null );
+	//cout << "\n Prec Solve status : " << prec_solve_status << "\n";
+	
+	//computing G_inv(y2)
+	prec_solve_status = umfpack_di_solve ( UMFPACK_A, G->p, G->i, G->x, z2, y2, Numeric_G, null, null );
+	//cout << "\n  Prec solve status MSC :" << prec_solve_status << "\n";
+
+	//for(kk = 0; kk < 20; ++kk)
+	//	cout << "z1["<<kk<<"] = " << z1[kk] << endl; 
+	
+	for(kk = 0; kk < ivar; kk++)
+	{
+		if(kk < (D->n)) prec_sol[kk] = z1[kk];
+		else prec_sol[kk] = z2[kk - (D->n)];
+	}
+
+	FILE *fp = fopen("MSC_sol_20.txt","w");
+	//cout << "\nSolve done!" << endl;
+ 	int j;
+      //freopen("test_rhs.txt","w",stdout);
+
+    for (j = 0; j < A->n; j++)
+    {
+    	//cout << Jt_e[j];
+      	fprintf(fp, "%15.15lf\n", prec_sol[j]);
+    }
+
+    fclose(fp);
+
+	//for(int i = 0; i < 20; i++)
+	//	printf("\nprec_sol[%d] = %10.9f \t\t prec_mat_sol[%d] = %10.9f",i,prec_sol[i],i,prec_mat_sol[i]);
+
+	//daxpy(&ivar, &dvar, prec_sol, &p, prec_mat_sol, &p);
+	//diff = dnrm2(&ivar,prec_mat_sol,&p);
+
+  	//cout << "\n The difference in norms for prec solve  is " << diff << "\n";
+
+	delete [] y1; delete [] y2; delete [] z1; delete [] z2; 
+	delete [] rhs_prec; delete [] prec_mat_sol; delete [] prec_sol;
 
 	return;
 }

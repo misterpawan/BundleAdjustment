@@ -14,6 +14,7 @@
 #include "umfpack.h"
 #include "mkl.h"
 
+
 using namespace std;
 using namespace V3D;
 
@@ -21,10 +22,10 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 2025
+	#define sizeG 441
 	#define size_MKL_IPAR 128
 	#define MAX_ITERS 100
-	#define RESTARTS 40
+	#define RESTARTS 50
 
 	/* This function computes the preconditioner solve for the input array y_in
 		and writes the output in z_out
@@ -88,15 +89,9 @@ namespace V3D
 		int iterD = 0, iterG = 0;
 		int count = 1;
 
-		//int const num_cols = H.num_cols();
-		//int const ncc = H.getNonzeroCount();
-
 		//creating structures of cs_diPARSE
 		cs_di* A = new cs_di;cs_di* D = new cs_di;cs_di* G = new cs_di;
 
-		//num_cols = num_cols+1;         
-		//cout << "\nNo of non zeros = "<< ncc << "\n";
-		//cout << "\nNo of columns = "<< num_cols << "\n";
 
 		//size of the D matrix
 		sizeD = num_cols - sizeG; 
@@ -107,20 +102,12 @@ namespace V3D
 		//Allocate space for the coefficient matrix
 		A->x = new double[ncc](); A->p = new int[num_cols+1](); A->i = new int[ncc]();
 
-		//A->p = colStarts;
-		//A->i = rowIdxs;
-		//A->x = values;
 
 		for(int q = 0; q < num_cols; q++) A->p[q] = colStarts[q];
 		for(int q = 0; q < ncc; q++) A->i[q] = rowIdxs[q];
 		for(int q = 0; q < ncc; q++) A->x[q] = values[q];
 		//dcopy(&num_cols, values, &count, A->x, &count); 
 		A->p[num_cols] = ncc;
-
-		//cout << "\n values[ncc-1] = "<< values[ncc-1] << "\t\t A->x[ncc-1] = "<<A->x[ncc-1]<<"\n";
-
-
-		/***Domain Decomposition***/
 
 		//Allocating memory for blocks
 		D->p = new int[sizeD+1]();
@@ -179,7 +166,6 @@ namespace V3D
 					if(A->i[k] < sizeD) continue;
 					else
 					{
-						//cout << "\n row : " << A->i[k] << "\n";
 						G->i[iterG] = A->i[k]-sizeD;
 						G->x[iterG] = A->x[k];
 						iterG += 1;
@@ -189,36 +175,22 @@ namespace V3D
 			//for the last column
 			else 
 			{
-				//cout << "\n In second condition..."<<A->nzmax <<"\n";
 				for(k = A->p[j]; k < A->nzmax;k++)
 				{
 					if(A->i[k] < sizeD) continue;
 					else
 					{
-						//cout << "\n row : " << A->i[k] << "\n";
 						G->i[iterG] = A->i[k] - sizeD;
 						G->x[iterG] = A->x[k];
 						iterG += 1;
 					}
-					//cout << "\n k : " << k << "\n";
-					//break;
 				}
 			}
-		    //break;
 		}
 
 		G->p[sizeG] = iterG;
 
-		//cout << "\nFilling non zeros complete!!\n";
-
-		//cout << "\n ok : "<< ok << "\n";
-	/*
-		for(int k = 0; k < 1; k++)
-		{
-			for(int l = MSC->p[k]; l<20; l++)
-				printf("\nMSC->i[%d] = %d\t\tMSC->x[%d] = %10.9f",l,MSC->i[l],l,MSC->x[l]);
-		}
-	*/
+	
 		/************LU Factorization of D and MSC******************************/
 
 		sym_status = umfpack_di_symbolic ( D->m, D->n, D->p, D->i, D->x, &Symbolic_D, solve_null, solve_null );
@@ -242,16 +214,11 @@ namespace V3D
 		/**********************GMRES CALL******************************/
 
 		//initializing variables and data structures for DFGMRES call
-		//int restart = 20;  //DFGMRES restarts
 		MKL_INT* ipar = new MKL_INT[size_MKL_IPAR]();
-		//ipar[14] = 150;  //non restarted iterations
-
-		//cout << "\n tmp size : "<< num_cols*(2*ipar[14]+1)+ipar[14]*((ipar[14]+9)/2+1) << "\n";
 
 		double* dpar = new double[size_MKL_IPAR](); 
 		
 		double* tmp = new double[num_cols*(2*RESTARTS+1)+(RESTARTS*(RESTARTS+9))/2+1]();
-		//double expected_solution[num_cols];
 		double* rhs = new double[num_cols]();
 		double* computed_solution = new double[num_cols]();
 		double* residual = new double[num_cols]();   
@@ -283,34 +250,8 @@ namespace V3D
 	    mkl_dcsrcsc(job,&ivar,acsr,ja,ia,A->x,A->i,A->p,&info);
 	    //cout << "\n Conversion info A : "<< info << "\n";
 
+	    //test_jacobi_solve(A,D,G,Numeric_D,Numeric_G);
 
-	    // Testing A solve with LU and comparing with MATLAB
-		//test_A_solve(A);
-		//test_D_solve(D);
-		//test_MSC_solve(MSC);
-		// test_matvec_multiply(A);
-
-	    /***Testing the preconditioner solve with MATLAB***/
-	/*    double *matvec = new double[A->n];
-	    double *randvec = new double[A->n];
-	    string test_filename = "test/rand_vec.txt";
-
-	    r8vec_data_read ( test_filename, A->n, randvec);
-
-		mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, randvec, matvec);
-
-		ofstream outfile("test/rand_matvec_cpp.txt");
-
-	  	if(outfile.is_open())
-	  	{
-	  		for(int k = 0; k < A->n; k++)
-	  			outfile << matvec[k] << "\n";
-	  	}
-	  	outfile.close();
-
-	    test_prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl);
-	    delete [] matvec; delete [] randvec;
-	*/
 		/*---------------------------------------------------------------------------
 		/* Save the right-hand side in vector rhs for future use
 		/*---------------------------------------------------------------------------*/
@@ -377,25 +318,7 @@ namespace V3D
 		if (RCI_request==1)
 		{
 			mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, &tmp[ipar[21]-1], &tmp[ipar[22]-1]);
-		/*	
-			ofstream outfile("RCI_1_matvec_cpp.txt");
-
-		  	if(outfile.is_open())
-		  	{
-		  		for(int k = 0; k < A->n; k++)
-		  			outfile << tmp[(ipar[21]-1)+k] << "\n";
-		  	}
-		  	outfile.close();
-
-		  	char comp_done ;
-		  	printf("\nMATLAB  matvec computation done ? :");
-		  	scanf(" %c[^\n]",&comp_done);
-		  	cout << "\n";
-		  	string matvec_filename = "matvec.txt"; 
-		  	
-		  	if(comp_done == 'y' || comp_done == 'Y')
-		  		r8vec_data_read ( matvec_filename, A->n, &tmp[ipar[22]-1]);
-		*/
+		
 			goto ONE;
 		}
 
@@ -407,24 +330,17 @@ namespace V3D
 			/* Request to the dfgmres_get routine to put the solution into b[N] via ipar[12]*/
 			ipar[12]=1;
 			
-			//for(int kl = 0; kl < 10; kl++)
-			//	printf("\n comp_sol[%d] = %10.9f",kl, rhs[kl]);
-
+			
 			/* Get the current FGMRES solution in the vector rhs[N] */
 			dfgmres_get(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp, &itercount);
-
-			
 
 			/* Compute the current true residual via MKL (Sparse) BLAS routines */
 			mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, rhs, residual); // A*x for new solution x
 			dvar=-1.0E0;
 			RCI_count=1;
-			daxpy(&ivar, &dvar, Jt_e, &RCI_count, residual, &RCI_count);  // Ax - A*x_solution
-			
-
-			//cout << "\n Iteration : " << itercount;
-			//for(int k = 0; k < 10; k++)
-			//		printf("\nresildual[%d] = %10.9f\n",k,residual[k]);
+			//daxpy(&ivar, &dvar, Jt_e, &RCI_count, residual, &RCI_count);  // Ax - A*x_solution
+			for(j = 0 ; j<ivar ; j++)
+				residual[j] = Jt_e[j] - residual[j];
 
 			if(ipar[10] == 0)   // non preconditioned system
 			{
@@ -443,14 +359,9 @@ namespace V3D
 				prec_solve(A,D,G,Numeric_D,Numeric_G,residual,prec_relres);
 				prec_relres_nrm = dnrm2(&ivar,prec_relres,&RCI_count); 
 				delete [] prec_relres;
-				//cout << "\n prec relres norm : " << prec_relres_nrm << "\n";
-				//printf("\nPrec relres norm : %10.9f",prec_relres_nrm);
 				relres_nrm = prec_relres_nrm/prec_rhs_nrm;
 
 			}
-
-			//cout << "\n relres_nrm : " << relres_nrm << "\n";
-			//printf("\nRelres norm = %10.9f\n",relres_nrm);
 
 			if (relres_nrm<=tol) goto COMPLETE;   //taking tolerance as 1e-04
 
@@ -466,25 +377,7 @@ namespace V3D
 		{
 			//cout << "\n Prec solve ..." << "\n";
 			prec_solve(A,D,G,Numeric_D,Numeric_G,&tmp[(ipar[21]-1)],&tmp[(ipar[22]-1)]);
-		/*	
-			ofstream outfile("RCI_3_prec_solve_cpp.txt");
-
-		  	if(outfile.is_open())
-		  	{
-		  		for(int k = 0; k < A->n; k++)
-		  			outfile << tmp[(ipar[21]-1)+k] << "\n";
-		  	}
-		  	outfile.close();
-
-		  	char comp_done ;
-		  	printf("\nMATLAB prec solve computation done ? :");
-		  	scanf(" %c[^\n]",&comp_done);
-		  	cout << "\n";
-		  	string precsolve_filename = "prec_solve.txt"; 
-		  	
-		  	if(comp_done == 'y' || comp_done == 'Y')
-		  		r8vec_data_read ( precsolve_filename, A->n, &tmp[ipar[22]-1]);
-		*/
+		
 			goto ONE;
 		}
 

@@ -584,10 +584,10 @@ main(int argc, char * argv[])
 {
   
    // This loop is for testing with different number of MSC blocks in mini_schur_solve
-   //int msc_blocks[6] = {10,20,30,40,50,60};
-   int msc_blocks[1] = {20};
+   int msc_blocks[6] = {10,20,30,40,50,60};
+   //int msc_blocks[1] = {20};
 
-   for(int m = 0; m < 1; ++m)
+   for(int m = 0; m < 6; ++m)
    {
          if (argc != 2)
          {

@@ -67,8 +67,8 @@ function test_BA
     % blocks for schur complements
     %nmsc = 3; 
    % nmsc_blocks = [3 4 5 6 7 8 9 10 15 20];
-    % nmsc_blocks = [10 20 30 40 50 60];
-    nmsc_blocks = [20];
+     nmsc_blocks = [10 20 30 40 50 60];
+   % nmsc_blocks = [20];
     %nmsc_blocks = [25 30 35 40];
     %nmsc_blocks = [13 14 15 16 17 18];
     iters = zeros(1,length(nmsc_blocks));
@@ -205,13 +205,13 @@ function test_BA
 %         fp = fopen("~/rand_sol_MSC_20.txt","w");
 %         fprintf(fp,"%10.9f\n",rand_sol);
 %         fclose(fp);
-            GS = full(GS); 
+           % GS = full(GS); 
             %keyboard;
-            for i = 1:9
-                fprintf("GS(%d) = %f\n",i,GS(1,i));
-            end
+            %for i = 1:9
+             %   fprintf("GS(%d) = %f\n",i,GS(1,i));
+            %end
           
-            keyboard;
+            %keyboard;
         clear S PD PU PL PG
         clear GS
  
@@ -243,36 +243,37 @@ tic;
 %     [L_block_G,U_block_G] = lu(G);
   t_jacobi = toc
  
-   prec_rhs = ones(m,1);
+  % prec_rhs = ones(m,1);
   % yy = B * prec_rhs;
-   prec_sol = nssolve2(prec_rhs);
+  % prec_sol = nssolve2(prec_rhs);
+  %prec_sol = jacobi_solve(prec_rhs);
 %     prec_sol = UG\(LG\prec_rhs);
     %pp = J * prec_sol;
     %pp = GS*prec_sol;
     %fp = fopen("~/rhs_MSC_20.txt","w");
     %fprintf(fp,"%d\n",prec_rhs);
     %fclose(fp);
-    keyboard;
-    prec_sol_C = load("~/MSC_sol_20.txt");
+   % keyboard;
+    %prec_sol_C = load("~/MSC_sol_20.txt");
     %qq = J * prec_sol_C;
-    keyboard;
+    %keyboard;
  clear J D G ; 
             %% Solve with PCG
             sol=zeros(n,1);
             tol = 1e-2; maxit = 3;restart = 40;
-            max_pcg = 100;
+            max_pcg = 500;
             try
                 fprintf('Enter GMRES...\n');
-%                 tic, [x,flag,relres,iter] = pcg(B,b,tol,max_pcg,@nssolve2); t_gmres = toc;
-                %[x,flag,relres,iter,resvec] = pcg(B,b,tol,max_pcg,@jacobi_solve);t_gmres = toc;
+                 tic, [x,flag,relres,iter] = pcg(B,b,tol,max_pcg,@nssolve2); t_gmres = toc;
+                [x,flag,relres,iter,resvec] = pcg(B,b,tol,max_pcg,@jacobi_solve);t_gmres = toc;
                 %tic, [x_np,flag_np,relres_np,iter_np,resvec_np] = gmres(B,b,restart,tol,maxit); t_gmres_np = toc;
-                tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@nssolve2); t_gmres = toc;
+%               tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@nssolve2); t_gmres = toc;
 %                 tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@jacobi_solve); t_gmres = toc;
                 %tic, [x,flag,relres,iter] = gmres(B,b,restart,tol,maxit); t_gmres = toc;
                 %% Display output
                 %its_np = (iter_np(1)-1)*restart+iter_np(2);
-                its = (iter(1)-1)*restart+iter(2);
-%                 its = iter;
+%                its = (iter(1)-1)*restart+iter(2);
+                 its = iter;
                 %fprintf('flag_np: %d\nits_np: %d\nrelres_np: %d\n', flag_np, its_np, relres_np);
                 fprintf('flag: %d\nits: %d\nrelres: %d\n', flag, its, relres);
                 %fprintf('time lu MSC: %g\ntime ilu D: %g\ntime PCG: %g\n', t_factor_msc, t_factor_d, t_pcg);
