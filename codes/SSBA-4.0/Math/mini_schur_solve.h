@@ -710,7 +710,7 @@ using namespace V3D;
 		/*
 			Since, U = L^T, instead of computing U*z2, compute Uz2 = L^T * z2
 		*/
-		/*
+		
 		char tvar = 'T';
 		int  nrows = D->n;
 		double *Uz2 = new double[D->n]();
@@ -728,7 +728,7 @@ using namespace V3D;
 		for(kk = 0 ; kk<nrows ;kk++)
 				z1[kk] = z1[kk] - t1[kk];
 		
-		*/
+		
 		for(kk = 0; kk < ivar; kk++)
 		{
 			if(kk < (D->n)) z_out[kk] = z1[kk];
