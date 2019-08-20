@@ -2,11 +2,11 @@
 function test_BA
     clc;
     warning('off','all');
-    filepath = '~/Test/138';
+    filepath = '~/Test/49';
     addpath(filepath);
     addpath('../ddm');
-    lhs_filename = 'JTJ138_1.mat';
-    rhs_filename = 'JTe138_1.mat';
+    lhs_filename = 'JTJ49_1.mat';
+    rhs_filename = 'JTe49_1.mat';
 
     %P = load(strcat(filepath,lhs_filename),'-mat')
     P = load(lhs_filename,'-mat')
@@ -40,7 +40,7 @@ function test_BA
     
 
     tic;
-    xx = normal_solve(B, b);
+%     xx = normal_solve(B, b);
 %     [LB,DB] = ldl(full(B));
 %     xx = LB'\(LD\(LB\b));
     normal_solve_time = toc;
@@ -55,7 +55,7 @@ function test_BA
     %[sizes_parts, A, p] = domain_decomposition(B, nparts);
     A=B;
     %sizeG = m - sum(sizes_parts(1:nparts))
-    sizeG = 1242;
+    sizeG = 441;
     sizeD = m - sizeG; 
     %keyboard;
 %     D = A(1 : sizeD, 1 : sizeD);
@@ -67,8 +67,8 @@ function test_BA
     % blocks for schur complements
     %nmsc = 3; 
    % nmsc_blocks = [3 4 5 6 7 8 9 10 15 20];
-     nmsc_blocks = [10 20 30];
-    %nmsc_blocks = [30];
+    % nmsc_blocks = [10 20 30 40 50 60];
+    nmsc_blocks = [20];
     %nmsc_blocks = [25 30 35 40];
     %nmsc_blocks = [13 14 15 16 17 18];
     iters = zeros(1,length(nmsc_blocks));
@@ -205,12 +205,13 @@ function test_BA
 %         fp = fopen("~/rand_sol_MSC_20.txt","w");
 %         fprintf(fp,"%10.9f\n",rand_sol);
 %         fclose(fp);
-%           GS = full(GS);
-%           for i = 62:124
-%               fprintf("GS(%d) = %f\n",i,GS(99,i));
-%           end
+            GS = full(GS); 
+            %keyboard;
+            for i = 1:9
+                fprintf("GS(%d) = %f\n",i,GS(1,i));
+            end
           
-%            keyboard;
+            keyboard;
         clear S PD PU PL PG
         clear GS
  
@@ -222,18 +223,17 @@ function test_BA
 
         tic; 
         %[LD,UD] = ilu(D,setup); 
-%         [LD,UD] = lu(D);
-        [UD,pos_def] = chol(D);
-        if(pos_def == 0)
-            LD = UD';
-        else
+         [LD,UD] = lu(D);
+         [UD,pos_def] = chol(D);
+         if(pos_def == 0)
+             LD = UD';
+         else
            [LD,UD] = lu(D);
-        end
+         end
         t_factor_d = toc;
 
         fprintf('done!!!\n');      
 
-       
 
   J = blkdiag(D,G);
 %    keyboard;
@@ -243,26 +243,27 @@ tic;
 %     [L_block_G,U_block_G] = lu(G);
   t_jacobi = toc
  
-%    prec_rhs = ones(m,1);
-%     prec_sol = nssolve2(prec_rhs);
+   prec_rhs = ones(m,1);
+  % yy = B * prec_rhs;
+   prec_sol = nssolve2(prec_rhs);
 %     prec_sol = UG\(LG\prec_rhs);
-%     pp = J * prec_sol;
-%     pp = GS*prec_sol;
-%     fp = fopen("~/rhs_MSC_20.txt","w");
-%     fprintf(fp,"%d\n",prec_rhs);
-%     fclose(fp);
-%     keyboard;
-%     prec_sol_C = load("~/MSC_sol_20.txt");
-%     qq = J * prec_sol_C;
-%     keyboard;
+    %pp = J * prec_sol;
+    %pp = GS*prec_sol;
+    %fp = fopen("~/rhs_MSC_20.txt","w");
+    %fprintf(fp,"%d\n",prec_rhs);
+    %fclose(fp);
+    keyboard;
+    prec_sol_C = load("~/MSC_sol_20.txt");
+    %qq = J * prec_sol_C;
+    keyboard;
  clear J D G ; 
             %% Solve with PCG
             sol=zeros(n,1);
             tol = 1e-2; maxit = 3;restart = 40;
-            max_pcg = 200;
+            max_pcg = 100;
             try
                 fprintf('Enter GMRES...\n');
-                %tic, [x,flag,relres,iter] = pcg(B,b,tol,maxit,@nssolve2); t_pcg = toc;
+%                 tic, [x,flag,relres,iter] = pcg(B,b,tol,max_pcg,@nssolve2); t_gmres = toc;
                 %[x,flag,relres,iter,resvec] = pcg(B,b,tol,max_pcg,@jacobi_solve);t_gmres = toc;
                 %tic, [x_np,flag_np,relres_np,iter_np,resvec_np] = gmres(B,b,restart,tol,maxit); t_gmres_np = toc;
                 tic, [x,flag,relres,iter,resvec] = gmres(B,b,restart,tol,maxit,@nssolve2); t_gmres = toc;
@@ -271,7 +272,7 @@ tic;
                 %% Display output
                 %its_np = (iter_np(1)-1)*restart+iter_np(2);
                 its = (iter(1)-1)*restart+iter(2);
-                %its = iter;
+%                 its = iter;
                 %fprintf('flag_np: %d\nits_np: %d\nrelres_np: %d\n', flag_np, its_np, relres_np);
                 fprintf('flag: %d\nits: %d\nrelres: %d\n', flag, its, relres);
                 %fprintf('time lu MSC: %g\ntime ilu D: %g\ntime PCG: %g\n', t_factor_msc, t_factor_d, t_pcg);
@@ -335,10 +336,11 @@ tic;
     %% Functions follow ...
     function xx = nssolve2(y)
       y1 = y(1:sizeD); y2 = y(sizeD+1:sizeD+sizeG);z1 = UD\(LD\y1); 
-      z2 = UG\(LG\(y2 - L*z1)); 
-      %x2 = z2; x1 = z1 - UD\(LD\(U * x2)); 
-      %xx = [x1; x2];
-      xx = [z1; z2];
+      z2 = UG\(LG\(y2 - L*z1));
+      x2 = z2;  
+      x1 = z1 - UD\(LD\(U*x2));
+      xx = [x1; x2]; 
+       %xx = [z1; z2];
       %sum(isnan(x))
     end
 

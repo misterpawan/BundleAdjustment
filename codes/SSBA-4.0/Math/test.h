@@ -2,6 +2,7 @@
  This file contains test that are to be computed with MATLAB for accuracy
 */
 using namespace std;
+
 void test_A_solve(cs_di_sparse* A)
 {
 	double* b = new double[A->n];
@@ -251,22 +252,24 @@ void test_matvec_multiply(cs_di_sparse* A)
 }
 
 
-void test_prec_solve(cs_di_sparse* A, cs_di_sparse* D,cs_di_sparse* MSC,void *Numeric_D,void *Numeric_MSC,double *lcsr,int *il,int *jl)
+void test_prec_solve(cs_di_sparse* A, cs_di_sparse* D,cs_di_sparse* MSC,void *Numeric_D,void *Numeric_MSC,
+					double *lcsr,int *il,int *jl)
 {
-	double* y1 = new double[D->n];
-	double* y2 = new double[MSC->n];
-	double* z1 = new double[D->n];
-	double* z2 = new double[MSC->n];
-	double* Lz1 = new double[MSC->n];
+	double* y1 = new double[D->n]();
+	double* y2 = new double[MSC->n]();
+	double* z1 = new double[D->n]();
+	double* z2 = new double[MSC->n]();
+	double* Lz1 = new double[MSC->n]();
+
 	int prec_solve_status;
 	double* null = (double*)NULL;
 	int zvar = MSC->n ; //no of rows of L
 	int kk;
 	char cvar = 'N';
 
-	double *rhs_prec = new double[A->n];
-	double *prec_sol = new double[A->n];
-	double *prec_mat_sol = new double[A->n];
+	double *rhs_prec = new double[A->n]();
+	double *prec_sol = new double[A->n]();
+	double *prec_mat_sol = new double[A->n]();
 	//string test_filename = "~/rhs_MSC_20.txt";
 	//string solve_filename = "test/rand_sol_prec.txt";
 	int ivar = A->n;
@@ -274,7 +277,17 @@ void test_prec_solve(cs_di_sparse* A, cs_di_sparse* D,cs_di_sparse* MSC,void *Nu
 	double diff;
 	double dvar = -1.0E0;
 
-	
+	/*
+	for(int k = 0; k < 1; k++)
+	{
+		//cout << "\n In loop .. " << endl;
+		for(int l = MSC->p[k]; l<MSC->p[k+1]; l++)
+			printf("\nMSC->i[%d] = %d\t\tMSC->x[%d] = %lf",l,MSC->i[l],l,MSC->x[l]);
+			//cout << "\n l : " << l << endl;
+	}
+	cout << "\n MSC non zeros : " << MSC->p[MSC->n] << endl;
+	cout << "\n";
+	*/
 	//r8vec_data_read ( test_filename, A->n, rhs_prec);
 	//r8vec_data_read ( solve_filename, A->n, prec_mat_sol); // MATLAB solution
 	//cout << "\nData read done!" << endl;
@@ -288,17 +301,51 @@ void test_prec_solve(cs_di_sparse* A, cs_di_sparse* D,cs_di_sparse* MSC,void *Nu
 		else y2[kk-(D->n)] = rhs_prec[kk];  //splitting vector into y1,y2
 	}
 
+	//z1 = inv(D)*y1
 	prec_solve_status = umfpack_di_solve ( UMFPACK_A, D->p, D->i, D->x, z1, y1, Numeric_D, null, null );
 	//cout << "\n Prec Solve status : " << prec_solve_status << "\n";
 	
+	//Lz1 = L*z1
 	mkl_dcsrgemv(&cvar, &zvar, lcsr, il, jl, z1, Lz1);
-	
-	//y2 = y2 - L*z1
-	daxpy(&zvar, &dvar, Lz1, &p, y2, &p);  // Ax - A*x_correct
 
+	//y2 = y2 - L*z1
+	//daxpy(&zvar, &dvar, y2, &p, Lz1, &p);  // Ax - A*x_correct
+	for(kk = 0; kk < zvar; ++kk)
+		y2[kk] = y2[kk] - Lz1[kk];
+
+
+
+	//z2 = inv(MSC)*y2
 	prec_solve_status = umfpack_di_solve ( UMFPACK_A, MSC->p, MSC->i, MSC->x, z2, y2, Numeric_MSC, null, null );
 	//cout << "\n  Prec solve status MSC :" << prec_solve_status << "\n";
+	
+	//for(kk = 429; kk < 441; ++kk)
+	//	cout << "z2["<<kk<<"] = " << z2[kk] << endl; 		
 
+	char tvar = 'T';
+	int  nrows = D->n;
+	double *Uz2 = new double[D->n]();
+	double *t1 = new double[D->n]();
+
+	//Uz2 = L^T * z2
+	mkl_dcsrgemv(&tvar, &zvar, lcsr, il, jl, z2, Uz2);
+
+	
+
+	//t1 = inv(D)*uz2
+	prec_solve_status = umfpack_di_solve ( UMFPACK_A, D->p, D->i, D->x, t1, Uz2, Numeric_D, null, null );
+	//cout << "\n Prec Solve status : " << prec_solve_status << "\n";
+
+	
+
+	//z1 = z1 - t1
+	//daxpy(&nrows, &dvar, t1, &p, z1, &p);  // Ax - A*x_true
+	for(kk = 0; kk < nrows; ++kk)
+		z1[kk] = z1[kk] - t1[kk];
+
+	for(kk = 0; kk < 20; ++kk)
+		cout << "z1["<<kk<<"] = " << z1[kk] << endl; 
+	
 	for(kk = 0; kk < ivar; kk++)
 	{
 		if(kk < (D->n)) prec_sol[kk] = z1[kk];
@@ -328,6 +375,7 @@ void test_prec_solve(cs_di_sparse* A, cs_di_sparse* D,cs_di_sparse* MSC,void *Nu
 
 	delete [] y1; delete [] y2; delete [] z1; delete [] z2; delete [] Lz1;
 	delete [] rhs_prec; delete [] prec_mat_sol; delete [] prec_sol;
+	delete [] Uz2; delete [] t1; 
 
 	return;
 }

@@ -17,6 +17,9 @@ using namespace std;
 #include "sort.h"
 #include "mkl.h"
 
+#include "util.h"
+#include "test.h"
+
 using namespace V3D;
 
 
@@ -658,7 +661,8 @@ using namespace V3D;
 	/* This function computes the preconditioner solve for the input array y_in
 		and writes the output in z_out
 	*/
-	void prec_solve(cs_di *A,cs_di *D,cs_di *MSC,void *Numeric_D,void *Numeric_MSC,double *lcsr,int *il,int *jl,double *y_in,double *z_out)
+	void prec_solve(cs_di *A,cs_di *D,cs_di *MSC,void *Numeric_D,void *Numeric_MSC,
+					double *lcsr,int *il,int *jl,double *y_in,double *z_out)
 	{
 		double* y1 = new double[D->n]();
 		double* y2 = new double[MSC->n]();
@@ -675,32 +679,65 @@ using namespace V3D;
 		int p = 1;
 		double dvar = -1.0E0;
 
-
 		for(kk = 0; kk<ivar; kk++)
 		{
 			if(kk < (D->n)) y1[kk] = y_in[kk];
 			else y2[kk-(D->n)] = y_in[kk];  //splitting vector into y1,y2
 		}
 
+		//z1 = inv(D)*y1
 		prec_solve_status = umfpack_di_solve ( UMFPACK_A, D->p, D->i, D->x, z1, y1, Numeric_D, null, null );
 		//cout << "\n Prec Solve status : " << prec_solve_status << "\n";
 		
+		//Lz1 = L*z1
 		mkl_dcsrgemv(&cvar, &zvar, lcsr, il, jl, z1, Lz1);
 		
-		//y2 = y2 - L*z1
-		daxpy(&zvar, &dvar, Lz1, &p, y2, &p);  // Ax - A*x_correct
+		//for(kk=0; kk < 10; ++kk)
+		//	cout << "Lz1["<<kk<<"] = " << Lz1[kk] << endl;
 
+		//y2 = y2 - Lz1
+		//daxpy(&zvar, &dvar, y2, &p, Lz1, &p);  // Ax - A*x_true
+		for(kk = 0 ; kk<zvar ;kk++)
+				y2[kk] = y2[kk] - Lz1[kk];
+
+		//for(kk=0; kk < 10; ++kk)
+		//	cout << "y2["<<kk<<"] = " << y2[kk] << endl;
+
+		//z2 = inv(MSC)*y2
 		prec_solve_status = umfpack_di_solve ( UMFPACK_A, MSC->p, MSC->i, MSC->x, z2, y2, Numeric_MSC, null, null );
 		//cout << "\n  Prec solve status MSC :" << prec_solve_status << "\n";
+		//cout << "\n after lower solve.. " << endl;
+		/*
+			Since, U = L^T, instead of computing U*z2, compute Uz2 = L^T * z2
+		*/
+		/*
+		char tvar = 'T';
+		int  nrows = D->n;
+		double *Uz2 = new double[D->n]();
+		double *t1 = new double[D->n]();
 
+		//Uz2 = L^T * z2
+		mkl_dcsrgemv(&tvar, &zvar, lcsr, il, jl, z2, Uz2); 
+
+		//t1 = inv(D)*uz2
+		prec_solve_status = umfpack_di_solve ( UMFPACK_A, D->p, D->i, D->x, t1, Uz2, Numeric_D, null, null );
+		//cout << "\n Prec Solve status : " << prec_solve_status << "\n";
+
+		//z1 = z1 - t1
+		//daxpy(&nrows, &dvar, z1, &p, t1, &p);  // Ax - A*x_true
+		for(kk = 0 ; kk<nrows ;kk++)
+				z1[kk] = z1[kk] - t1[kk];
+		
+		*/
 		for(kk = 0; kk < ivar; kk++)
 		{
 			if(kk < (D->n)) z_out[kk] = z1[kk];
 			else z_out[kk] = z2[kk - (D->n)];
 		}
+		
 
-
-		delete [] y1; delete [] y2; delete [] z1; delete [] z2; delete [] Lz1;
+		delete [] y1; delete [] y2; delete [] z1; delete [] z2; 
+		delete [] Lz1;  //delete [] Uz2; delete [] t1;
 		
 		return;
 	}
@@ -708,7 +745,7 @@ using namespace V3D;
 	 void mini_schur_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,double *values,double *Jt_e,
 	 					   double *delta,double *prev_sol,int msc_block, double *MSC_time, int *total_iters)
 	 {	
-		int i;
+		int i,j,k;
 		int *null = ( int * ) NULL;
 		double *solve_null = ( double * ) NULL;
 		void *Numeric, *Numeric_D,*Numeric_MSC;
@@ -716,7 +753,6 @@ using namespace V3D;
 		int status,sym_status,num_status,solve_status;
 		void* Symbolic,*Symbolic_D,*Symbolic_MSC;
 		int sizeD;
-		int j,k;
 		int nzD = 0 ,nzG = 0 ,nzL = 0; 
 		int iterD = 0, iterL = 0 ,iterG = 0;
 		int count = 1;
@@ -803,7 +839,7 @@ using namespace V3D;
 			}
 		}
 		D->p[sizeD] = iterD;
-		L->p[sizeD] = iterL;
+		L->p[sizeD] = iterL; 
 		
 		status = umfpack_di_transpose(sizeG,sizeD, L->p,L->i,L->x,null,null,U->p,U->i,U->x) ;
 		//cout << "\n TRANSPOSE STATUS : "<< status<< "\n";
@@ -857,7 +893,7 @@ using namespace V3D;
 		delete [] U->p;delete [] U->i;delete [] U->x;delete U;
 
 		int ok = cs_di_sprealloc(MSC,MSC->p[sizeG]);
-		
+		//cout << "\n MSC non zeros : " <<  MSC->p[sizeG]<< endl;
 		/*
 		for(int k = 98; k < 99; k++)
 		{
@@ -917,23 +953,62 @@ using namespace V3D;
 		/**********Converting A & L from CSC to CSR*****************/
 	  	MKL_INT job[6] = {1,1,0,0,0,1};
 	    double *acsr =  new double[ncc]();
-	    double *lcsr =  new double[L->nzmax]();
+	    double *lcsr =  new double[L->nzmax](); 
 	    MKL_INT *ja = new MKL_INT[ncc]();
 	    MKL_INT *jl = new MKL_INT[L->nzmax]();
 	    MKL_INT *ia = new MKL_INT[ivar+1]();
 	    MKL_INT *il = new MKL_INT[sizeG+1]();
 	    MKL_INT info;
 	    MKL_INT lvar = sizeG;
+	    int csr_count_L = 1;
 
-	      //converting COO to CSR
+	      //converting CSC to CSR
 	    mkl_dcsrcsc(job,&ivar,acsr,ja,ia,A->x,A->i,A->p,&info);
 	    //cout << "\n Conversion info A : "<< info << "\n";
-
-
-	    mkl_dcsrcsc(job,&lvar,lcsr,jl,il,L->x,L->i,L->p,&info);
+	    
+	    //mkl_dcsrcsc(job,&lvar,lcsr,jl,il,L->x,L->i,L->p,&info);
 	    //cout << "\n Conversion info L : "<< info << "\n";
-
+	    //cout << "\n no. of elements in csr L : " << il[sizeG] << endl; 
+		//cout << "\n no. of elements in csc L : " << L->p[L->n] << endl; 
 		
+		/*
+	    double *xx = new double[A->n]();
+	    double *res = new double[A->n]();
+	    for(int kk = 0; kk < A->n; kk++)
+			xx[kk] = 1.0; 
+
+		mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, xx, res);
+
+		for(int kk = 20; kk < 39; kk++)
+			cout << "\n res["<<kk<<"] = "<< res[kk]/1e06 << endl;
+		*/
+	    // Extracting L in CSR format from acsr
+		for(i = sizeD; i < num_cols; i++)
+		{
+			il[i-sizeD] = csr_count_L;
+			for(j = ia[i]; j< ia[i+1]; j++)
+			{
+				if(ja[j-1] > sizeD) break;
+				else
+				{
+					jl[csr_count_L-1] = ja[j-1];
+					lcsr[csr_count_L-1] = acsr[j-1];
+					csr_count_L += 1;
+				}
+			}
+		}
+
+		il[sizeG] = csr_count_L-1;
+		//cout << "\n no. of elements in csr L : " << il[sizeG] << endl; 
+		//cout << "\n no. of elements in csc L : " << L->p[L->n] << endl; 
+/*
+		for(i = 0; i < 1; i++)
+		{
+			for(j=il[i]; j < il[i+1]; j++)
+				cout << "lcsr["<<jl[j-1]<<"] : " << lcsr[j-1] << endl;
+		}
+*/
+
 		/*---------------------------------------------------------------------------
 		/* Save the right-hand side in vector rhs for future use
 		/*---------------------------------------------------------------------------*/
@@ -950,6 +1025,7 @@ using namespace V3D;
 		prec_rhs_nrm = dnrm2(&ivar,prec_rhs,&RCI_count);
 		delete [] prec_rhs; 
 
+		//test_prec_solve(A, D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl);
 		
 		/*---------------------------------------------------------------------------
 		/* Initialize the solver
@@ -1016,7 +1092,9 @@ using namespace V3D;
 			mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, rhs, residual); // A*x for new solution x
 			dvar=-1.0E0;
 			RCI_count=1;
-			daxpy(&ivar, &dvar, Jt_e, &RCI_count, residual, &RCI_count);  // Ax - A*x_solution
+			//daxpy(&ivar, &dvar, Jt_e, &RCI_count, residual, &RCI_count);  // Ax - A*x_solution
+			for(j = 0 ; j<ivar ; j++)
+				residual[j] = Jt_e[j] - residual[j];
 			
 
 			if(ipar[10] == 0)   // non preconditioned system

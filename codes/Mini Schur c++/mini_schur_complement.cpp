@@ -1150,9 +1150,9 @@ int main()
 
 		
 		ipar[7] = 1;
-		ipar[4] = 200;  // Max Iterations
+		ipar[4] = 100;  // Max Iterations
 		ipar[10] = 1;  //Preconditioner used
-		ipar[14] = 20; //internal iterations
+		ipar[14] = 40; //internal iterations
 		
 		dpar[0] = tol; //Relative Tolerance
 

@@ -620,7 +620,7 @@ namespace V3D
       int const nObjs = _costFunctions.size();
 
       for (currentIteration = 0; currentIteration < maxIterations; ++currentIteration)
-      //for (currentIteration = 0; currentIteration < 2; ++currentIteration)
+      //for (currentIteration = 0; currentIteration < 1; ++currentIteration)
       {
          if (optimizerVerbosenessLevel >= 2)
             cout << "NLSQ_LM_Optimizer: currentIteration: " << currentIteration << endl;
@@ -757,21 +757,25 @@ namespace V3D
          //writeJtetofile(currentIteration,delta);
 
          //MSC solve
-         //Timer t("MSC_solve");
-         //t.start();
-         //this->MSC_solve(_JtJ, delta, deltaPerm,prev_sol,msc_block,&MSC_time,&total_iters);
-         //t.stop();
-         //solve_MSC_time += t.getTime();
-         //*total_MSC_time += MSC_time;
-         //for (int n=0; n<totalParamDimension; n++) prev_sol[n] = deltaPerm[n];
+         Timer t("MSC_solve");
+         t.start();
 
+         this->MSC_solve(_JtJ, delta, deltaPerm,prev_sol,msc_block,&MSC_time,&total_iters);
+         
+         t.stop();
+         solve_MSC_time += t.getTime();
+         *total_MSC_time += MSC_time;
+
+         for (int n=0; n<totalParamDimension; n++) prev_sol[n] = deltaPerm[n];
+		
          //Block Jacobi Solve
+         /*
          Timer t("Jacobi_solve");
          t.start();
          this->blockjacobi_solve(_JtJ, delta, deltaPerm,&total_iters);
          t.stop();
          solve_MSC_time += t.getTime();
-
+		*/
          *num_gmres_iters += total_iters;
 
          LDL_permt(_JtJ_Parent.size(), &delta[0], &deltaPerm[0], &_perm_JtJ[0]);

@@ -10,5 +10,5 @@ clear
 
 cd Apps
 
-./bundle_large_lifted_schur ~/Dataset/problem-1031-110968-pre.txt
+./bundle_large_lifted_schur ~/Dataset/problem-49-7776-pre.txt
 #./bundle_large ~/Dataset/problem-49-7776-pre.txt
