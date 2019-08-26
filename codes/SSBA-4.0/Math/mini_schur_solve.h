@@ -26,10 +26,10 @@ using namespace V3D;
 
 //namespace V3D
 //{
-	#define sizeG 441 
+	#define sizeG 1242 
 	#define size_MKL_IPAR 128
 	#define MAX_ITERS 100
-	#define RESTARTS 50 
+	#define RESTARTS 40 
 	//#define NUM_MSC_BLOCKS 50
 
 	//This function densifies the jth column of input matrix PU
@@ -714,6 +714,7 @@ using namespace V3D;
 		for(kk = 0 ; kk<nrows ;kk++)
 				z1[kk] = z1[kk] - t1[kk];
 		
+		delete [] Uz2; delete [] t1;
 		
 		for(kk = 0; kk < ivar; kk++)
 		{
@@ -722,8 +723,7 @@ using namespace V3D;
 		}
 		
 
-		delete [] y1; delete [] y2; delete [] z1; delete [] z2; 
-		delete [] Lz1;  //delete [] Uz2; delete [] t1;
+		delete [] y1; delete [] y2; delete [] z1; delete [] z2; delete [] Lz1;  
 		
 		return;
 	}
@@ -863,6 +863,7 @@ using namespace V3D;
 		}
 
 		G->p[sizeG] = iterG;
+		//cout<< "\n Memory for G : " << iterG*8 << endl;
 
 		//cout << "\nFilling non zeros complete!!\n";
 		
@@ -879,6 +880,15 @@ using namespace V3D;
 		delete [] U->p;delete [] U->i;delete [] U->x;delete U;
 
 		int ok = cs_di_sprealloc(MSC,MSC->p[sizeG]);
+		/*
+		int MSC_40 = (MSC->p[sizeG]*8) + ((num_cols*(2*RESTARTS+1)+(RESTARTS*(RESTARTS+9))/2+1)*8);
+		int MSC_cg = (MSC->p[sizeG]*8) + (4*8*num_cols);
+		cout << "\n MSC non zeros : " << MSC->p[sizeG]*8 << endl;
+		cout << "\n Memory for MSC 40 : " << MSC_40 << endl;
+		cout << "\n Memory for tmp gmres: " << (num_cols*(2*RESTARTS+1)+(RESTARTS*(RESTARTS+9))/2+1)*8 << endl;
+		cout << "\n Memory for tmp cg: " << 4*8*num_cols << endl;
+		cout << "\n Memory for MSC cg: " << MSC_cg << endl;
+		*/
 		//cout << "\n MSC non zeros : " <<  MSC->p[sizeG]<< endl;
 		/*
 		for(int k = 98; k < 99; k++)

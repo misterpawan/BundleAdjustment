@@ -25,7 +25,7 @@ namespace V3D
 	#define sizeG 1242
 	#define size_MKL_IPAR 128
 	#define MAX_ITERS 100
-	#define RESTARTS 50
+	//#define RESTARTS 50
 
 	/* This function computes the preconditioner solve for the input array y_in
 		and writes the output in z_out
@@ -189,7 +189,8 @@ namespace V3D
 		}
 
 		G->p[sizeG] = iterG;
-	
+
+
 		/************LU Factorization of D and MSC******************************/
 
 		sym_status = umfpack_di_symbolic ( D->m, D->n, D->p, D->i, D->x, &Symbolic_D, solve_null, solve_null );
@@ -207,8 +208,6 @@ namespace V3D
 		num_status = umfpack_di_numeric ( G->p, G->i, G->x, Symbolic_G, &Numeric_G, solve_null, solve_null );
 		//cout << "\n Numeric status for G:" << num_status << "\n";
 		umfpack_di_free_symbolic ( &Symbolic_G );
-	  	
-
 
 		/**********************GMRES CALL******************************/
 
@@ -217,13 +216,13 @@ namespace V3D
 
 		double* dpar = new double[size_MKL_IPAR](); 
 		
-		double* tmp = new double[num_cols*(2*RESTARTS+1)+(RESTARTS*(RESTARTS+9))/2+1]();
-		double* rhs = new double[num_cols]();
+		double* tmp = new double[num_cols*4]();
+		//double* rhs = new double[num_cols]();
 		double* computed_solution = new double[num_cols]();
 		double* residual = new double[num_cols]();   
 		double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev,prec_rhs_nrm,prec_relres_nrm;
 		double *prec_rhs = new double[num_cols]();
-		double tol = 1.0e-02;
+		double tol = 1.0E-02;
 		
 
 		MKL_INT itercount,ierr=0;
@@ -231,7 +230,6 @@ namespace V3D
 		char cvar;
 
 		//cout << "\nMKL var init done !\n";
-
 
 
 		ivar = num_cols;
@@ -245,11 +243,10 @@ namespace V3D
 	    MKL_INT info;
 	    MKL_INT lvar = sizeG;
 
-	      //converting COO to CSR
+	    //converting CSC to CSR
 	    mkl_dcsrcsc(job,&ivar,acsr,ja,ia,A->x,A->i,A->p,&info);
 	    //cout << "\n Conversion info A : "<< info << "\n";
-
-	    //test_jacobi_solve(A,D,G,Numeric_D,Numeric_G);
+	    
 
 		/*---------------------------------------------------------------------------
 		/* Save the right-hand side in vector rhs for future use
@@ -260,52 +257,51 @@ namespace V3D
 		//cout << "\n rhs_nrm : " << rhs_nrm << "\n";
 		// Jt_e vector is not altered
 		//rhs is used for residual calculations
-		//dcopy(&ivar, Jt_e, &RCI_count, rhs, &RCI_count);   
-		for(int q = 0; q < num_cols; q++) rhs[q] = Jt_e[q];
-
+		//for(int q = 0; q < num_cols; q++) rhs[q] = Jt_e[q];
 		// PRECONDITIONED RHS
 		prec_solve(A,D,G,Numeric_D,Numeric_G,Jt_e,prec_rhs);
 		//norm of the preconditioned rhs
 		prec_rhs_nrm = dnrm2(&ivar,prec_rhs,&RCI_count);
 		delete [] prec_rhs; 
-		//cout << "\n prec rhs norm : "<< prec_rhs_nrm << "\n";
 
+		//test_prec_solve(A, D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl);
 		
 		/*---------------------------------------------------------------------------
 		/* Initialize the solver
 		/*---------------------------------------------------------------------------*/
-		dfgmres_init(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp); 
+		//dfgmres_init(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp); 
+		dcg_init(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp);
 		if (RCI_request!=0) goto FAILED;
 
 		
 		ipar[7] = 1;
 		ipar[4] = MAX_ITERS;  // Max Iterations
-		ipar[10] = 1;  //Preconditioner used
-		ipar[14] = RESTARTS; //internal iterations
+		ipar[10] = 1;  //  Preconditioner used
+		//ipar[14] = RESTARTS; //  Internal iterations
 		
 		dpar[0] = tol; //Relative Tolerance
 
 		/*---------------------------------------------------------------------------
 		/* Initialize the initial guess
 		/*---------------------------------------------------------------------------*/
-		/*for(RCI_count=0; RCI_count<num_cols; RCI_count++)
+		for(RCI_count=0; RCI_count<num_cols; RCI_count++)
 		{
-			computed_solution[RCI_count]=0.0;
-		}*/
-		//if(ipar[10] == 1) computed_solution[0]=1000.0;
-
+			computed_solution[RCI_count] = 0.0;
+		}
+		
 		/*---------------------------------------------------------------------------
 		/* Check the correctness and consistency of the newly set parameters
 		/*---------------------------------------------------------------------------*/
-		dfgmres_check(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp); 
+		//dfgmres_check(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp); 
+		dcg_check(&ivar,computed_solution,Jt_e,&RCI_request,ipar,dpar,tmp);
 		if (RCI_request!=0) goto FAILED;
 
 		/*---------------------------------------------------------------------------
 		/* Compute the solution by RCI (P)FGMRES solver with preconditioning
 		/* Reverse Communication starts here
 		/*---------------------------------------------------------------------------*/
-		ONE:  dfgmres(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp);
-		//cout << "\n dfgmres RCI_request : "<<RCI_request << "\n";
+		//ONE:  dfgmres(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp);
+		ONE:  dcg(&ivar,computed_solution,Jt_e,&RCI_request,ipar,dpar,tmp);
 
 		
 		if(RCI_request==0) goto COMPLETE;
@@ -313,11 +309,11 @@ namespace V3D
 		/*---------------------------------------------------------------------------
 		/* If RCI_request=1, then compute the vector A*tmp[ipar[21]-1]
 		/* and put the result in vector tmp[ipar[22]-1]	
-		/*------------------DEPRECATED ROUTINE (FIND ANOTHER )-------------------------*/
+		/*-----------------------DEPRECATED ROUTINE --------------------------------*/
 		if (RCI_request==1)
 		{
-			mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, &tmp[ipar[21]-1], &tmp[ipar[22]-1]);
-		
+			//mkl_dcsrsymv(&tr, &n, a, ia, ja, tmp, &tmp[n]);
+			mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, tmp, &tmp[ivar]);
 			goto ONE;
 		}
 
@@ -329,32 +325,29 @@ namespace V3D
 			/* Request to the dfgmres_get routine to put the solution into b[N] via ipar[12]*/
 			ipar[12]=1;
 			
-			
 			/* Get the current FGMRES solution in the vector rhs[N] */
-			dfgmres_get(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp, &itercount);
+			//dfgmres_get(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp, &itercount);
 
 			/* Compute the current true residual via MKL (Sparse) BLAS routines */
-			mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, rhs, residual); // A*x for new solution x
+			mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, Jt_e, residual); // A*x for new solution x
 			dvar=-1.0E0;
 			RCI_count=1;
 			//daxpy(&ivar, &dvar, Jt_e, &RCI_count, residual, &RCI_count);  // Ax - A*x_solution
 			for(j = 0 ; j<ivar ; j++)
 				residual[j] = Jt_e[j] - residual[j];
+			
 
 			if(ipar[10] == 0)   // non preconditioned system
 			{
 				dvar=dnrm2(&ivar,residual,&RCI_count);
 				relres_nrm = dvar/rhs_nrm;
-				//relres_nrm = dvar/prec_rhs_nrm;
-				//printf("\nresidual norm non prec = %10.9f\n",dvar);
 				
 			}
 			else if(ipar[10] == 1)  //preconditioned system
 			{
 				double *prec_relres = new double[num_cols]();
-				//dvar=dnrm2(&ivar,residual,&RCI_count);
-				//printf("\nresidual norm with prec = %10.9f\n",dvar);
 
+				//prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,residual,prec_relres);
 				prec_solve(A,D,G,Numeric_D,Numeric_G,residual,prec_relres);
 				prec_relres_nrm = dnrm2(&ivar,prec_relres,&RCI_count); 
 				delete [] prec_relres;
@@ -362,7 +355,7 @@ namespace V3D
 
 			}
 
-			if (relres_nrm<=tol) goto COMPLETE;   //taking tolerance as 1e-04
+			if (relres_nrm<=tol) goto COMPLETE; 
 
 			else goto ONE;
 			
@@ -374,22 +367,11 @@ namespace V3D
 		
 		if (RCI_request==3)
 		{
-			//cout << "\n Prec solve ..." << "\n";
-			prec_solve(A,D,G,Numeric_D,Numeric_G,&tmp[(ipar[21]-1)],&tmp[(ipar[22]-1)]);
-		
+			//prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,&tmp[2*ivar],&tmp[3*ivar]);
+			prec_solve(A,D,G,Numeric_D,Numeric_G,&tmp[2*ivar],&tmp[3*ivar]);
 			goto ONE;
 		}
 
-		/*---------------------------------------------------------------------------
-		/* If RCI_request=4, then check if the norm of the next generated vector is
-		/* not zero up to rounding and computational errors. The norm is contained
-		/* in dpar[6] parameter
-		/*---------------------------------------------------------------------------*/
-		if (RCI_request==4)
-		{
-			if (dpar[6]<1.0E-12) goto COMPLETE;
-			else goto ONE;
-		}
 		/*---------------------------------------------------------------------------
 		/* If RCI_request=anything else, then dfgmres subroutine failed
 		/* to compute the solution vector: computed_solution[N]
@@ -405,28 +387,15 @@ namespace V3D
 		/* the initial guess!). Request to dfgmres_get to put the solution
 		/* into vector computed_solution[N] via ipar[12]
 		/*---------------------------------------------------------------------------*/
-		COMPLETE:   ipar[12]=0;
-		dfgmres_get(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp, &itercount);
+		//COMPLETE:  dfgmres_get(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp, &itercount);
+		COMPLETE : dcg_get(&ivar,computed_solution,Jt_e,&RCI_request,ipar,dpar,tmp,&itercount);
 		//cout << "The system has been solved  in " << itercount << " iterations!\n";
 		*total_iters = itercount;
-	//	cout << "\n RCI_request : "<< RCI_request << "\n";
-	/*
-		printf("\nThe following solution has been obtained: \n");
-		for (RCI_count=0;RCI_count<10;RCI_count++)                //PRINTING ONLY THE FIRST 10 MEMBERS
-		{
-			printf("computed_solution[%d]=%f\n",RCI_count,computed_solution[RCI_count]);
-		}
-	*/
 
 		//store the solution into delta 
 		RCI_count = 1;
-		//dcopy(&ivar, computed_solution, &RCI_count, delta, &RCI_count); 
 		for(int q = 0; q < num_cols; q++) delta[q] = computed_solution[q];
-	/*	for (RCI_count=0;RCI_count<10;RCI_count++)                //PRINTING ONLY THE FIRST 10 MEMBERS
-		{
-			printf("delta[%d]=%f\n",RCI_count,delta[RCI_count]);
-		}
-	*/
+	
 		MKL_Free_Buffers();
 
 
@@ -434,14 +403,15 @@ namespace V3D
 	  	umfpack_di_free_numeric ( &Numeric_D );
 	  	umfpack_di_free_numeric ( &Numeric_G );
 
-		//delete [] Jt_e; 
-		delete [] A->p; delete [] A->i; delete [] A->x; 
+		
+		
 		delete [] D->p;  delete [] D->i;delete [] D->x; 
-		delete [] G->p;  delete [] G->i;delete [] G->x; 
-		delete D; delete A; delete [] G;
+		delete [] A->p; delete [] A->i; delete [] A->x; 
+		delete [] G->p; delete [] G->i; delete [] G->x; 
+		delete A; delete D; delete G; 
 
-		delete [] tmp; delete [] ipar; delete [] dpar;
-		delete [] rhs; delete [] computed_solution; delete [] residual;
+		delete [] tmp; delete [] ipar; delete [] dpar; 
+		delete [] computed_solution; delete [] residual;
 		delete [] acsr; delete [] ia; delete [] ja;
 
 		return ;

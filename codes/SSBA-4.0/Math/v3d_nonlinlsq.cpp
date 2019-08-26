@@ -1,6 +1,8 @@
 #include "Math/v3d_nonlinlsq.h"
-#include "Math/mini_schur_solve.h"
+//#include "Math/mini_schur_solve.h"
+#include "Math/mini_schur_solve_cg.h"
 #include "Math/block_jacobi_solve.h"
+//#include "Math/block_jacobi_solve_cg.h"
 #include <map>
 
 

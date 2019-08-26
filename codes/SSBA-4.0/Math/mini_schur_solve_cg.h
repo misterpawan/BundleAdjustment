@@ -26,7 +26,7 @@ using namespace V3D;
 
 //namespace V3D
 //{
-	#define sizeG 441 
+	#define sizeG 1242 
 	#define size_MKL_IPAR 128
 	#define MAX_ITERS 100
 	//#define RESTARTS 50 
@@ -713,6 +713,8 @@ using namespace V3D;
 		//daxpy(&nrows, &dvar, z1, &p, t1, &p);  // Ax - A*x_true
 		for(kk = 0 ; kk<nrows ;kk++)
 				z1[kk] = z1[kk] - t1[kk];
+
+		delete [] Uz2; delete [] t1;
 		
 		
 		for(kk = 0; kk < ivar; kk++)
@@ -723,7 +725,7 @@ using namespace V3D;
 		
 
 		delete [] y1; delete [] y2; delete [] z1; delete [] z2; 
-		delete [] Lz1;  //delete [] Uz2; delete [] t1;
+		delete [] Lz1;  
 		
 		return;
 	}
@@ -918,7 +920,7 @@ using namespace V3D;
 		double* dpar = new double[size_MKL_IPAR](); 
 		
 		double* tmp = new double[num_cols*4]();
-		double* rhs = new double[num_cols]();
+		//double* rhs = new double[num_cols]();
 		double* computed_solution = new double[num_cols]();
 		double* residual = new double[num_cols]();   
 		double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev,prec_rhs_nrm,prec_relres_nrm;
@@ -981,7 +983,7 @@ using namespace V3D;
 		//cout << "\n rhs_nrm : " << rhs_nrm << "\n";
 		// Jt_e vector is not altered
 		//rhs is used for residual calculations
-		for(int q = 0; q < num_cols; q++) rhs[q] = Jt_e[q];
+		//for(int q = 0; q < num_cols; q++) rhs[q] = Jt_e[q];
 		// PRECONDITIONED RHS
 		prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,Jt_e,prec_rhs);
 		//norm of the preconditioned rhs
@@ -1017,7 +1019,7 @@ using namespace V3D;
 		/* Check the correctness and consistency of the newly set parameters
 		/*---------------------------------------------------------------------------*/
 		//dfgmres_check(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp); 
-		dcg_check(&ivar,computed_solution,rhs,&RCI_request,ipar,dpar,tmp);
+		dcg_check(&ivar,computed_solution,Jt_e,&RCI_request,ipar,dpar,tmp);
 		if (RCI_request!=0) goto FAILED;
 
 		/*---------------------------------------------------------------------------
@@ -1038,7 +1040,6 @@ using namespace V3D;
 		{
 			//mkl_dcsrsymv(&tr, &n, a, ia, ja, tmp, &tmp[n]);
 			mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, tmp, &tmp[ivar]);
-
 			goto ONE;
 		}
 
@@ -1051,12 +1052,10 @@ using namespace V3D;
 			ipar[12]=1;
 			
 			/* Get the current FGMRES solution in the vector rhs[N] */
-			dfgmres_get(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp, &itercount);
-
-			
+			//dfgmres_get(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp, &itercount);
 
 			/* Compute the current true residual via MKL (Sparse) BLAS routines */
-			mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, rhs, residual); // A*x for new solution x
+			mkl_dcsrgemv(&cvar, &ivar, acsr, ia, ja, Jt_e, residual); // A*x for new solution x
 			dvar=-1.0E0;
 			RCI_count=1;
 			//daxpy(&ivar, &dvar, Jt_e, &RCI_count, residual, &RCI_count);  // Ax - A*x_solution
@@ -1093,21 +1092,10 @@ using namespace V3D;
 		
 		if (RCI_request==3)
 		{
-			prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,&tmp[(ipar[21]-1)],&tmp[(ipar[22]-1)]);
-		
+			prec_solve(A,D,MSC,Numeric_D,Numeric_MSC,lcsr,il,jl,&tmp[2*ivar],&tmp[3*ivar]);
 			goto ONE;
 		}
 
-		/*---------------------------------------------------------------------------
-		/* If RCI_request=4, then check if the norm of the next generated vector is
-		/* not zero up to rounding and computational errors. The norm is contained
-		/* in dpar[6] parameter
-		/*---------------------------------------------------------------------------*/
-		if (RCI_request==4)
-		{
-			if (dpar[6]<1.0E-12) goto COMPLETE;
-			else goto ONE;
-		}
 		/*---------------------------------------------------------------------------
 		/* If RCI_request=anything else, then dfgmres subroutine failed
 		/* to compute the solution vector: computed_solution[N]
@@ -1123,8 +1111,8 @@ using namespace V3D;
 		/* the initial guess!). Request to dfgmres_get to put the solution
 		/* into vector computed_solution[N] via ipar[12]
 		/*---------------------------------------------------------------------------*/
-		COMPLETE:   ipar[12]=0;
-		dfgmres_get(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp, &itercount);
+		//COMPLETE:  dfgmres_get(&ivar, computed_solution, Jt_e, &RCI_request, ipar, dpar, tmp, &itercount);
+		COMPLETE : dcg_get(&ivar,computed_solution,Jt_e,&RCI_request,ipar,dpar,tmp,&itercount);
 		//cout << "The system has been solved  in " << itercount << " iterations!\n";
 		*total_iters = itercount;
 
@@ -1147,8 +1135,8 @@ using namespace V3D;
 		delete [] L->p; delete [] L->i; delete [] L->x; 
 		delete L; delete A;delete MSC; delete D;  
 
-		delete [] tmp; delete [] ipar; delete [] dpar;
-		delete [] rhs; delete [] computed_solution; delete [] residual;
+		delete [] tmp; delete [] ipar; delete [] dpar; //delete [] rhs; 
+		delete [] computed_solution; delete [] residual;
 		delete [] acsr; delete [] ia; delete [] ja;
 		delete [] lcsr; delete [] il; delete [] jl;
 

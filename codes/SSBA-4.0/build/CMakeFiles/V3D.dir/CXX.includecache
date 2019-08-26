@@ -102,7 +102,7 @@ umfpack.h
 mkl.h
 .././Math/mkl.h
 
-.././Math/mini_schur_solve.h
+.././Math/mini_schur_solve_cg.h
 cstdlib
 -
 iomanip
@@ -203,8 +203,8 @@ Geometry/v3d_stereobundle.h
 /home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Math/v3d_nonlinlsq.cpp
 Math/v3d_nonlinlsq.h
 /home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Math/Math/v3d_nonlinlsq.h
-Math/mini_schur_solve.h
-/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Math/Math/mini_schur_solve.h
+Math/mini_schur_solve_cg.h
+/home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Math/Math/mini_schur_solve_cg.h
 Math/block_jacobi_solve.h
 /home/shrutimoy.das/BundleAdjustment/codes/SSBA-4.0/Math/Math/block_jacobi_solve.h
 map
