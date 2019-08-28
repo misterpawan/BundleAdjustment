@@ -1,6 +1,6 @@
 #include "Math/v3d_nonlinlsq.h"
-//#include "Math/mini_schur_solve.h"
-#include "Math/mini_schur_solve_cg.h"
+#include "Math/mini_schur_solve.h"
+//#include "Math/mini_schur_solve_cg.h"
 #include "Math/block_jacobi_solve.h"
 //#include "Math/block_jacobi_solve_cg.h"
 #include <map>
@@ -523,7 +523,7 @@ namespace V3D
    //call to mini schur solve
    void
    NLSQ_LM_Optimizer::MSC_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,Vector<double>& delta,
-                               double *prev_sol,int msc_block,double *MSC_time,int *total_iters)
+                               double *prev_sol,int msc_block,double *MSC_time,int *total_iters,double *factor_time)
    {
       int  nCols = A.num_cols();
       int  nnz = A.getNonzeroCount();
@@ -542,7 +542,7 @@ namespace V3D
 
 
       mini_schur_solve(nCols,nnz,(int*)colStarts,(int*)rowIdxs,(double*)values,
-      					Jte,del, prev_sol,msc_block,MSC_time,total_iters);
+      					Jte,del, prev_sol,msc_block,MSC_time,total_iters,factor_time);
 
       for(i = 0; i < nCols; i++)
       {
@@ -558,7 +558,7 @@ namespace V3D
    //call to block jacobi solve
    void
    NLSQ_LM_Optimizer::blockjacobi_solve(CCS_Matrix<double> const& A, Vector<double>& Jt_e,
-   										Vector<double>& delta,int *total_iters)
+   										Vector<double>& delta,int *total_iters,double *factor_time)
    {
       int  nCols = A.num_cols();
       int  nnz = A.getNonzeroCount();
@@ -576,7 +576,7 @@ namespace V3D
       }
 
 
-      block_jacobi_solve(nCols,nnz,(int*)colStarts,(int*)rowIdxs,(double*)values,Jte,del,total_iters);
+      block_jacobi_solve(nCols,nnz,(int*)colStarts,(int*)rowIdxs,(double*)values,Jte,del,total_iters,factor_time);
 
       for(i = 0; i < nCols; i++)
       {
@@ -591,7 +591,8 @@ namespace V3D
 
 
    void
-   NLSQ_LM_Optimizer::minimize(int msc_block,double *total_MSC_time, int *num_gmres_iters,double *MSC_solve_time)
+   NLSQ_LM_Optimizer::minimize(int msc_block,double *total_MSC_time, int *num_gmres_iters,
+                              double *MSC_solve_time,double *factor_time)
    {
       status = LEVENBERG_OPTIMIZER_TIMEOUT;
       bool computeDerivatives = true;
@@ -614,6 +615,7 @@ namespace V3D
       //to be used as an initial starting point for the GMRES iterations in the next LM iteration
       double *prev_sol = new double[totalParamDimension](); 
       double MSC_time = 0.0; //MSC construction time
+      double LU_time = 0.0; //LU factorization time
       int total_iters = 0; //no of gmres itertions per LM iteration
       double solve_MSC_time = 0.0; //solve time using MSC...including construction time
 
@@ -759,26 +761,28 @@ namespace V3D
          //writeJtetofile(currentIteration,delta);
 
          //MSC solve
-         
+         /*
          Timer t("MSC_solve");
          t.start();
 
-         this->MSC_solve(_JtJ, delta, deltaPerm,prev_sol,msc_block,&MSC_time,&total_iters);
+         this->MSC_solve(_JtJ, delta, deltaPerm,prev_sol,msc_block,&MSC_time,&total_iters,&LU_time);
          
          t.stop();
          solve_MSC_time += t.getTime();
          *total_MSC_time += MSC_time;
+         *factor_time += LU_time; 
 
          for (int n=0; n<totalParamDimension; n++) prev_sol[n] = deltaPerm[n];
-		
+		    */
          //Block Jacobi Solve
-         /*
+         
          Timer t("Jacobi_solve");
          t.start();
-         this->blockjacobi_solve(_JtJ, delta, deltaPerm,&total_iters);
+         this->blockjacobi_solve(_JtJ, delta, deltaPerm,&total_iters,&LU_time);
          t.stop();
          solve_MSC_time += t.getTime();
-		*/
+         *factor_time += LU_time; 
+		
          *num_gmres_iters += total_iters;
 
          LDL_permt(_JtJ_Parent.size(), &delta[0], &deltaPerm[0], &_perm_JtJ[0]);

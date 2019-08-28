@@ -22,10 +22,11 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 1242
+	#define sizeG 441
 	#define size_MKL_IPAR 128
 	#define MAX_ITERS 100
-	#define RESTARTS 50
+	#define RESTARTS 40
+	#define TOL 1E-1
 
 	/* This function computes the preconditioner solve for the input array y_in
 		and writes the output in z_out
@@ -74,7 +75,7 @@ namespace V3D
 	}
 
 	 void block_jacobi_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,
-	 							double *values,double *Jt_e,double *delta,int *total_iters)
+	 							double *values,double *Jt_e,double *delta,int *total_iters,double *LU_time)
 	 {
 		int i;
 		int *null = ( int * ) NULL;
@@ -191,6 +192,8 @@ namespace V3D
 		G->p[sizeG] = iterG;
 	
 		/************LU Factorization of D and MSC******************************/
+		Timer t("LU");
+		t.start();
 
 		sym_status = umfpack_di_symbolic ( D->m, D->n, D->p, D->i, D->x, &Symbolic_D, solve_null, solve_null );
 		//cout << "\n Symbolic status for D :" << sym_status << "\n";
@@ -208,7 +211,8 @@ namespace V3D
 		//cout << "\n Numeric status for G:" << num_status << "\n";
 		umfpack_di_free_symbolic ( &Symbolic_G );
 	  	
-
+		t.stop();
+		*LU_time = t.getTime();
 
 		/**********************GMRES CALL******************************/
 
@@ -223,7 +227,7 @@ namespace V3D
 		double* residual = new double[num_cols]();   
 		double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev,prec_rhs_nrm,prec_relres_nrm;
 		double *prec_rhs = new double[num_cols]();
-		double tol = 1.0e-02;
+		//double tol = 1.0e-02;
 		
 
 		MKL_INT itercount,ierr=0;
@@ -283,7 +287,7 @@ namespace V3D
 		ipar[10] = 1;  //Preconditioner used
 		ipar[14] = RESTARTS; //internal iterations
 		
-		dpar[0] = tol; //Relative Tolerance
+		dpar[0] = TOL; //Relative Tolerance
 
 		/*---------------------------------------------------------------------------
 		/* Initialize the initial guess
@@ -362,7 +366,7 @@ namespace V3D
 
 			}
 
-			if (relres_nrm<=tol) goto COMPLETE;   //taking tolerance as 1e-04
+			if (relres_nrm<=TOL) goto COMPLETE;   //taking tolerance as 1e-04
 
 			else goto ONE;
 			

@@ -525,10 +525,11 @@ main(int argc, char * argv[])
       opt.updateThreshold = 1e-8;
 
       double total_MSC_time = 0.0;
+      double factor_time = 0.0;
       int num_gmres_iters = 0;
       double MSC_solve_time = 0.0;
       opt.maxIterations = 200;
-      opt.minimize(1,&total_MSC_time,&num_gmres_iters,&MSC_solve_time);
+      opt.minimize(1,&total_MSC_time,&num_gmres_iters,&MSC_solve_time,&factor_time);
       cout << "optimizer status = " << opt.status << endl;
    } // end scope
 

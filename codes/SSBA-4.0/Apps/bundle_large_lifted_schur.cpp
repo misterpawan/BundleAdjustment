@@ -538,14 +538,16 @@ namespace
       opt.tau = 1e-3;
 
       double total_MSC_time = 0.0;  // to compute the MSC construction time per iteration
+      double factor_time = 0.0; //time taken for the symbolic and numeric factorization of D and G or MSC
       int num_gmres_iters = 0; //total no of GMRES iterations in the 100 LM iterations
       double MSC_solve_time = 0.0; //time taken for solving only with MSC...including MSC construction
       Timer t("BA");
       t.start();
-      opt.minimize(msc_block,&total_MSC_time,&num_gmres_iters,&MSC_solve_time);  // MSC_time is an output parameter
+      opt.minimize(msc_block,&total_MSC_time,&num_gmres_iters,&MSC_solve_time,&factor_time);  // MSC_time is an output parameter
       t.stop();
       cout << "Time per iteration: " << t.getTime() / opt.currentIteration << endl;
       cout << "MSC construction time per iteration: " << total_MSC_time / opt.currentIteration << endl;
+      cout << "Factor time: " << factor_time / opt.currentIteration << endl;
       cout << "Average GMRES iterations : " << num_gmres_iters/opt.currentIteration << endl;
       cout << "Total MSC solve time : " << MSC_solve_time/opt.currentIteration << endl;
 
@@ -570,7 +572,7 @@ namespace
 #endif
          } // end for (k)
          opt.tau = 1e-3;
-         opt.minimize(msc_block,&total_MSC_time,&num_gmres_iters,&MSC_solve_time);
+         opt.minimize(msc_block,&total_MSC_time,&num_gmres_iters,&MSC_solve_time,&factor_time);
       }
 
       //params.lambda = opt.lambda;
@@ -583,7 +585,7 @@ int
 main(int argc, char * argv[])
 {
   //cout << "\n Direct " << endl;
-  //cout << "\n Block jacobi 40 " << endl;
+  cout << "\n Block jacobi 40 " << endl;
   //cout << "\n Block jacobi 50 " << endl;
   //cout << "\n Block jacobi CG " << endl;
   //cout << "\n MSC lower gmres 40 " << endl;
@@ -591,13 +593,13 @@ main(int argc, char * argv[])
   //cout << "\n MSC full gmres 40 " << endl;
   //cout << "\n MSC full gmres 50 " << endl;
   //cout << "\n MSC lower CG " << endl;
-  cout << "\n MSC full CG " << endl;
+  //cout << "\n MSC full CG " << endl;
 
    // This loop is for testing with different number of MSC blocks in mini_schur_solve
-   int msc_blocks[6] = {10,20,30,40,50,60};
-   //int msc_blocks[1] = {20};
+   //int msc_blocks[6] = {10,20,30,40,50,60};
+   int msc_blocks[1] = {20};
 
-   for(int m = 0; m < 6; ++m)
+   for(int m = 0; m < 1; ++m)
    {
          if (argc != 2)
          {

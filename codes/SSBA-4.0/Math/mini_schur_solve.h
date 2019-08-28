@@ -26,10 +26,11 @@ using namespace V3D;
 
 //namespace V3D
 //{
-	#define sizeG 1242 
+	#define sizeG 12948 
 	#define size_MKL_IPAR 128
 	#define MAX_ITERS 100
 	#define RESTARTS 40 
+	#define TOL 1E-1
 	//#define NUM_MSC_BLOCKS 50
 
 	//This function densifies the jth column of input matrix PU
@@ -696,7 +697,7 @@ using namespace V3D;
 		/*
 			Since, U = L^T, instead of computing U*z2, compute Uz2 = L^T * z2
 		*/
-		
+		/*
 		char tvar = 'T';
 		int  nrows = D->n;
 		double *Uz2 = new double[D->n]();
@@ -715,7 +716,7 @@ using namespace V3D;
 				z1[kk] = z1[kk] - t1[kk];
 		
 		delete [] Uz2; delete [] t1;
-		
+		*/
 		for(kk = 0; kk < ivar; kk++)
 		{
 			if(kk < (D->n)) z_out[kk] = z1[kk];
@@ -729,7 +730,7 @@ using namespace V3D;
 	}
 
 	 void mini_schur_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,double *values,double *Jt_e,
-	 					   double *delta,double *prev_sol,int msc_block, double *MSC_time, int *total_iters)
+	 		double *delta,double *prev_sol,int msc_block, double *MSC_time, int *total_iters,double *LU_time)
 	 {	
 		int i,j,k;
 		int *null = ( int * ) NULL;
@@ -792,16 +793,20 @@ using namespace V3D;
 		
 		nzG = ncc - (nzD + 2*nzL); 
 
+		int MSC_block_size = sizeG/msc_block; //size of each MSC block
+		//if sizeG%msc_block != 0, then 1 extra MSC block will be created. Hence,(msc_block+1)
+		int MSC_max_nnz = MSC_block_size*MSC_block_size*(msc_block+1);
+
 		//Allocating memory
 		D->i = new int[nzD](); D->x = new double[nzD]();
 		L->i = new int[nzL](); L->x = new double[nzL]();
 		U->i = new int[nzL](); U->x = new double[nzL]();
-		G->i = new int[nzG](); G->x = new double[nzG]();
-		MSC->i = new int[sizeG*sizeG](); MSC->x = new double[sizeG*sizeG]();
+		G->i = new int[nzG](); G->x = new double[nzG](); 
+		MSC->i = new int[MSC_max_nnz](); MSC->x = new double[MSC_max_nnz]();
 
 		//setting values
-		D->nzmax = nzD; L->nzmax = nzL; U->nzmax = nzL; G->nzmax = nzG;MSC->nzmax = sizeG*sizeG;
-
+		D->nzmax = nzD; L->nzmax = nzL; U->nzmax = nzL; G->nzmax = nzG;MSC->nzmax = MSC_max_nnz;
+		//cout << "\n alloc done! " << endl;
 		
 		//cout << "\nFilling non zeros ...\n";
 		for(j=0;j<sizeD;j++)
@@ -901,6 +906,8 @@ using namespace V3D;
 		*/
 
 		/************LU Factorization of D and MSC******************************/
+		Timer tt("LU");
+		tt.start();
 
 		sym_status = umfpack_di_symbolic ( D->m, D->n, D->p, D->i, D->x, &Symbolic_D, solve_null, solve_null );
 		//cout << "\n Symbolic status for D :" << sym_status << "\n";
@@ -916,6 +923,9 @@ using namespace V3D;
 		num_status = umfpack_di_numeric ( MSC->p, MSC->i, MSC->x, Symbolic_MSC, &Numeric_MSC, solve_null, solve_null );
 		//cout << "\n Numeric status for MSC:" << num_status << "\n";
 		umfpack_di_free_symbolic ( &Symbolic_MSC );
+
+		tt.stop();
+		*LU_time = tt.getTime();
 	  	
 	  	delete [] G->p; delete [] G->i; delete [] G->x; delete G;
 
@@ -933,7 +943,7 @@ using namespace V3D;
 		double* residual = new double[num_cols]();   
 		double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev,prec_rhs_nrm,prec_relres_nrm;
 		double *prec_rhs = new double[num_cols]();
-		double tol = 1.0E-02;
+		//double tol = 1.0E-02;
 		
 
 		MKL_INT itercount,ierr=0;
@@ -1012,7 +1022,7 @@ using namespace V3D;
 		ipar[10] = 1;  //  Preconditioner used
 		ipar[14] = RESTARTS; //  Internal iterations
 		
-		dpar[0] = tol; //Relative Tolerance
+		dpar[0] = TOL; //Relative Tolerance
 
 		/*---------------------------------------------------------------------------
 		/* Initialize the initial guess
@@ -1087,7 +1097,7 @@ using namespace V3D;
 
 			}
 
-			if (relres_nrm<=tol) goto COMPLETE; 
+			if (relres_nrm<=TOL) goto COMPLETE; 
 
 			else goto ONE;
 			

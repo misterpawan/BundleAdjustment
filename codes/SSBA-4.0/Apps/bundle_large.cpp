@@ -470,11 +470,12 @@ namespace
       //opt.tau = 1e-6;
 
       double total_MSC_time = 0.0;
+      double factor_time = 0.0;
       int num_gmres_iters = 0;
       double MSC_solve_time = 0.0;
       Timer t("BA");
       t.start();
-      opt.minimize(1,&total_MSC_time,&num_gmres_iters,&MSC_solve_time); //1 should be replaced with the no of MSC blocks, 0.0 for total MSC time
+      opt.minimize(1,&total_MSC_time,&num_gmres_iters,&MSC_solve_time,&factor_time); //1 should be replaced with the no of MSC blocks, 0.0 for total MSC time
       t.stop();
       cout << "Time per iteration: " << t.getTime() / opt.currentIteration << endl;
 
