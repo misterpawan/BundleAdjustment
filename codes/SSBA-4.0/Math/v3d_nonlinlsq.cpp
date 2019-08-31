@@ -1,8 +1,8 @@
 #include "Math/v3d_nonlinlsq.h"
 #include "Math/mini_schur_solve.h"
 //#include "Math/mini_schur_solve_cg.h"
+//#include "Math/block_jacobi_solve.h"
 #include "Math/block_jacobi_solve.h"
-//#include "Math/block_jacobi_solve_cg.h"
 #include <map>
 
 
@@ -654,7 +654,7 @@ namespace V3D
             
             if (optimizerVerbosenessLevel >= 1)
             {
-               if (currentIteration == 0 || currentIteration == 99)
+               if (currentIteration == 0 || currentIteration == maxIterations-1)
                {
                   cout << "NLSQ_LM_Optimizer: iteration: " << currentIteration << ", |residual|^2 = " << err
                        << ", lambda = " << lambda << ", residuals itemized: "; displayVector(errors);
@@ -761,7 +761,7 @@ namespace V3D
          //writeJtetofile(currentIteration,delta);
 
          //MSC solve
-         /*
+         
          Timer t("MSC_solve");
          t.start();
 
@@ -772,17 +772,17 @@ namespace V3D
          *total_MSC_time += MSC_time;
          *factor_time += LU_time; 
 
-         for (int n=0; n<totalParamDimension; n++) prev_sol[n] = deltaPerm[n];
-		    */
+         //for (int n=0; n<totalParamDimension; n++) prev_sol[n] = deltaPerm[n];
+		    
          //Block Jacobi Solve
-         
+         /*
          Timer t("Jacobi_solve");
          t.start();
          this->blockjacobi_solve(_JtJ, delta, deltaPerm,&total_iters,&LU_time);
          t.stop();
          solve_MSC_time += t.getTime();
          *factor_time += LU_time; 
-		
+		    */
          *num_gmres_iters += total_iters;
 
          LDL_permt(_JtJ_Parent.size(), &delta[0], &deltaPerm[0], &_perm_JtJ[0]);

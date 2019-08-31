@@ -26,7 +26,7 @@ using namespace V3D;
 
 //namespace V3D
 //{
-	#define sizeG 12948 
+	#define sizeG 3399 
 	#define size_MKL_IPAR 128
 	#define MAX_ITERS 100
 	#define RESTARTS 40 
@@ -131,14 +131,14 @@ using namespace V3D;
 		cs_di* AA = new cs_di;
 		
 		AA->nz = -1;
-		AA->m = PD->m; AA->n = PU->n; AA->nzmax = AA->m * AA->n;
+		AA->m = PD->m; AA->n = PU->n; //AA->nzmax = AA->m * AA->n; 
+		AA->nzmax = PD->nzmax + PU->nzmax; // since nnz of AA is upper bounded by this 
 		AA->p = new int[AA->n+1](); AA->i = new int[AA->nzmax](); AA->x = new double[AA->nzmax]();
 
 		
 		
 		compute_PDinv_times_PU(PD,PU,AA);
 		ok = cs_di_sprealloc(AA,AA->p[AA->n]);  //reallocate unused space
-		
 		LDU = cs_di_multiply(PL,AA);
 
 		delete[] AA->p; delete[] AA->i; delete[] AA->x;
@@ -408,11 +408,11 @@ using namespace V3D;
 					else continue;
 				}
 			}
-			PG->p[PG->n] = iterPG;
+			PG->p[PG->n] = iterPG;   
 
 			//compute the full schur complement of the extracted blocks
 			compute_full_schur_complement(r1,r2,rD1,rD2,ol,MSC,PD,PL,PU,PG,&total_nz);
-
+			//cout << "full schur complement done!" << endl;
 
 			//updating the coordinates
 			r1 = r2;  r2 = r2+sz;

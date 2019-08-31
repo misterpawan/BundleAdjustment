@@ -26,9 +26,9 @@ using namespace V3D;
 
 //namespace V3D
 //{
-	#define sizeG 1242 
+	#define sizeG 3399 
 	#define size_MKL_IPAR 128
-	#define MAX_ITERS 100
+	#define MAX_ITERS 500
 	//#define RESTARTS 50 
 	//#define NUM_MSC_BLOCKS 50
 

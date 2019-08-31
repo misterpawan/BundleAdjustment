@@ -29,7 +29,7 @@ CMakeFiles/V3D.dir/Math/v3d_nonlinlsq.cpp.o: .././Base/v3d_exception.h
 CMakeFiles/V3D.dir/Math/v3d_nonlinlsq.cpp.o: .././Base/v3d_serialization.h
 CMakeFiles/V3D.dir/Math/v3d_nonlinlsq.cpp.o: .././Base/v3d_timer.h
 CMakeFiles/V3D.dir/Math/v3d_nonlinlsq.cpp.o: .././Math/block_jacobi_solve.h
-CMakeFiles/V3D.dir/Math/v3d_nonlinlsq.cpp.o: .././Math/mini_schur_solve_cg.h
+CMakeFiles/V3D.dir/Math/v3d_nonlinlsq.cpp.o: .././Math/mini_schur_solve.h
 CMakeFiles/V3D.dir/Math/v3d_nonlinlsq.cpp.o: .././Math/sort.h
 CMakeFiles/V3D.dir/Math/v3d_nonlinlsq.cpp.o: .././Math/v3d_ldl_private.h
 CMakeFiles/V3D.dir/Math/v3d_nonlinlsq.cpp.o: .././Math/v3d_linear.h

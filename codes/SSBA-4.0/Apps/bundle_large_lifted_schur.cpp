@@ -585,7 +585,7 @@ int
 main(int argc, char * argv[])
 {
   //cout << "\n Direct " << endl;
-  cout << "\n Block jacobi 40 " << endl;
+  //cout << "\n Block jacobi 40 " << endl;
   //cout << "\n Block jacobi 50 " << endl;
   //cout << "\n Block jacobi CG " << endl;
   //cout << "\n MSC lower gmres 40 " << endl;
@@ -596,8 +596,8 @@ main(int argc, char * argv[])
   //cout << "\n MSC full CG " << endl;
 
    // This loop is for testing with different number of MSC blocks in mini_schur_solve
-   //int msc_blocks[6] = {10,20,30,40,50,60};
-   int msc_blocks[1] = {20};
+   //int msc_blocks[3] = {20,30,40};
+   int msc_blocks[1] = {30};
 
    for(int m = 0; m < 1; ++m)
    {

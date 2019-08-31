@@ -22,7 +22,7 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 441
+	#define sizeG 5739
 	#define size_MKL_IPAR 128
 	#define MAX_ITERS 100
 	#define RESTARTS 40

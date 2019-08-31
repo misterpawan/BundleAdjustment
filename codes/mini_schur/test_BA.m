@@ -2,11 +2,11 @@
 function test_BA
     clc;
     warning('off','all');
-    filepath = '~/Test/49';
+    filepath = '~/Test/885';
     addpath(filepath);
     addpath('../ddm');
-    lhs_filename = 'JTJ49_1.mat';
-    rhs_filename = 'JTe49_1.mat';
+    lhs_filename = 'JTJ885_1.mat';
+    rhs_filename = 'JTe885_1.mat';
 
     %P = load(strcat(filepath,lhs_filename),'-mat')
     P = load(lhs_filename,'-mat')
@@ -55,7 +55,7 @@ function test_BA
     %[sizes_parts, A, p] = domain_decomposition(B, nparts);
     A=B;
     %sizeG = m - sum(sizes_parts(1:nparts))
-    sizeG = 441;
+    sizeG = 12948;
     sizeD = m - sizeG; 
     %keyboard;
 %     D = A(1 : sizeD, 1 : sizeD);
@@ -67,8 +67,8 @@ function test_BA
     % blocks for schur complements
     %nmsc = 3; 
    % nmsc_blocks = [3 4 5 6 7 8 9 10 15 20];
-     nmsc_blocks = [10 20 30 40 50 60];
-   % nmsc_blocks = [20];
+    % nmsc_blocks = [10 20 30 40 50 60];
+    nmsc_blocks = [30];
     %nmsc_blocks = [25 30 35 40];
     %nmsc_blocks = [13 14 15 16 17 18];
     iters = zeros(1,length(nmsc_blocks));
@@ -92,7 +92,7 @@ function test_BA
         U = L';
         G = A(sizeD + 1:m, sizeD + 1:m);%%change
         
-%         Schur = G - L*(D\U);
+         Schur = G - L*(D\U);
         
 %         [L_block_G,U_block_G] = lu(G);
         %keyboard;
@@ -130,6 +130,7 @@ function test_BA
 %            fprintf('block size of L = %d x %d (%d : %d, %d : %d) \n', size(PL,1), size(PL,2), r1, r2, rD1, rD2);
 %            fprintf('block size of D = %d x %d (%d : %d, %d : %d) \n\n', size(PD,1), size(PD,2), rD1, rD2, rD1, rD2);
 
+%            invPDPU = PD\PU; keyboard;
            S{i} = PG - PL * (PD \ PU); 
            GS(r1:r2 + ol, r1 : r2 + ol) = S{i}; 
            GS = sparse(GS); 
@@ -205,13 +206,14 @@ function test_BA
 %         fp = fopen("~/rand_sol_MSC_20.txt","w");
 %         fprintf(fp,"%10.9f\n",rand_sol);
 %         fclose(fp);
-           % GS = full(GS); 
+           GS = full(GS); 
             %keyboard;
             %for i = 1:9
              %   fprintf("GS(%d) = %f\n",i,GS(1,i));
             %end
           
-            %keyboard;
+            [LG_jac,UG_jac] = lu(G);
+            keyboard;
         clear S PD PU PL PG
         clear GS
  
