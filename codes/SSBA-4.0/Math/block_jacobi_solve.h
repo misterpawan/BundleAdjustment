@@ -22,11 +22,11 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 5739
+	//#define sizeG 5739
 	#define size_MKL_IPAR 128
-	#define MAX_ITERS 100
-	#define RESTARTS 40
-	#define TOL 1E-1
+	//#define MAX_ITERS 100
+	//#define RESTARTS 40
+	//#define TOL 1E-3
 
 	/* This function computes the preconditioner solve for the input array y_in
 		and writes the output in z_out
@@ -75,7 +75,8 @@ namespace V3D
 	}
 
 	 void block_jacobi_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,
-	 							double *values,double *Jt_e,double *delta,int *total_iters,double *LU_time)
+	 							double *values,double *Jt_e,double *delta,int *total_iters,double *LU_time,
+	 							int max_gmres_iterations,int gmres_restarts,double tolerance,int sizeG)
 	 {
 		int i;
 		int *null = ( int * ) NULL;
@@ -221,13 +222,13 @@ namespace V3D
 
 		double* dpar = new double[size_MKL_IPAR](); 
 		
-		double* tmp = new double[num_cols*(2*RESTARTS+1)+(RESTARTS*(RESTARTS+9))/2+1]();
+		double* tmp = new double[num_cols*(2*gmres_restarts+1)+(gmres_restarts*(gmres_restarts+9))/2+1]();
 		double* rhs = new double[num_cols]();
 		double* computed_solution = new double[num_cols]();
 		double* residual = new double[num_cols]();   
 		double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev,prec_rhs_nrm,prec_relres_nrm;
 		double *prec_rhs = new double[num_cols]();
-		//double tol = 1.0e-02;
+		double TOL = tolerance;
 		
 
 		MKL_INT itercount,ierr=0;
@@ -283,9 +284,9 @@ namespace V3D
 
 		
 		ipar[7] = 1;
-		ipar[4] = MAX_ITERS;  // Max Iterations
+		ipar[4] = max_gmres_iterations;  // Max Iterations
 		ipar[10] = 1;  //Preconditioner used
-		ipar[14] = RESTARTS; //internal iterations
+		ipar[14] = gmres_restarts; //internal iterations
 		
 		dpar[0] = TOL; //Relative Tolerance
 

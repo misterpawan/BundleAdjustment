@@ -506,7 +506,13 @@ namespace
                             vector<int> const& correspondingView,
                             vector<int> const& correspondingPoint,
                             double inlierThreshold,
-                            int msc_block)
+                            int msc_block,
+                            int max_gmres_iterations,
+                            int gmres_restarts,
+                            double tol,
+                            int sizeG,
+                            int method,
+                            ofstream& os)
    {
       NLSQ_ParamDesc paramDesc;
       paramDesc.nParamTypes = 2;
@@ -541,15 +547,29 @@ namespace
       double factor_time = 0.0; //time taken for the symbolic and numeric factorization of D and G or MSC
       int num_gmres_iters = 0; //total no of GMRES iterations in the 100 LM iterations
       double MSC_solve_time = 0.0; //time taken for solving only with MSC...including MSC construction
+
+
       Timer t("BA");
       t.start();
-      opt.minimize(msc_block,&total_MSC_time,&num_gmres_iters,&MSC_solve_time,&factor_time);  // MSC_time is an output parameter
+      opt.minimize(msc_block,&total_MSC_time,&num_gmres_iters,&MSC_solve_time,&factor_time,
+                   max_gmres_iterations,gmres_restarts,tol,sizeG,method,os);  // MSC_time is an output parameter
       t.stop();
-      cout << "Time per iteration: " << t.getTime() / opt.currentIteration << endl;
-      cout << "MSC construction time per iteration: " << total_MSC_time / opt.currentIteration << endl;
-      cout << "Factor time: " << factor_time / opt.currentIteration << endl;
-      cout << "Average GMRES iterations : " << num_gmres_iters/opt.currentIteration << endl;
-      cout << "Total MSC solve time : " << MSC_solve_time/opt.currentIteration << endl;
+      os << "Time per iteration: " << t.getTime() / opt.currentIteration << endl;
+
+      if(method == 2)
+      {
+         os << "MSC construction time per iteration: " << total_MSC_time / opt.currentIteration << endl;
+         os << "Factor time(MSC): " << factor_time / opt.currentIteration << endl;
+         os << "Average GMRES iterations : " << num_gmres_iters/opt.currentIteration << endl;
+         os << "Total GMRES(MSC) solve time : " << MSC_solve_time/opt.currentIteration << endl;  
+      }   
+      else if(method == 3)
+      {
+         os << "Factor time(block jacobi) : " << factor_time / opt.currentIteration << endl;
+         os << "Average GMRES iterations : " << num_gmres_iters/opt.currentIteration << endl;
+         os << "Total GMRES(block jacobi) solve time : " << MSC_solve_time/opt.currentIteration << endl;
+      }
+      
 
       if (0)
       {
@@ -572,7 +592,8 @@ namespace
 #endif
          } // end for (k)
          opt.tau = 1e-3;
-         opt.minimize(msc_block,&total_MSC_time,&num_gmres_iters,&MSC_solve_time,&factor_time);
+         opt.minimize(msc_block,&total_MSC_time,&num_gmres_iters,&MSC_solve_time,&factor_time,
+                      max_gmres_iterations,gmres_restarts,tol,sizeG,method,os);
       }
 
       //params.lambda = opt.lambda;
@@ -584,26 +605,155 @@ namespace
 int
 main(int argc, char * argv[])
 {
-  //cout << "\n Direct " << endl;
-  //cout << "\n Block jacobi 40 " << endl;
-  //cout << "\n Block jacobi 50 " << endl;
-  //cout << "\n Block jacobi CG " << endl;
-  //cout << "\n MSC lower gmres 40 " << endl;
-  //cout << "\n MSC lower gmres 50 " << endl;
-  //cout << "\n MSC full gmres 40 " << endl;
-  //cout << "\n MSC full gmres 50 " << endl;
-  //cout << "\n MSC lower CG " << endl;
-  //cout << "\n MSC full CG " << endl;
+   //This array contains the method to be used
+   //1 - Direct Solve
+   //2 - MSC Solve (GMRES)
+   //3 - Block Jacobi Solve (GMRES)
+   int method[3] = {1,2,3};
 
-   // This loop is for testing with different number of MSC blocks in mini_schur_solve
-   //int msc_blocks[3] = {20,30,40};
-   int msc_blocks[1] = {30};
+   ofstream os("../../output.txt");
 
-   for(int m = 0; m < 1; ++m)
+   for(int m = 0; m < 3; ++m)
    {
-         if (argc != 2)
+      if(method[m] == 2)
+      {
+         os << "=====================================================================================" << endl;
+         os << "MSC Solve --> " << endl;
+         // This loop is for testing with different number of MSC blocks in mini_schur_solve
+         //int msc_blocks[3] = {20,30,40};
+         int msc_blocks[1] = {30};
+
+         for(int bl = 0; bl < 1; ++bl)
          {
-            cerr << "Usage: " << argv[0] << " <sparse reconstruction file>" << endl;
+               //if (argc != 2)
+               if (argc != 3)
+               {
+                  //cerr << "Usage: " << argv[0] << " <sparse reconstruction file>" << endl;
+                  cerr << "Usage: " << argv[0] << " <sparse reconstruction file>" << "<parameters file>" << endl;
+                  return -1;
+               }
+
+               ifstream is(argv[1]);
+               if (!is)
+               {
+                  cerr << "Cannot open " << argv[1] << endl;
+                  return -2;
+               }
+
+               ifstream ps(argv[2]);
+               if (!ps)
+               {
+                  cerr << "Cannot open " << argv[2] << endl;
+                  return -2;
+               }
+
+               int max_gmres_iterations,gmres_restarts,sizeG;
+               double tol;
+               ps >> max_gmres_iterations >> gmres_restarts >> tol;
+               ps.close();
+
+               os << "max_gmres_iterations : " << max_gmres_iterations << endl;
+               os << "gmres_restarts : " << gmres_restarts << endl;
+               os << "tolerance : " << tol << endl;
+
+               os << "No. of MSC blocks : " << msc_blocks[bl] << endl;
+
+               double const avg_focal_length = AVG_FOCAL_LENGTH;
+               V3D::optimizerVerbosenessLevel = 1;
+
+               cout.precision(10);
+
+               int N, M, K;
+               is >> N >> M >> K;
+               if (m == 0)
+                  cout << "N (cams) = " << N << " M (points) = " << M << " K (measurements) = " << K << endl;
+
+               sizeG = 9*N; //size of the reduced camera block (G)of the Hessian
+               os << "sizeG : " << sizeG << endl;
+
+               //cout << "Reading image measurements..." << endl;
+               vector<Vector2d> measurements(K);
+               vector<int> correspondingView(K, -1);
+               vector<int> correspondingPoint(K, -1);
+               for (int k = 0; k < K; ++k)
+               {
+                  is >> correspondingView[k];
+                  is >> correspondingPoint[k];
+                  is >> measurements[k][0] >> measurements[k][1];
+                  measurements[k][0] /= avg_focal_length;
+                  measurements[k][1] /= avg_focal_length;
+               } // end for (k)
+               //cout << "Done." << endl;
+
+               //cout << "Reading cameras..." << endl;
+               vector<CameraMatrix> cams(N);
+               vector<SimpleDistortionFunction> distortions(N);
+               for (int i = 0; i < N; ++i)
+               {
+                  Vector3d om, T;
+                  double f, k1, k2;
+                  is >> om[0] >> om[1] >> om[2];
+                  is >> T[0] >> T[1] >> T[2];
+                  is >> f >> k1 >> k2;
+
+                  Matrix3x3d K; makeIdentityMatrix(K);
+                  K[0][0] = K[1][1] = -f / avg_focal_length;
+                  cams[i].setIntrinsic(K);
+                  cams[i].setTranslation(T);
+
+                  Matrix3x3d R;
+                  createRotationMatrixRodrigues(om, R);
+                  cams[i].setRotation(R);
+
+                  double const f2 = f*f;
+                  distortions[i].k1 = k1 * f2;
+                  distortions[i].k2 = k2 * f2 * f2;
+
+                  //cout << "k1 = " << k1 << " k2 = " << k2 << endl;
+               } // end for (i)
+               //cout << "Done." << endl;
+
+               //cout << "Reading 3D point..." << endl;
+               vector<Vector3d > Xs(M);
+               for (int j = 0; j < M; ++j) is >> Xs[j][0] >> Xs[j][1] >> Xs[j][2];
+               //cout << "Done." << endl;
+
+
+               //write only final stats to output.txt....set param before os object param to 1 for writing to output.txt
+               double init_ratio = showErrorStatistics(avg_focal_length, inlier_threshold, cams, distortions, Xs, measurements, correspondingView, correspondingPoint,0,os);
+               double const E_init = showObjective(avg_focal_length, inlier_threshold, cams, distortions, Xs, measurements, correspondingView, correspondingPoint);
+
+               //for (int i = 0; i < 10; ++i) cout << "f[" << i << "] = " << cams[i].getFocalLength() << endl;
+
+               vector<double> weights(measurements.size(), omega2_inv(1.0));
+
+
+               adjustStructureAndMotion(bundle_mode, cams, distortions, Xs, weights, measurements, correspondingView, correspondingPoint,
+                                  inlier_threshold/avg_focal_length,msc_blocks[bl],max_gmres_iterations,gmres_restarts,tol,sizeG,method[m],os);
+
+               //for (int i = 0; i < 10; ++i) cout << "f[" << i << "] = " << cams[i].getFocalLength() << endl;
+
+               double final_ratio = showErrorStatistics(avg_focal_length, inlier_threshold, cams, distortions, Xs, measurements, correspondingView, correspondingPoint,1,os);
+               //showErrorStatistics(KMat, cams, Xs, measurements, correspondingView, correspondingPoint);
+               double const E_final = showObjective(avg_focal_length, inlier_threshold, cams, distortions, Xs, measurements, correspondingView, correspondingPoint);
+               cout << "E_init = " << E_init << " E_final = " << E_final << " initial ratio = " << init_ratio << " final ratio = " << final_ratio << endl;
+         } 
+      }
+      else
+      {
+         if(method[m] == 1) os<<"Direct Solve --> " << endl;
+         else 
+         {
+            os << "=====================================================================================" << endl;
+            os << "Block Jacobi Solve --> " << endl;   
+         }
+         
+
+         //if (argc != 2)
+         if (argc != 3)
+         {
+            //cerr << "Usage: " << argv[0] << " <sparse reconstruction file>" << endl;
+            cerr << "Usage: " << argv[0] << " <sparse reconstruction file>" << "<parameters file>" << endl;
             return -1;
          }
 
@@ -613,7 +763,24 @@ main(int argc, char * argv[])
             cerr << "Cannot open " << argv[1] << endl;
             return -2;
          }
-         cout << "\n No. of MSC blocks : " << msc_blocks[m] << endl;
+
+         ifstream ps(argv[2]);
+         if (!ps)
+         {
+            cerr << "Cannot open " << argv[2] << endl;
+            return -2;
+         }
+
+         int max_gmres_iterations,gmres_restarts,sizeG;
+         double tol;
+         ps >> max_gmres_iterations >> gmres_restarts >> tol;
+         ps.close();
+
+         os << "max_gmres_iterations : " << max_gmres_iterations << endl;
+         os << "gmres_restarts : " << gmres_restarts << endl;
+         os << "tolerance : " << tol << endl;
+
+         //cout << "\n No. of MSC blocks : " << msc_blocks[m] << endl;
 
          double const avg_focal_length = AVG_FOCAL_LENGTH;
          V3D::optimizerVerbosenessLevel = 1;
@@ -624,6 +791,9 @@ main(int argc, char * argv[])
          is >> N >> M >> K;
          if (m == 0)
             cout << "N (cams) = " << N << " M (points) = " << M << " K (measurements) = " << K << endl;
+
+         sizeG = 9*N; //size of the reduced camera block (G)of the Hessian
+         os << "sizeG : " << sizeG << endl;
 
          //cout << "Reading image measurements..." << endl;
          vector<Vector2d> measurements(K);
@@ -673,7 +843,7 @@ main(int argc, char * argv[])
          //cout << "Done." << endl;
 
 
-         double init_ratio = showErrorStatistics(avg_focal_length, inlier_threshold, cams, distortions, Xs, measurements, correspondingView, correspondingPoint);
+         double init_ratio = showErrorStatistics(avg_focal_length, inlier_threshold, cams, distortions, Xs, measurements, correspondingView, correspondingPoint,0,os);
          double const E_init = showObjective(avg_focal_length, inlier_threshold, cams, distortions, Xs, measurements, correspondingView, correspondingPoint);
 
          //for (int i = 0; i < 10; ++i) cout << "f[" << i << "] = " << cams[i].getFocalLength() << endl;
@@ -682,18 +852,19 @@ main(int argc, char * argv[])
 
 
          adjustStructureAndMotion(bundle_mode, cams, distortions, Xs, weights, measurements, correspondingView, correspondingPoint,
-                            inlier_threshold/avg_focal_length,msc_blocks[m]);
+                            inlier_threshold/avg_focal_length,0,max_gmres_iterations,gmres_restarts,tol,sizeG,method[m],os);
 
          //for (int i = 0; i < 10; ++i) cout << "f[" << i << "] = " << cams[i].getFocalLength() << endl;
 
-         double final_ratio = showErrorStatistics(avg_focal_length, inlier_threshold, cams, distortions, Xs, measurements, correspondingView, correspondingPoint);
+         double final_ratio = showErrorStatistics(avg_focal_length, inlier_threshold, cams, distortions, Xs, measurements, correspondingView, correspondingPoint,1,os);
          //showErrorStatistics(KMat, cams, Xs, measurements, correspondingView, correspondingPoint);
          double const E_final = showObjective(avg_focal_length, inlier_threshold, cams, distortions, Xs, measurements, correspondingView, correspondingPoint);
          cout << "E_init = " << E_init << " E_final = " << E_final << " initial ratio = " << init_ratio << " final ratio = " << final_ratio << endl;
-   } 
+      }
+      
+   }
 
-
-
+   os.close();
 
    return 0;
 }

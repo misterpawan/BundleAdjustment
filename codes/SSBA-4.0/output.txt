@@ -1,0 +1,40 @@
+Direct Solve --> 
+max_gmres_iterations : 100
+gmres_restarts : 40
+tolerance : 0.01
+sizeG : 1242
+NLSQ_LM_Optimizer: iteration: 0, |residual|^2 = 126225, lambda = 0.001
+NLSQ_LM_Optimizer: iteration: 99, |residual|^2 = 2574.69, lambda = 1
+Time per iteration: 0.448345
+mean reprojection error = 0.893762
+inlier mean reprojection error = 0.138262 55345 / 85217 inliers.
+=====================================================================================
+MSC Solve --> 
+max_gmres_iterations : 100
+gmres_restarts : 40
+tolerance : 0.01
+No. of MSC blocks : 30
+sizeG : 1242
+NLSQ_LM_Optimizer: iteration: 0, |residual|^2 = 126225, lambda = 0.001
+NLSQ_LM_Optimizer: iteration: 99, |residual|^2 = 2568.4, lambda = 0.01
+Time per iteration: 1.47596
+MSC construction time per iteration: 0.108769
+Factor time(MSC): 0.0365856
+Average GMRES iterations : 29
+Total GMRES(MSC) solve time : 1.32141
+mean reprojection error = 4190.45
+inlier mean reprojection error = 0.133238 54629 / 85217 inliers.
+=====================================================================================
+Block Jacobi Solve --> 
+max_gmres_iterations : 100
+gmres_restarts : 40
+tolerance : 0.01
+sizeG : 1242
+NLSQ_LM_Optimizer: iteration: 0, |residual|^2 = 126225, lambda = 0.001
+NLSQ_LM_Optimizer: iteration: 99, |residual|^2 = 2595.05, lambda = 0.01
+Time per iteration: 0.873103
+Factor time(block jacobi) : 0.0414524
+Average GMRES iterations : 19
+Total GMRES(block jacobi) solve time : 0.720357
+mean reprojection error = 0.828884
+inlier mean reprojection error = 0.132933 54033 / 85217 inliers.

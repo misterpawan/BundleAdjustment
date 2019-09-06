@@ -408,7 +408,13 @@ namespace
                             vector<Vector2d > const& measurements2d,
                             vector<int> const& correspondingView,
                             vector<int> const& correspondingPoint,
-                            double inlierThreshold)
+                            double inlierThreshold,
+                            int max_gmres_iterations,
+                            int gmres_restarts,
+                            double tol,
+                            int sizeG,
+                            int method,
+                            ofstream& os)
    {
       NLSQ_ParamDesc paramDesc;
       paramDesc.nParamTypes = 2;
@@ -445,7 +451,8 @@ namespace
       double MSC_solve_time = 0.0;
       Timer t("BA");
       t.start();
-      opt.minimize(1,&total_MSC_time,&num_gmres_iters,&MSC_solve_time,&factor_time);
+      opt.minimize(1,&total_MSC_time,&num_gmres_iters,&MSC_solve_time,&factor_time,
+                     max_gmres_iterations,gmres_restarts,tol,sizeG,method,os);
       t.stop();
       cout << "Time per iteration: " << t.getTime() / opt.currentIteration << endl;
 
@@ -463,7 +470,7 @@ main(int argc, char * argv[])
       cerr << "Usage: " << argv[0] << " <sparse reconstruction file>" << endl;
       return -1;
    }
-
+   ofstream os;
    ifstream is(argv[1]);
    if (!is)
    {
@@ -527,17 +534,17 @@ main(int argc, char * argv[])
    for (int j = 0; j < M; ++j) is >> Xs[j][0] >> Xs[j][1] >> Xs[j][2];
    cout << "Done." << endl;
 
-   double init_ratio = showErrorStatistics(avg_focal_length, inlier_threshold, cams, distortions, Xs, measurements, correspondingView, correspondingPoint);
+   double init_ratio = showErrorStatistics(avg_focal_length, inlier_threshold, cams, distortions, Xs, measurements, correspondingView, correspondingPoint,0,os);
    double const E_init = showObjective(avg_focal_length, inlier_threshold, cams, distortions, Xs, measurements, correspondingView, correspondingPoint);
 
    for (int i = 0; i < 10; ++i) cout << "f[" << i << "] = " << cams[i].getFocalLength() << endl;
 
    adjustStructureAndMotion(bundle_mode, cams, distortions, Xs, measurements, correspondingView, correspondingPoint,
-                            inlier_threshold/avg_focal_length);
+                            inlier_threshold/avg_focal_length,1,1,1.0,10,1,os);
 
    for (int i = 0; i < 10; ++i) cout << "f[" << i << "] = " << cams[i].getFocalLength() << endl;
 
-   double final_ratio = showErrorStatistics(avg_focal_length, inlier_threshold, cams, distortions, Xs, measurements, correspondingView, correspondingPoint);
+   double final_ratio = showErrorStatistics(avg_focal_length, inlier_threshold, cams, distortions, Xs, measurements, correspondingView, correspondingPoint,0,os);
    //showErrorStatistics(KMat, cams, Xs, measurements, correspondingView, correspondingPoint);
    double const E_final = showObjective(avg_focal_length, inlier_threshold, cams, distortions, Xs, measurements, correspondingView, correspondingPoint);
    cout << "E_init = " << E_init << " E_final = " << E_final << " initial ratio = " << init_ratio << " final ratio = " << final_ratio << endl;

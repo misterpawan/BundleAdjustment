@@ -22,10 +22,10 @@ using namespace V3D;
 
 namespace V3D
 {
-	#define sizeG 3399
+	//#define sizeG 3399
 	#define size_MKL_IPAR 128
-	#define MAX_ITERS 500
-	#define TOL 1E-1
+	//#define MAX_ITERS 500
+	//#define TOL 1E-1
 	//#define RESTARTS 50
 
 	/* This function computes the preconditioner solve for the input array y_in
@@ -75,7 +75,8 @@ namespace V3D
 	}
 
 	 void block_jacobi_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,
-	 							double *values,double *Jt_e,double *delta,int *total_iters,double *LU_time)
+	 							double *values,double *Jt_e,double *delta,int *total_iters,double *LU_time,
+	 							int max_gmres_iterations,int gmres_restarts,double tolerance,int sizeG)
 	 {
 		int i;
 		int *null = ( int * ) NULL;
@@ -223,7 +224,7 @@ namespace V3D
 		double* residual = new double[num_cols]();   
 		double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev,prec_rhs_nrm,prec_relres_nrm;
 		double *prec_rhs = new double[num_cols]();
-		double tol = TOL;
+		double tol = tolerance;
 		
 
 		MKL_INT itercount,ierr=0;

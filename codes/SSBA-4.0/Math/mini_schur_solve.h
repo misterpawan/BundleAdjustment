@@ -26,11 +26,11 @@ using namespace V3D;
 
 //namespace V3D
 //{
-	#define sizeG 3399 
+	//#define sizeG 7839 
 	#define size_MKL_IPAR 128
-	#define MAX_ITERS 100
-	#define RESTARTS 40 
-	#define TOL 1E-1
+	//#define MAX_ITERS 100
+	//#define RESTARTS 40 
+	//#define TOL 1E-1
 	//#define NUM_MSC_BLOCKS 50
 
 	//This function densifies the jth column of input matrix PU
@@ -123,7 +123,8 @@ using namespace V3D;
 
 	// This function computes the full Schur complement using the blocks 
 	//given as input. The output is written in MSC.
-	void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* MSC,cs_di* PD,cs_di* PL,cs_di* PU,cs_di* PG,int* total_nz)
+	void compute_full_schur_complement(int r1,int r2,int rD1,int rD2,int ol,cs_di* MSC,cs_di* PD,cs_di* PL,cs_di* PU,cs_di* PG,
+										int* total_nz,int sizeG)
 	{
 		int j,k,l,ok;
 		cs_di* LDU;
@@ -287,7 +288,7 @@ using namespace V3D;
 		The domain decomposition step is not shown as it is assumed that the size of 
 		block G is available. 
 	*/
-	void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* U,cs_di* G,int msc_block)
+	void compute_mini_schur_complement(cs_di* A,cs_di* MSC,cs_di* D,cs_di* L,cs_di* U,cs_di* G,int msc_block,int sizeG)
 	{
 		int nmsc_block = msc_block ;  //no of blocks for G
 		int r = sizeG % nmsc_block;
@@ -411,7 +412,7 @@ using namespace V3D;
 			PG->p[PG->n] = iterPG;   
 
 			//compute the full schur complement of the extracted blocks
-			compute_full_schur_complement(r1,r2,rD1,rD2,ol,MSC,PD,PL,PU,PG,&total_nz);
+			compute_full_schur_complement(r1,r2,rD1,rD2,ol,MSC,PD,PL,PU,PG,&total_nz,sizeG);
 			//cout << "full schur complement done!" << endl;
 
 			//updating the coordinates
@@ -523,7 +524,7 @@ using namespace V3D;
 			PG->p[PG->n] = iterPG;
 
 			//compute the full schur complement of the extracted blocks
-			compute_full_schur_complement(r1,r2,rD1,rD2,oll,MSC,PD,PL,PU,PG,&total_nz);
+			compute_full_schur_complement(r1,r2,rD1,rD2,oll,MSC,PD,PL,PU,PG,&total_nz,sizeG);
 
 			
 
@@ -637,7 +638,7 @@ using namespace V3D;
 			PG->p[PG->n] = iterPG;
 			
 			//compute the full schur complement of the extracted blocks
-			compute_full_schur_complement(r1,r2,rD1,rD2,0,MSC,PD,PL,PU,PG,&total_nz);
+			compute_full_schur_complement(r1,r2,rD1,rD2,0,MSC,PD,PL,PU,PG,&total_nz,sizeG);
 
 			MSC->p[sizeG] = total_nz;
 
@@ -730,7 +731,8 @@ using namespace V3D;
 	}
 
 	 void mini_schur_solve(int num_cols,int ncc,int *colStarts,int *rowIdxs,double *values,double *Jt_e,
-	 		double *delta,double *prev_sol,int msc_block, double *MSC_time, int *total_iters,double *LU_time)
+	 		double *delta,double *prev_sol,int msc_block, double *MSC_time, int *total_iters,double *LU_time,
+	 		int max_gmres_iterations,int gmres_restarts,double tolerance,int sizeG)
 	 {	
 		int i,j,k;
 		int *null = ( int * ) NULL;
@@ -875,7 +877,7 @@ using namespace V3D;
 		Timer t("MSC");
 		t.start();
 		//compute the mini schur complement in the cs_di format.
-		compute_mini_schur_complement(A,MSC,D,L,U,G,msc_block);
+		compute_mini_schur_complement(A,MSC,D,L,U,G,msc_block,sizeG);
 		//cout << "\n Mini Schur Complement computation done! \n";
 		t.stop();
 		//cout << "\n Time for MSC construction : " << t.getTime() << endl;
@@ -937,13 +939,13 @@ using namespace V3D;
 
 		double* dpar = new double[size_MKL_IPAR](); 
 		
-		double* tmp = new double[num_cols*(2*RESTARTS+1)+(RESTARTS*(RESTARTS+9))/2+1]();
+		double* tmp = new double[num_cols*(2*gmres_restarts+1)+(gmres_restarts*(gmres_restarts+9))/2+1]();
 		double* rhs = new double[num_cols]();
 		double* computed_solution = new double[num_cols]();
 		double* residual = new double[num_cols]();   
 		double nrm2,rhs_nrm,relres_nrm,dvar,relres_prev,prec_rhs_nrm,prec_relres_nrm;
 		double *prec_rhs = new double[num_cols]();
-		//double tol = 1.0E-02;
+		double TOL = tolerance;
 		
 
 		MKL_INT itercount,ierr=0;
@@ -1018,9 +1020,9 @@ using namespace V3D;
 
 		
 		ipar[7] = 1;
-		ipar[4] = MAX_ITERS;  // Max Iterations
+		ipar[4] = max_gmres_iterations;  // Max Iterations
 		ipar[10] = 1;  //  Preconditioner used
-		ipar[14] = RESTARTS; //  Internal iterations
+		ipar[14] = gmres_restarts; //  Internal iterations
 		
 		dpar[0] = TOL; //Relative Tolerance
 

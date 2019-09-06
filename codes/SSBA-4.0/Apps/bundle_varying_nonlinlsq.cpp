@@ -528,8 +528,12 @@ main(int argc, char * argv[])
       double factor_time = 0.0;
       int num_gmres_iters = 0;
       double MSC_solve_time = 0.0;
+      int max_gmres_iterations,gmres_restarts;
+      double tol;
+      int sizeG;
+      ofstream os;
       opt.maxIterations = 200;
-      opt.minimize(1,&total_MSC_time,&num_gmres_iters,&MSC_solve_time,&factor_time);
+      opt.minimize(1,&total_MSC_time,&num_gmres_iters,&MSC_solve_time,&factor_time,max_gmres_iterations,gmres_restarts,tol,sizeG,1,os);
       cout << "optimizer status = " << opt.status << endl;
    } // end scope
 

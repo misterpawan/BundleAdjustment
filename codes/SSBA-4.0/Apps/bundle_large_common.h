@@ -152,7 +152,9 @@ namespace V3D
                        vector<Vector3d> const& Xs,
                        vector<Vector2d> const& measurements,
                        vector<int> const& correspondingView,
-                       vector<int> const& correspondingPoint)
+                       vector<int> const& correspondingPoint,
+                       int write_to_file,
+                       ofstream& os)
    {
       int const K = measurements.size();
 
@@ -173,8 +175,17 @@ namespace V3D
             inlierReprojectionError += reprojectionError;
          }
       }
-      cout << "mean reprojection error = " << meanReprojectionError/K << endl;
-      cout << "inlier mean reprojection error = " << inlierReprojectionError/nInliers << " " << nInliers << " / " << K << " inliers." << endl;
+      if(write_to_file == 0)
+      {
+         cout << "mean reprojection error = " << meanReprojectionError/K << endl;
+         cout << "inlier mean reprojection error = " << inlierReprojectionError/nInliers << " " << nInliers << " / " << K << " inliers." << endl;   
+      }
+      else
+      {
+         os << "mean reprojection error = " << meanReprojectionError/K << endl;
+         os << "inlier mean reprojection error = " << inlierReprojectionError/nInliers << " " << nInliers << " / " << K << " inliers." << endl;
+      }
+      
       return double(nInliers) / K;
    }
 
