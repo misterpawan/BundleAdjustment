@@ -1,33 +1,30 @@
 Direct Solve --> 
-max_gmres_iterations : 100
-gmres_restarts : 40
-tolerance : 0.01
-sizeG : 2772
-NLSQ_LM_Optimizer: iteration: 0, |residual|^2 = 2.2315e+06, lambda = 0.001
-NLSQ_LM_Optimizer: iteration: 99, |residual|^2 = 35296.5, lambda = 0.01
-Time per iteration: 8.14891
-mean reprojection error = 0.713217
-inlier mean reprojection error = 0.159013 639019 / 1045197 inliers.
+sizeG : 2025
+NLSQ_LM_Optimizer: iteration: 0, |residual|^2 = 122222, lambda = 0.001
+NLSQ_LM_Optimizer: iteration: 99, |residual|^2 = 6406.26, lambda = 0.01
+Time per iteration: 0.926606
+mean reprojection error = 0.875436
+inlier mean reprojection error = 0.130391 131473 / 208622 inliers.
 =====================================================================================
 MSC Solve --> 
 max_gmres_iterations : 100
 gmres_restarts : 40
 tolerance : 0.01
 No. of MSC blocks : 30
-sizeG : 2772
-NLSQ_LM_Optimizer: iteration: 0, |residual|^2 = 2.2315e+06, lambda = 0.001
-NLSQ_LM_Optimizer: iteration: 99, |residual|^2 = 35560.6, lambda = 0.01
-Time per iteration: 29.1821
-MSC construction time per iteration: 1.51635
-Factor time(MSC): 1.54238
-Average GMRES iterations : 48
-Total GMRES(MSC) solve time : 27.0589
-mean reprojection error = 0.709909
-inlier mean reprojection error = 0.157974 631897 / 1045197 inliers.
+sizeG : 2025
+NLSQ_LM_Optimizer: iteration: 0, |residual|^2 = 122222, lambda = 0.001
+NLSQ_LM_Optimizer: iteration: 99, |residual|^2 = 6453.83, lambda = 0.0001
+Time per iteration: 8.22458
+MSC construction time per iteration: 0.330554
+Factor time(MSC): 0.163499
+Average GMRES iterations : 78
+Total GMRES(MSC) solve time : 7.8372
+mean reprojection error = 0.800636
+inlier mean reprojection error = 0.129725 130295 / 208622 inliers.
 =====================================================================================
 Block Jacobi Solve --> 
 max_gmres_iterations : 100
 gmres_restarts : 40
 tolerance : 0.01
-sizeG : 2772
-NLSQ_LM_Optimizer: iteration: 0, |residual|^2 = 2.2315e+06, lambda = 0.001
+sizeG : 2025
+NLSQ_LM_Optimizer: iteration: 0, |residual|^2 = 122222, lambda = 0.001

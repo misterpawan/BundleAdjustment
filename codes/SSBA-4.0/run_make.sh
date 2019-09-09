@@ -1,5 +1,9 @@
 #!/bin/bash
 
+export OMP_NUM_THREADS=5
+
+echo $OMP_NUM_THREADS
+
 clear
 
 rm -rf build
@@ -10,7 +14,7 @@ clear
 
 cd Apps
 
-DATA_FILE=~/Dataset/problem-308-195089-pre.txt
+DATA_FILE=~/Dataset/problem-225-57665-pre.txt
 PARAM_FILE=~/BundleAdjustment/codes/SSBA-4.0/params.txt
 
 

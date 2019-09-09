@@ -776,9 +776,12 @@ main(int argc, char * argv[])
          ps >> max_gmres_iterations >> gmres_restarts >> tol;
          ps.close();
 
-         os << "max_gmres_iterations : " << max_gmres_iterations << endl;
-         os << "gmres_restarts : " << gmres_restarts << endl;
-         os << "tolerance : " << tol << endl;
+         if(method[m] == 3)
+         {
+            os << "max_gmres_iterations : " << max_gmres_iterations << endl;
+            os << "gmres_restarts : " << gmres_restarts << endl;
+            os << "tolerance : " << tol << endl;
+         }
 
          //cout << "\n No. of MSC blocks : " << msc_blocks[m] << endl;
 
