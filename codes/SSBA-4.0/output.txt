@@ -1,30 +1,37 @@
 Direct Solve --> 
-sizeG : 2025
-NLSQ_LM_Optimizer: iteration: 0, |residual|^2 = 122222, lambda = 0.001
-NLSQ_LM_Optimizer: iteration: 99, |residual|^2 = 6406.26, lambda = 0.01
-Time per iteration: 0.926606
-mean reprojection error = 0.875436
-inlier mean reprojection error = 0.130391 131473 / 208622 inliers.
+sizeG : 7965
+NLSQ_LM_Optimizer: iteration: 0, |residual|^2 = 231026, lambda = 0.001
+NLSQ_LM_Optimizer: iteration: 99, |residual|^2 = 120698, lambda = 100
+Time per iteration: 12.5642
+mean reprojection error = 0.692984
+inlier mean reprojection error = 0.248303 231362 / 434905 inliers.
 =====================================================================================
 MSC Solve --> 
 max_gmres_iterations : 100
 gmres_restarts : 40
 tolerance : 0.01
 No. of MSC blocks : 30
-sizeG : 2025
-NLSQ_LM_Optimizer: iteration: 0, |residual|^2 = 122222, lambda = 0.001
-NLSQ_LM_Optimizer: iteration: 99, |residual|^2 = 6453.83, lambda = 0.0001
-Time per iteration: 8.22458
-MSC construction time per iteration: 0.330554
-Factor time(MSC): 0.163499
-Average GMRES iterations : 78
-Total GMRES(MSC) solve time : 7.8372
-mean reprojection error = 0.800636
-inlier mean reprojection error = 0.129725 130295 / 208622 inliers.
+sizeG : 7965
+NLSQ_LM_Optimizer: iteration: 0, |residual|^2 = 231026, lambda = 0.001
+NLSQ_LM_Optimizer: iteration: 99, |residual|^2 = 88814.1, lambda = 100
+Time per iteration: 20.6914
+MSC construction time per iteration: 1.67493
+Factor time(MSC): 0.401903
+Average GMRES iterations : 93
+Total GMRES(MSC) solve time : 19.7826
+mean reprojection error = 0.686184
+inlier mean reprojection error = 0.245443 241952 / 434905 inliers.
 =====================================================================================
 Block Jacobi Solve --> 
 max_gmres_iterations : 100
 gmres_restarts : 40
 tolerance : 0.01
-sizeG : 2025
-NLSQ_LM_Optimizer: iteration: 0, |residual|^2 = 122222, lambda = 0.001
+sizeG : 7965
+NLSQ_LM_Optimizer: iteration: 0, |residual|^2 = 231026, lambda = 0.001
+NLSQ_LM_Optimizer: iteration: 99, |residual|^2 = 111294, lambda = 100
+Time per iteration: 14.3474
+Factor time(block jacobi) : 0.390139
+Average GMRES iterations : 77
+Total GMRES(block jacobi) solve time : 13.4572
+mean reprojection error = 0.69129
+inlier mean reprojection error = 0.247827 233192 / 434905 inliers.

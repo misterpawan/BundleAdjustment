@@ -2,7 +2,7 @@
 
 export OMP_NUM_THREADS=5
 
-echo $OMP_NUM_THREADS
+
 
 clear
 
@@ -14,7 +14,7 @@ clear
 
 cd Apps
 
-DATA_FILE=~/Dataset/problem-225-57665-pre.txt
+DATA_FILE=~/Dataset/problem-885-97473-pre.txt
 PARAM_FILE=~/BundleAdjustment/codes/SSBA-4.0/params.txt
 
 
@@ -24,3 +24,4 @@ PARAM_FILE=~/BundleAdjustment/codes/SSBA-4.0/params.txt
 ./bundle_large_lifted_schur  $DATA_FILE $PARAM_FILE
 #./bundle_large_lifted_schur ~/Dataset/problem-49-7776-pre.txt
 #./bundle_large ~/Dataset/problem-49-7776-pre.txt
+echo "Number of threads = "$OMP_NUM_THREADS
